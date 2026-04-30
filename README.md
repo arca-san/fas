@@ -1,0 +1,3 @@
+﻿# fas
+
+Fon analiz sistemi.
