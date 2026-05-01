@@ -166,17 +166,20 @@ layout = dbc.Container(
 def search_funds(search_value):
     """Kullanıcı yazdıkça TEFAS'tan fon ara."""
     if not search_value or len(search_value.strip()) < 2:
-        return []
+        # Bos veya cok kisa arama: mevcut data'yi koru (secili ogeler kaybolmasin)
+        return dash.no_update
     try:
         results = _tefas_api.fon_unvan_ara(search_value.strip())
-        return [
+        data = [
             {"value": r.get("fonKodu", ""), "label": f"{r.get('fonKodu', '')} - {r.get('fonUnvan', '')}"}
             for r in results
             if r.get("fonKodu")
         ]
+        logger.debug("Arama: '%s' -> %s sonuc", search_value, len(data))
+        return data
     except Exception as exc:
-        logger.warning("Fon arama başarısız: %s", exc)
-        return []
+        logger.warning("Fon arama basarisiz: %s", exc)
+        return dash.no_update
 
 
 @callback(
@@ -200,6 +203,7 @@ def run_analysis(
     getiri_tipi,
     risk_free_annual,
 ):
+    logger.debug("Analiz butonu: fon_kodlari=%s", fon_kodlari)
     if not fon_kodlari:
         return {}, "Lütfen en az bir fon seçin."
 
