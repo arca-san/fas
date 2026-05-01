@@ -6,6 +6,8 @@ Dash Pages (use_pages=True) ile çalışır.
 """
 
 import dash
+import webbrowser
+import threading
 from dash import html, dcc, page_container
 import dash_bootstrap_components as dbc
 
@@ -30,4 +32,7 @@ app.layout = dbc.Container(
 )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    url = "http://127.0.0.1:8050"
+    # Uygulama başladıktan 1.5 sn sonra tarayıcıyı otomatik aç
+    threading.Timer(1.5, lambda: webbrowser.open(url)).start()
+    app.run(debug=True, port=8050)
