@@ -1,6 +1,7 @@
 # Web Framework
 dash>=2.15
 dash-bootstrap-components>=1.5
+dash-mantine-components>=0.14
 
 # Hesaplama
 pandas>=2.0
