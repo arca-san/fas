@@ -11,6 +11,8 @@ import dash_mantine_components as dmc
 from datetime import date, timedelta
 
 from data.fetchers import _tefas_api
+from data.fetchers.tefas_fetcher import TefasFetcher
+from components.charts import create_price_chart
 from config.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,6 +36,19 @@ layout = dbc.Container(
         html.P(
             "Analiz etmek istediğiniz fonları, benchmark'ı ve tarih aralığını seçin."
         ),
+        html.Div(id="grafik-alani", style={"display": "none"}, children=[
+            dbc.Card(
+                [
+                    dbc.CardBody(
+                        [
+                            html.H5("Fiyat Grafiği", className="card-title"),
+                            dcc.Graph(id="fiyat-grafigi", config={"displayModeBar": True}),
+                        ]
+                    )
+                ],
+                className="mb-4 mt-4",
+            ),
+        ]),
         dbc.Row(
             [
                 dbc.Col(
@@ -53,7 +68,7 @@ layout = dbc.Container(
                                             data=[],
                                         ),
                                         html.Small(
-                                            "Birden fazla fon seçebilirsiniz.",
+                                            "Birden fazla fon seçebilirsiniz. İlk seçili fonun fiyat grafiği çizilecek.",
                                             className="text-muted d-block mt-2",
                                         ),
                                     ]
@@ -183,39 +198,41 @@ def search_funds(search_value):
 
 
 @callback(
-    Output("analysis-store", "data"),
+    Output("fiyat-grafigi", "figure"),
+    Output("grafik-alani", "style"),
     Output("analiz-status", "children"),
     Input("analiz-btn", "n_clicks"),
     State("fon-select", "value"),
-    State("benchmark-dropdown", "value"),
     State("tarih-araligi", "start_date"),
     State("tarih-araligi", "end_date"),
-    State("getiri-tipi", "value"),
-    State("risk-free-input", "value"),
     prevent_initial_call=True,
 )
 def run_analysis(
     n_clicks,
     fon_kodlari,
-    benchmark,
     start_date,
     end_date,
-    getiri_tipi,
-    risk_free_annual,
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s", fon_kodlari)
     if not fon_kodlari:
-        return {}, "Lütfen en az bir fon seçin."
+        return {}, {"display": "none"}, "Lütfen en az bir fon seçin."
 
-    # Metadata store'a kaydet (büyük veri disk cache'ten çekilecek)
-    store_data = {
-        "fon_kodlari": fon_kodlari,
-        "benchmark": benchmark,
-        "baslangic": start_date,
-        "bitis": end_date,
-        "getiri_tipi": getiri_tipi,
-        "risk_free_yillik": risk_free_annual,
-    }
+    # İlk seçili fonun fiyat verisini çek
+    fon_kodu = fon_kodlari[0]
+    fetcher = TefasFetcher()
 
-    logger.info("Analiz başlatıldı: %s fon, %s → %s", len(fon_kodlari), start_date, end_date)
-    return store_data, f"Analiz hazır! {len(fon_kodlari)} fon seçildi. 'Fon Analizi' sayfasına geçebilirsiniz."
+    try:
+        from datetime import datetime
+        bas = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+        bit = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
+        df = fetcher.get_historical_data(fon_kodu, bas, bit)
+    except Exception as exc:
+        logger.error("Veri çekme hatasi: %s", exc)
+        return {}, {"display": "none"}, f"Veri çekme hatasi: {exc}"
+
+    if df.empty:
+        return {}, {"display": "none"}, f"{fon_kodu} için veri bulunamadi."
+
+    fig = create_price_chart(df, title=f"{fon_kodu} - Fiyat Grafiği")
+    logger.info("Grafik olusturuldu: %s, %s satir", fon_kodu, len(df))
+    return fig, {"display": "block"}, f"{fon_kodu} için fiyat grafiği hazır. ({len(df)} gün)"
