@@ -7,26 +7,14 @@ Ana Sayfa — Fon seçimi, benchmark, tarih aralığı ve analiz parametreleri.
 import dash
 from dash import html, dcc, callback, Output, Input, State
 import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
 from datetime import date, timedelta
 
-from data.fetchers.tefas_fetcher import TefasFetcher
+from data.fetchers import _tefas_api
 from config.logger import get_logger
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/")
-
-# TEFAS'tan fon listesini bir kez çek (sayfa yüklenirken)
-# NOT: Uzun sürebilir; ileride dcc.Store + background callback ile optimize edilebilir.
-_fetcher = TefasFetcher()
-try:
-    _fon_listesi = _fetcher.list_available_symbols()
-    _fon_options = [
-        {"label": f"{f['kod']} — {f['unvan']}", "value": f["kod"]}
-        for f in _fon_listesi if f.get("kod")
-    ]
-except Exception as exc:
-    logger.warning("Fon listesi çekilemedi: %s", exc)
-    _fon_options = []
 
 # Benchmark seçenekleri (başlangıçta sabit, ileride dinamik)
 _BENCHMARK_OPTIONS = [
@@ -55,17 +43,18 @@ layout = dbc.Container(
                                 dbc.CardBody(
                                     [
                                         html.H5("Fon Seçimi", className="card-title"),
-                                        dcc.Dropdown(
-                                            id="fon-dropdown",
-                                            options=_fon_options,
-                                            multi=True,
-                                            placeholder="Fon kodu/ünvanı ara...",
+                                        dmc.MultiSelect(
+                                            id="fon-select",
+                                            label="Fon kodu veya ünvanı yazın",
+                                            placeholder="En az 2 karakter yazın...",
                                             searchable=True,
                                             clearable=True,
+                                            debounce=400,
+                                            data=[],
                                         ),
                                         html.Small(
                                             "Birden fazla fon seçebilirsiniz.",
-                                            className="text-muted",
+                                            className="text-muted d-block mt-2",
                                         ),
                                     ]
                                 )
@@ -170,10 +159,31 @@ layout = dbc.Container(
 
 
 @callback(
+    Output("fon-select", "data"),
+    Input("fon-select", "searchValue"),
+    prevent_initial_call=True,
+)
+def search_funds(search_value):
+    """Kullanıcı yazdıkça TEFAS'tan fon ara."""
+    if not search_value or len(search_value.strip()) < 2:
+        return []
+    try:
+        results = _tefas_api.fon_unvan_ara(search_value.strip())
+        return [
+            {"value": r.get("fonKodu", ""), "label": f"{r.get('fonKodu', '')} - {r.get('fonUnvan', '')}"}
+            for r in results
+            if r.get("fonKodu")
+        ]
+    except Exception as exc:
+        logger.warning("Fon arama başarısız: %s", exc)
+        return []
+
+
+@callback(
     Output("analysis-store", "data"),
     Output("analiz-status", "children"),
     Input("analiz-btn", "n_clicks"),
-    State("fon-dropdown", "value"),
+    State("fon-select", "value"),
     State("benchmark-dropdown", "value"),
     State("tarih-araligi", "start_date"),
     State("tarih-araligi", "end_date"),
