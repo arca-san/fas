@@ -14,6 +14,7 @@ from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
 from components.charts import create_price_chart
 from config.logger import get_logger
+import plotly.graph_objects as go
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/")
@@ -215,9 +216,9 @@ def run_analysis(
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s", fon_kodlari)
     if not fon_kodlari:
-        return {}, {"display": "none"}, "Lütfen en az bir fon seçin."
+        return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin."
 
-    # İlk seçili fonun fiyat verisini çek
+    # İlk secili fonun fiyat verisini cek
     fon_kodu = fon_kodlari[0]
     fetcher = TefasFetcher()
 
@@ -227,11 +228,11 @@ def run_analysis(
         bit = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
         df = fetcher.get_historical_data(fon_kodu, bas, bit)
     except Exception as exc:
-        logger.error("Veri çekme hatasi: %s", exc)
-        return {}, {"display": "none"}, f"Veri çekme hatasi: {exc}"
+        logger.error("Veri cekme hatasi: %s", exc)
+        return go.Figure(), {"display": "none"}, f"Veri cekme hatasi: {exc}"
 
     if df.empty:
-        return {}, {"display": "none"}, f"{fon_kodu} için veri bulunamadi."
+        return go.Figure(), {"display": "none"}, f"{fon_kodu} icin veri bulunamadi."
 
     fig = create_price_chart(df, title=f"{fon_kodu} - Fiyat Grafiği")
     logger.info("Grafik olusturuldu: %s, %s satir", fon_kodu, len(df))
