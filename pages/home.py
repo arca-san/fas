@@ -1,0 +1,207 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Ana Sayfa — Fon seçimi, benchmark, tarih aralığı ve analiz parametreleri.
+"""
+
+import dash
+from dash import html, dcc, callback, Output, Input, State
+import dash_bootstrap_components as dbc
+from datetime import date, timedelta
+
+from data.fetchers.tefas_fetcher import TefasFetcher
+from config.logger import get_logger
+
+logger = get_logger(__name__)
+dash.register_page(__name__, path="/")
+
+# TEFAS'tan fon listesini bir kez çek (sayfa yüklenirken)
+# NOT: Uzun sürebilir; ileride dcc.Store + background callback ile optimize edilebilir.
+_fetcher = TefasFetcher()
+try:
+    _fon_listesi = _fetcher.list_available_symbols()
+    _fon_options = [
+        {"label": f"{f['kod']} — {f['unvan']}", "value": f["kod"]}
+        for f in _fon_listesi if f.get("kod")
+    ]
+except Exception as exc:
+    logger.warning("Fon listesi çekilemedi: %s", exc)
+    _fon_options = []
+
+# Benchmark seçenekleri (başlangıçta sabit, ileride dinamik)
+_BENCHMARK_OPTIONS = [
+    {"label": "BIST 100", "value": "XU100"},
+    {"label": "Dolar/TL", "value": "USDTRY"},
+    {"label": "Euro/TL", "value": "EURTRY"},
+    {"label": "Altın (Gram)", "value": "GLDGR"},
+]
+
+# Varsayılan tarih aralığı: son 1 yıl
+_DEFAULT_END = date.today()
+_DEFAULT_START = _DEFAULT_END - timedelta(days=365)
+
+layout = dbc.Container(
+    [
+        html.H2("Fon Analiz Sistemi", className="mb-4"),
+        html.P(
+            "Analiz etmek istediğiniz fonları, benchmark'ı ve tarih aralığını seçin."
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dbc.Card(
+                            [
+                                dbc.CardBody(
+                                    [
+                                        html.H5("Fon Seçimi", className="card-title"),
+                                        dcc.Dropdown(
+                                            id="fon-dropdown",
+                                            options=_fon_options,
+                                            multi=True,
+                                            placeholder="Fon kodu/ünvanı ara...",
+                                            searchable=True,
+                                            clearable=True,
+                                        ),
+                                        html.Small(
+                                            "Birden fazla fon seçebilirsiniz.",
+                                            className="text-muted",
+                                        ),
+                                    ]
+                                )
+                            ],
+                            className="mb-3",
+                        ),
+                        dbc.Card(
+                            [
+                                dbc.CardBody(
+                                    [
+                                        html.H5("Benchmark", className="card-title"),
+                                        dcc.Dropdown(
+                                            id="benchmark-dropdown",
+                                            options=_BENCHMARK_OPTIONS,
+                                            placeholder="Benchmark seçin...",
+                                            clearable=True,
+                                        ),
+                                    ]
+                                )
+                            ],
+                            className="mb-3",
+                        ),
+                    ],
+                    width=6,
+                ),
+                dbc.Col(
+                    [
+                        dbc.Card(
+                            [
+                                dbc.CardBody(
+                                    [
+                                        html.H5("Tarih Aralığı", className="card-title"),
+                                        dcc.DatePickerRange(
+                                            id="tarih-araligi",
+                                            start_date=_DEFAULT_START,
+                                            end_date=_DEFAULT_END,
+                                            display_format="YYYY-MM-DD",
+                                        ),
+                                    ]
+                                )
+                            ],
+                            className="mb-3",
+                        ),
+                        dbc.Card(
+                            [
+                                dbc.CardBody(
+                                    [
+                                        html.H5("Parametreler", className="card-title"),
+                                        dbc.Row(
+                                            [
+                                                dbc.Col(
+                                                    [
+                                                        html.Label("Getiri Tipi"),
+                                                        dcc.RadioItems(
+                                                            id="getiri-tipi",
+                                                            options=[
+                                                                {"label": "Log Getiri", "value": "log"},
+                                                                {"label": "Basit Getiri", "value": "simple"},
+                                                            ],
+                                                            value="log",
+                                                            inline=True,
+                                                            labelStyle={"margin-right": "15px"},
+                                                        ),
+                                                    ],
+                                                    width=6,
+                                                ),
+                                                dbc.Col(
+                                                    [
+                                                        html.Label("Risk-Free Oranı (Yıllık %)"),
+                                                        dcc.Input(
+                                                            id="risk-free-input",
+                                                            type="number",
+                                                            value=45.0,
+                                                            step=0.1,
+                                                            className="form-control",
+                                                        ),
+                                                    ],
+                                                    width=6,
+                                                ),
+                                            ]
+                                        ),
+                                        html.Hr(),
+                                        dbc.Button(
+                                            "Analiz Et",
+                                            id="analiz-btn",
+                                            color="primary",
+                                            className="w-100 mt-2",
+                                        ),
+                                        html.Div(id="analiz-status", className="mt-2 text-info"),
+                                    ]
+                                )
+                            ]
+                        ),
+                    ],
+                    width=6,
+                ),
+            ]
+        ),
+    ],
+    fluid=True,
+)
+
+
+@callback(
+    Output("analysis-store", "data"),
+    Output("analiz-status", "children"),
+    Input("analiz-btn", "n_clicks"),
+    State("fon-dropdown", "value"),
+    State("benchmark-dropdown", "value"),
+    State("tarih-araligi", "start_date"),
+    State("tarih-araligi", "end_date"),
+    State("getiri-tipi", "value"),
+    State("risk-free-input", "value"),
+    prevent_initial_call=True,
+)
+def run_analysis(
+    n_clicks,
+    fon_kodlari,
+    benchmark,
+    start_date,
+    end_date,
+    getiri_tipi,
+    risk_free_annual,
+):
+    if not fon_kodlari:
+        return {}, "Lütfen en az bir fon seçin."
+
+    # Metadata store'a kaydet (büyük veri disk cache'ten çekilecek)
+    store_data = {
+        "fon_kodlari": fon_kodlari,
+        "benchmark": benchmark,
+        "baslangic": start_date,
+        "bitis": end_date,
+        "getiri_tipi": getiri_tipi,
+        "risk_free_yillik": risk_free_annual,
+    }
+
+    logger.info("Analiz başlatıldı: %s fon, %s → %s", len(fon_kodlari), start_date, end_date)
+    return store_data, f"Analiz hazır! {len(fon_kodlari)} fon seçildi. 'Fon Analizi' sayfasına geçebilirsiniz."
