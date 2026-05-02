@@ -14,6 +14,7 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.FLATLY, dmc.styles.ALL],
     suppress_callback_exceptions=True,
     title="Fon Analiz Sistemi",
+    favicon="logo.png",
 )
 
 server = app.server
