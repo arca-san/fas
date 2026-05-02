@@ -181,12 +181,17 @@ def search_funds(search_value):
         return dash.no_update
     try:
         results = _tefas_api.fon_unvan_ara(search_value.strip())
-        data = [
-            {"value": r.get("fonKodu", ""), "label": f"{r.get('fonKodu', '')} - {r.get('fonUnvan', '')}"}
-            for r in results
-            if r.get("fonKodu")
-        ]
-        logger.debug("Arama: '%s' -> %s sonuc", search_value, len(data))
+        seen = set()
+        data = []
+        for r in results:
+            kod = r.get("fonKodu", "")
+            if kod and kod not in seen:
+                seen.add(kod)
+                data.append({
+                    "value": kod,
+                    "label": f"{kod} - {r.get('fonUnvan', '')}",
+                })
+        logger.debug("Arama: '%s' -> %s sonuc (dedup: %s)", search_value, len(results), len(data))
         return data
     except Exception as exc:
         logger.warning("Fon arama basarisiz: %s", exc)
@@ -266,7 +271,7 @@ def run_analysis(
 
                 benchmark_series = pd.Series(
                     risk_free_cum, index=df.index, name="TLREF (Bilesik)"
-                )
+                ) * 100.0
 
             ilk_tlref = tlref_all["value"].iloc[0]
             son_tlref = tlref_all["value"].iloc[-1]
