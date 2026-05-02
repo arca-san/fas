@@ -155,6 +155,11 @@ layout = dbc.Container(
                                             className="w-100 mt-2",
                                         ),
                                         html.Div(id="analiz-status", className="mt-2 text-info"),
+                                        html.Small(
+                                            "TEFAS'tan veri aliniyor, bu islem 10-30 saniye surebilir.",
+                                            className="text-muted d-block mt-1",
+                                            id="tefas-uyari",
+                                        ),
                                     ]
                                 )
                             ]
@@ -202,6 +207,7 @@ def search_funds(search_value):
     Output("fiyat-grafigi", "figure"),
     Output("grafik-alani", "style"),
     Output("analiz-status", "children"),
+    Output("tefas-uyari", "style"),
     Input("analiz-btn", "n_clicks"),
     State("fon-select", "value"),
     State("benchmark-dropdown", "value"),
@@ -218,7 +224,7 @@ def run_analysis(
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
     if not fon_kodlari:
-        return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin."
+        return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}
 
     fon_kodu = fon_kodlari[0]
     fetcher = TefasFetcher()
@@ -230,10 +236,10 @@ def run_analysis(
         df = fetcher.get_historical_data(fon_kodu, bas, bit)
     except Exception as exc:
         logger.error("Veri cekme hatasi: %s", exc)
-        return go.Figure(), {"display": "none"}, f"Veri cekme hatasi: {exc}"
+        return go.Figure(), {"display": "none"}, f"Veri cekme hatasi: {exc}", {"display": "none"}
 
     if df.empty:
-        return go.Figure(), {"display": "none"}, f"{fon_kodu} icin veri bulunamadi."
+        return go.Figure(), {"display": "none"}, f"{fon_kodu} icin veri bulunamadi.", {"display": "none"}
 
     risk_free_daily = None
     benchmark_series = None
@@ -299,4 +305,4 @@ def run_analysis(
         "Grafik olusturuldu: %s, %s satir, benchmark=%s",
         fon_kodu, len(df), benchmark,
     )
-    return fig, {"display": "block"}, " | ".join(status_parts)
+    return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}
