@@ -21,6 +21,8 @@ import zipfile
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from data.cache.local_cache import LocalCache
+from config.logger import get_logger
 import pandas as pd
 import requests
 
@@ -47,6 +49,7 @@ class TLREFScraper:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
         self.timeout = timeout
+        self._cache = LocalCache()
 
     def from_csv(self) -> pd.DataFrame:
         """CSV'den TLREF verisini çeker.
@@ -119,7 +122,13 @@ class TLREFScraper:
         return df
 
     def from_zip(self) -> pd.DataFrame:
-        """ZIP arşivinden tarihsel TLREF verisini çeker."""
+        """ZIP arşivinden tarihsel TLREF verisini çeker (cache'li)."""
+        cache_key = "tlref_zip"
+        if self._cache.exists(cache_key):
+            logger = get_logger(__name__)
+            logger.debug("TLREF ZIP cache hit")
+            return self._cache.get(cache_key)
+
         resp = self.session.get(self.ZIP_URL, timeout=self.timeout)
         resp.raise_for_status()
 
@@ -157,6 +166,7 @@ class TLREFScraper:
             raise ValueError("ZIP içinde geçerli CSV bulunamadı")
 
         df = df.sort_values("date").reset_index(drop=True)
+        self._cache.set(cache_key, df)
         return df
 
     def fetch_yield_matrix(self) -> pd.DataFrame:
