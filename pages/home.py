@@ -224,7 +224,7 @@ def run_analysis(
     risk_free_daily = None
     benchmark_series = None
     benchmark_name = None
-    status_parts = [f"{fon_kodu} fiyat grafigi hazir. ({len(df)} gun)"]
+    status_parts = [f"{fon_kodu} getiri grafigi hazir. ({len(df)} gun)"]
 
     if benchmark == "TLREF":
         try:
@@ -256,15 +256,26 @@ def run_analysis(
                     risk_free_cum.append(carpim)
 
                 benchmark_series = pd.Series(
-                    risk_free_cum, index=df.index, name="TLREF (Bilesik)"
+                    risk_free_cum, index=df.index, name="TLREF (Kumulatif)"
                 ) * 100.0 - 100.0
 
-            ilk_tlref = tlref_all["value"].iloc[0]
-            son_tlref = tlref_all["value"].iloc[-1]
+            # TLREF'i fon tarih araligina kirp
+            tlref_filtre = tlref_all[
+                (tlref_all["date"].dt.date >= df["tarih"].iloc[0].date())
+                & (tlref_all["date"].dt.date <= df["tarih"].iloc[-1].date())
+            ]
+            if not tlref_filtre.empty:
+                min_t = tlref_filtre["value"].min()
+                max_t = tlref_filtre["value"].max()
+            else:
+                min_t = son_bilinen or 0
+                max_t = son_bilinen or 0
+
+            toplam_getiri = (risk_free_cum[-1] - 1.0) * 100.0 if risk_free_cum else 0
             status_parts.append(
-                f"TLREF: %{ilk_tlref:.2f} ~ %{son_tlref:.2f}"
+                f"TLREF: %{min_t:.2f}~%{max_t:.2f} (Kum: %{toplam_getiri:.1f})"
             )
-            benchmark_name = "TLREF (Risksiz Getiri)"
+            benchmark_name = "TLREF (Kumulatif)"
             logger.info(
                 "TLREF yuklendi: %s kayit, %s - %s",
                 len(tlref_all), tlref_all["date"].iloc[0].date(),
@@ -276,7 +287,7 @@ def run_analysis(
 
     fig = create_price_chart(
         df,
-        title=f"{fon_kodu} - Fiyat Grafigi",
+        title=f"{fon_kodu} - Getiri Grafigi",
         benchmark_series=benchmark_series,
         benchmark_name=benchmark_name,
     )
