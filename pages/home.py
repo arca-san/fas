@@ -138,7 +138,7 @@ layout = dbc.Container(
                                                                 {"label": "Log Getiri", "value": "log"},
                                                                 {"label": "Basit Getiri", "value": "simple"},
                                                             ],
-                                                            value="log",
+                                                            value="simple",
                                                             inline=True,
                                                             labelStyle={"margin-right": "15px"},
                                                         ),
@@ -238,27 +238,46 @@ def run_analysis(
     if benchmark == "TLREF":
         try:
             tlref_scraper = TLREFScraper()
-            tlref_df = tlref_scraper.from_csv()
-            son_tlref = tlref_df["value"].iloc[-1]
-            risk_free_daily = TLREFConverter.daily_compound(son_tlref)
+            try:
+                tlref_all = tlref_scraper.from_zip()
+            except Exception:
+                tlref_all = tlref_scraper.from_csv()
+            tlref_map = dict(zip(tlref_all["date"].dt.date, tlref_all["value"]))
 
             if "tarih" in df.columns and not df["tarih"].empty:
-                bas_date = df["tarih"].iloc[0]
-                daily_rate = risk_free_daily / 100.0
-                gun_sayisi = len(df)
-                risk_free_cum = [(1.0 + daily_rate) ** i for i in range(gun_sayisi)]
+                gunluk_oranlar = []
+                son_bilinen = None
+                for tarih in df["tarih"]:
+                    t = tarih.date() if hasattr(tarih, "date") else tarih
+                    son_bilinen = tlref_map.get(t, son_bilinen)
+                    if son_bilinen is not None:
+                        gunluk_oranlar.append(
+                            TLREFConverter.daily_compound(son_bilinen) / 100.0
+                        )
+                    else:
+                        gunluk_oranlar.append(None)
+
+                carpim = 1.0
+                risk_free_cum = []
+                for r in gunluk_oranlar:
+                    if r is not None:
+                        carpim *= 1.0 + r
+                    risk_free_cum.append(carpim)
+
                 benchmark_series = pd.Series(
                     risk_free_cum, index=df.index, name="TLREF (Bilesik)"
                 )
-                risk_free_pct = risk_free_daily * gun_sayisi
 
+            ilk_tlref = tlref_all["value"].iloc[0]
+            son_tlref = tlref_all["value"].iloc[-1]
             status_parts.append(
-                f"TLREF: %{son_tlref:.2f} (gunluk: %{risk_free_daily:.4f})"
+                f"TLREF: %{ilk_tlref:.2f} ~ %{son_tlref:.2f}"
             )
             benchmark_name = "TLREF (Risksiz Getiri)"
             logger.info(
-                "TLREF yuklendi: yillik=%s%% gunluk=%s%%",
-                son_tlref, risk_free_daily,
+                "TLREF yuklendi: %s kayit, %s - %s",
+                len(tlref_all), tlref_all["date"].iloc[0].date(),
+                tlref_all["date"].iloc[-1].date(),
             )
         except Exception as exc:
             logger.warning("TLREF cekilemedi: %s", exc)
