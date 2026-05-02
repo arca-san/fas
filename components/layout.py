@@ -11,24 +11,23 @@ import dash_bootstrap_components as dbc
 
 def create_navbar() -> dbc.Navbar:
     return dbc.Navbar(
-        html.A(
-            [
+        [
+            html.Div(
                 html.Img(
                     src="/assets/logo.png",
-                    style={"height": "100%", "width": "auto", "objectFit": "cover"},
+                    style={"height": "100%", "width": "auto", "maxWidth": "none"},
                 ),
-                html.Span(
-                    "Fon Analiz Sistemi",
-                    className="text-white fw-semibold ms-2",
-                    style={"fontSize": "1.1rem"},
-                ),
-            ],
-            href="/",
-            className="d-flex align-items-center h-100 text-decoration-none",
-        ),
+                style={"height": "100%", "maxWidth": "220px", "overflow": "hidden", "flexShrink": "0"},
+            ),
+            html.Span(
+                "Fon Analiz Sistemi",
+                className="text-white fw-semibold ms-2",
+                style={"fontSize": "1.1rem"},
+            ),
+        ],
         color="primary",
         dark=True,
-        className="mb-0 px-3",
+        className="mb-0 px-3 d-flex align-items-center",
         style={"height": "56px"},
     )
 

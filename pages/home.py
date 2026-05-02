@@ -154,7 +154,7 @@ def search_funds(search_value):
         # Bos veya cok kisa arama: mevcut data'yi koru (secili ogeler kaybolmasin)
         return dash.no_update
     try:
-        results = _tefas_api.fon_unvan_ara(search_value.strip())
+        results = _tefas_api.fon_unvan_ara(search_value.strip().upper())
         seen = set()
         data = []
         for r in results:
