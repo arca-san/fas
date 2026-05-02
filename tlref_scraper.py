@@ -12,6 +12,7 @@ Kaynaklar:
 
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
@@ -283,4 +284,190 @@ class TLREFConverter:
 
         result = result.rename(columns={"converted": suffix})
         return result
+
+
+class TLREFReport:
+    """TLREF verisini raporlar."""
+
+    @staticmethod
+    def print_summary(df: pd.DataFrame) -> None:
+        """DataFrame ozetini yazdirir."""
+        if df.empty:
+            print("  Veri yok.")
+            return
+
+        print(f"  Toplam kayit: {len(df)}")
+        print(f"  Tarih araligi: {df['date'].min().date()} - {df['date'].max().date()}")
+        print(f"  Min TLREF: {df['value'].min():.4f}%")
+        print(f"  Max TLREF: {df['value'].max():.4f}%")
+        print(f"  Ortalama:  {df['value'].mean():.4f}%")
+        print(f"  Son TLREF: {df['value'].iloc[-1]:.4f}%")
+
+    @staticmethod
+    def print_table(df: pd.DataFrame, max_rows: int = 20) -> None:
+        """Tablo goruntusu yazdirir."""
+        if df.empty:
+            print("  Veri yok.")
+            return
+
+        display = df.tail(max_rows).copy()
+        date_col = display["date"].dt.strftime("%d/%m/%Y")
+        display.insert(0, "Tarih", date_col)
+
+        value_cols = [c for c in display.columns if c not in ("date", "Tarih")]
+        formatted = display[["Tarih"] + value_cols].copy()
+
+        for col in value_cols:
+            formatted[col] = formatted[col].apply(
+                lambda x: f"{x:.6f}" if isinstance(x, (int, float)) else x
+            )
+
+        sep = "-" * 90
+        print(sep)
+        header = " | ".join(str(c).ljust(18) for c in formatted.columns)
+        print(f"  {header}")
+        print(sep)
+        for _, row in formatted.iterrows():
+            vals = " | ".join(str(v).ljust(18) for v in row)
+            print(f"  {vals}")
+        print(sep)
+        print(f"  ... son {max_rows} kayit gosteriliyor (toplam {len(df)})")
+
+    @staticmethod
+    def export_csv(df: pd.DataFrame, filepath: str) -> str:
+        """DataFrame'i CSV'ye aktarir."""
+        out = df.copy()
+        out["date"] = out["date"].dt.strftime("%d/%m/%Y")
+        out.to_csv(filepath, sep=";", index=False, encoding="utf-8-sig")
+        return filepath
+
+
+def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+    """Komut satiri argumanlarini ayristirir."""
+    parser = argparse.ArgumentParser(
+        description="TLREF Scraper & Donusturucu",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Ornek:\n"
+            "  %(prog)s --source csv\n"
+            "  %(prog)s --source csv --convert daily --method compound\n"
+            "  %(prog)s --source csv --convert monthly --method simple\n"
+            "  %(prog)s --source api --convert period --days 90 --export tlref_period.csv\n"
+        ),
+    )
+    parser.add_argument(
+        "--source",
+        choices=["csv", "api", "zip"],
+        default="csv",
+        help="Veri kaynagi (varsayilan: csv)",
+    )
+    parser.add_argument(
+        "--convert",
+        choices=["daily", "monthly", "period", "none"],
+        default="daily",
+        help="Donusum hedefi (varsayilan: daily)",
+    )
+    parser.add_argument(
+        "--method",
+        choices=["simple", "compound"],
+        default="compound",
+        help="Faiz yontemi (varsayilan: compound)",
+    )
+    parser.add_argument(
+        "--days",
+        type=int,
+        default=90,
+        help="Period donusumunde gun sayisi (varsayilan: 90)",
+    )
+    parser.add_argument(
+        "--api-days",
+        type=int,
+        default=None,
+        help="API day parametresi (None = tumu, orn: 3650 = 10 yil)",
+    )
+    parser.add_argument(
+        "--export",
+        type=str,
+        default=None,
+        help="CSV'ye aktar (dosya yolu)",
+    )
+    parser.add_argument(
+        "--rows",
+        type=int,
+        default=20,
+        help="Tablo satir sayisi (varsayilan: 20)",
+    )
+    parser.add_argument(
+        "--no-table",
+        action="store_true",
+        help="Tabloyu gizle",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    """Ana CLI giris noktasi."""
+    args = parse_args(argv)
+
+    try:
+        scraper = TLREFScraper()
+
+        source_label = {"csv": "CSV", "api": "API", "zip": "ZIP"}
+        print(f"\n=== TLREF Scraper ===")
+        print(f"  Kaynak: {source_label.get(args.source, args.source)}")
+
+        if args.source == "csv":
+            df = scraper.from_csv()
+        elif args.source == "api":
+            df = scraper.from_api(day=args.api_days)
+        elif args.source == "zip":
+            df = scraper.from_zip()
+        else:
+            raise ValueError(f"Bilinmeyen kaynak: {args.source}")
+
+        print(f"  Veri: {len(df)} kayit bulundu")
+
+        if args.convert != "none":
+            df = TLREFConverter.convert_df(
+                df, target=args.convert, method=args.method, days=args.days
+            )
+            method_label = "Basit" if args.method == "simple" else "Bilesik"
+            target_labels = {
+                "daily": "Gunluk",
+                "monthly": "Aylik",
+                "period": f"{args.days} Gunluk",
+            }
+            print(
+                f"  Donusum: Yillik -> {target_labels[args.convert]} ({method_label} Faiz)"
+            )
+
+        print()
+        TLREFReport.print_summary(df)
+        print()
+
+        if not args.no_table:
+            TLREFReport.print_table(df, max_rows=args.rows)
+
+        if args.export:
+            path = TLREFReport.export_csv(df, args.export)
+            print(f"\n  CSV'ye aktarildi: {path}")
+
+        return 0
+
+    except requests.exceptions.RequestException as e:
+        print(f"\n  Istek hatasi: {e}", file=sys.stderr)
+        return 1
+    except json.JSONDecodeError as e:
+        print(f"\n  JSON cozumleme hatasi: {e}", file=sys.stderr)
+        return 1
+    except ValueError as e:
+        print(f"\n  Veri hatasi: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"\n  Beklenmeyen hata: {e}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 
