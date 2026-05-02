@@ -11,26 +11,26 @@ import dash_bootstrap_components as dbc
 
 def create_navbar() -> dbc.Navbar:
     return dbc.Navbar(
-        dbc.Container(
+        html.A(
             [
-                html.A(
-                    dbc.Row(
-                        [
-                            dbc.Col(html.Img(src="/assets/logo.png", height="30px")),
-                            dbc.Col(dbc.NavbarBrand("Fon Analiz Sistemi", className="ms-2")),
-                        ],
-                        align="center",
-                        className="g-0",
-                    ),
-                    href="/",
-                    style={"textDecoration": "none"},
+                html.Img(
+                    src="/assets/logo.png",
+                    style={"height": "100%", "width": "auto"},
+                    className="py-1",
                 ),
-                dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
-            ]
+                html.Span(
+                    "Fon Analiz Sistemi",
+                    className="text-white fw-semibold ms-2",
+                    style={"fontSize": "1.1rem"},
+                ),
+            ],
+            href="/",
+            className="d-flex align-items-center h-100 text-decoration-none",
         ),
         color="primary",
         dark=True,
-        className="mb-0",
+        className="mb-0 px-3",
+        style={"height": "56px"},
     )
 
 
