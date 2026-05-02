@@ -127,26 +127,6 @@ layout = dbc.Container(
                                 dbc.CardBody(
                                     [
                                         html.H5("Parametreler", className="card-title"),
-                                        dbc.Row(
-                                            [
-                                                dbc.Col(
-                                                    [
-                                                        html.Label("Getiri Tipi"),
-                                                        dcc.RadioItems(
-                                                            id="getiri-tipi",
-                                                            options=[
-                                                                {"label": "Log Getiri", "value": "log"},
-                                                                {"label": "Basit Getiri", "value": "simple"},
-                                                            ],
-                                                            value="simple",
-                                                            inline=True,
-                                                            labelStyle={"margin-right": "15px"},
-                                                        ),
-                                                    ],
-                                                    width=12,
-                                                ),
-                                            ]
-                                        ),
                                         html.Hr(),
                                         dbc.Button(
                                             "Analiz Et",
@@ -277,7 +257,7 @@ def run_analysis(
 
                 benchmark_series = pd.Series(
                     risk_free_cum, index=df.index, name="TLREF (Bilesik)"
-                ) * 100.0
+                ) * 100.0 - 100.0
 
             ilk_tlref = tlref_all["value"].iloc[0]
             son_tlref = tlref_all["value"].iloc[-1]
