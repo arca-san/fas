@@ -6,8 +6,6 @@ Dash Pages (use_pages=True) ile çalışır.
 """
 
 import dash
-import webbrowser
-import threading
 from dash import html, dcc, page_container
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
@@ -19,7 +17,7 @@ app.layout = dmc.MantineProvider(
     dbc.Container(
         [
             dcc.Location(id="url", refresh=False),
-            dcc.Store(id="analysis-store", storage_type="session"),  # metadata tutar
+            dcc.Store(id="analysis-store", storage_type="session"),
             create_navbar(),
             dbc.Row(
                 [
@@ -35,7 +33,4 @@ app.layout = dmc.MantineProvider(
 )
 
 if __name__ == "__main__":
-    url = "http://127.0.0.1:8050"
-    # Uygulama başladıktan 1.5 sn sonra tarayıcıyı otomatik aç
-    threading.Timer(1.5, lambda: webbrowser.open(url)).start()
     app.run(debug=True, port=8050)

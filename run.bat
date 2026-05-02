@@ -28,6 +28,8 @@ if errorlevel 1 (
 )
 
 echo Uygulama baslatiliyor...
+echo Tarayici http://127.0.0.1:8050 adresinde acilacak...
+start http://127.0.0.1:8050
 call %VENV_DIR%\Scripts\python index.py
 
 pause
