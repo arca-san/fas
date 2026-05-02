@@ -21,8 +21,16 @@ app.layout = dmc.MantineProvider(
             create_navbar(),
             dbc.Row(
                 [
-                    dbc.Col(create_sidebar(), width=2, className="bg-light sidebar vh-100"),
-                    dbc.Col(page_container, width=10, className="p-4"),
+                    dbc.Col(
+                        create_sidebar(),
+                        xs=0, sm=0, md=2,
+                        className="bg-light sidebar d-none d-md-block vh-100",
+                    ),
+                    dbc.Col(
+                        page_container,
+                        xs=12, sm=12, md=10,
+                        className="p-3 p-md-4",
+                    ),
                 ],
                 className="g-0",
             ),

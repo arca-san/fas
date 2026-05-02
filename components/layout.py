@@ -38,7 +38,6 @@ def create_sidebar() -> html.Div:
     """Sol yan menü — sayfalar arası gezinme."""
     return html.Div(
         [
-            html.Hr(),
             dbc.Nav(
                 [
                     dbc.NavLink("Ana Sayfa", href="/", active="exact"),
