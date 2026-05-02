@@ -31,8 +31,12 @@ def create_price_chart(
     if df.empty or "tarih" not in df.columns or "fiyat" not in df.columns:
         return go.Figure()
 
-    bas_fiyat = df["fiyat"].iloc[0]
-    normalized_price = df["fiyat"] / bas_fiyat * 100.0
+    # Ilk sifir olmayan fiyati bul (bazi fonlarda 0.0 kaydi olabiliyor)
+    non_zero = df.loc[df["fiyat"] > 0, "fiyat"]
+    if non_zero.empty:
+        return go.Figure()
+    bas_fiyat = non_zero.iloc[0]
+    normalized_price = df["fiyat"].clip(lower=1e-10) / bas_fiyat * 100.0
 
     fig = go.Figure()
     fig.add_trace(
@@ -61,7 +65,8 @@ def create_price_chart(
     fig.update_layout(
         title=title,
         xaxis_title="Tarih",
-        yaxis_title="Normalize Deger (Baslangic=100)",
+        yaxis_title="Normalize Deger (Baslangic=100, Log Olcek)",
+        yaxis_type="log",
         hovermode="x unified",
         template="plotly_white",
         margin=dict(l=40, r=40, t=60, b=40),
