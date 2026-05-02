@@ -15,7 +15,6 @@ from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
 from components.charts import create_price_chart
 from config.logger import get_logger
-from config.settings import TLREF_ANNUAL_DAYS
 from tlref_scraper import TLREFScraper, TLREFConverter
 import plotly.graph_objects as go
 
@@ -37,16 +36,12 @@ _DEFAULT_START = _DEFAULT_END - timedelta(days=365)
 
 layout = dbc.Container(
     [
-        html.H2("Fon Analiz Sistemi", className="mb-4"),
-        html.P(
-            "Analiz etmek istediğiniz fonları, benchmark'ı ve tarih aralığını seçin."
-        ),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
                 [
                     dbc.CardBody(
                         [
-                            html.H5("Fiyat Grafiği", className="card-title"),
+                            html.H5("Getiri Grafiği", className="card-title"),
                             dcc.Loading(
                                 id="loading-chart",
                                 type="default",
@@ -55,7 +50,7 @@ layout = dbc.Container(
                         ]
                     )
                 ],
-                className="mb-4 mt-4",
+                className="mb-3",
             ),
         ]),
         dbc.Row(
@@ -66,19 +61,15 @@ layout = dbc.Container(
                             [
                                 dbc.CardBody(
                                     [
-                                        html.H5("Fon Seçimi", className="card-title"),
+                                        html.H5("Fon", className="card-title"),
                                         dmc.MultiSelect(
                                             id="fon-select",
                                             label="Fon kodu veya ünvanı yazın",
-                                            placeholder="En az 2 karakter yazın...",
+                                            placeholder="En az 2 karakter...",
                                             searchable=True,
                                             clearable=True,
                                             debounce=400,
                                             data=[],
-                                        ),
-                                        html.Small(
-                                            "Birden fazla fon seçebilirsiniz. İlk seçili fonun fiyat grafiği çizilecek.",
-                                            className="text-muted d-block mt-2",
                                         ),
                                     ]
                                 )
@@ -102,7 +93,7 @@ layout = dbc.Container(
                             className="mb-3",
                         ),
                     ],
-                    width=6,
+                    xs=12, md=6,
                 ),
                 dbc.Col(
                     [
@@ -110,7 +101,7 @@ layout = dbc.Container(
                             [
                                 dbc.CardBody(
                                     [
-                                        html.H5("Tarih Aralığı", className="card-title"),
+                                        html.H5("Tarih", className="card-title"),
                                         dcc.DatePickerRange(
                                             id="tarih-araligi",
                                             start_date=_DEFAULT_START,
@@ -126,13 +117,11 @@ layout = dbc.Container(
                             [
                                 dbc.CardBody(
                                     [
-                                        html.H5("Parametreler", className="card-title"),
-                                        html.Hr(),
                                         dbc.Button(
                                             "Analiz Et",
                                             id="analiz-btn",
                                             color="primary",
-                                            className="w-100 mt-2",
+                                            className="w-100",
                                         ),
                                         html.Div(id="analiz-status", className="mt-2 text-info"),
                                         html.Small(
@@ -145,7 +134,7 @@ layout = dbc.Container(
                             ]
                         ),
                     ],
-                    width=6,
+                    xs=12, md=6,
                 ),
             ]
         ),
