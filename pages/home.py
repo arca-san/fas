@@ -9,11 +9,14 @@ from dash import html, dcc, callback, Output, Input, State
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from datetime import date, timedelta
+import pandas as pd
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
 from components.charts import create_price_chart
 from config.logger import get_logger
+from config.settings import TLREF_ANNUAL_DAYS
+from tlref_scraper import TLREFScraper, TLREFConverter
 import plotly.graph_objects as go
 
 logger = get_logger(__name__)
@@ -25,6 +28,7 @@ _BENCHMARK_OPTIONS = [
     {"label": "Dolar/TL", "value": "USDTRY"},
     {"label": "Euro/TL", "value": "EURTRY"},
     {"label": "Altın (Gram)", "value": "GLDGR"},
+    {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"},
 ]
 
 # Varsayılan tarih aralığı: son 1 yıl
@@ -43,7 +47,11 @@ layout = dbc.Container(
                     dbc.CardBody(
                         [
                             html.H5("Fiyat Grafiği", className="card-title"),
-                            dcc.Graph(id="fiyat-grafigi", config={"displayModeBar": True}),
+                            dcc.Loading(
+                                id="loading-chart",
+                                type="default",
+                                children=dcc.Graph(id="fiyat-grafigi", config={"displayModeBar": True}),
+                            ),
                         ]
                     )
                 ],
@@ -135,20 +143,7 @@ layout = dbc.Container(
                                                             labelStyle={"margin-right": "15px"},
                                                         ),
                                                     ],
-                                                    width=6,
-                                                ),
-                                                dbc.Col(
-                                                    [
-                                                        html.Label("Risk-Free Oranı (Yıllık %)"),
-                                                        dcc.Input(
-                                                            id="risk-free-input",
-                                                            type="number",
-                                                            value=45.0,
-                                                            step=0.1,
-                                                            className="form-control",
-                                                        ),
-                                                    ],
-                                                    width=6,
+                                                    width=12,
                                                 ),
                                             ]
                                         ),
@@ -204,6 +199,7 @@ def search_funds(search_value):
     Output("analiz-status", "children"),
     Input("analiz-btn", "n_clicks"),
     State("fon-select", "value"),
+    State("benchmark-dropdown", "value"),
     State("tarih-araligi", "start_date"),
     State("tarih-araligi", "end_date"),
     prevent_initial_call=True,
@@ -211,14 +207,14 @@ def search_funds(search_value):
 def run_analysis(
     n_clicks,
     fon_kodlari,
+    benchmark,
     start_date,
     end_date,
 ):
-    logger.debug("Analiz butonu: fon_kodlari=%s", fon_kodlari)
+    logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
     if not fon_kodlari:
         return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin."
 
-    # İlk secili fonun fiyat verisini cek
     fon_kodu = fon_kodlari[0]
     fetcher = TefasFetcher()
 
@@ -234,6 +230,49 @@ def run_analysis(
     if df.empty:
         return go.Figure(), {"display": "none"}, f"{fon_kodu} icin veri bulunamadi."
 
-    fig = create_price_chart(df, title=f"{fon_kodu} - Fiyat Grafiği")
-    logger.info("Grafik olusturuldu: %s, %s satir", fon_kodu, len(df))
-    return fig, {"display": "block"}, f"{fon_kodu} için fiyat grafiği hazır. ({len(df)} gün)"
+    risk_free_daily = None
+    benchmark_series = None
+    benchmark_name = None
+    status_parts = [f"{fon_kodu} fiyat grafigi hazir. ({len(df)} gun)"]
+
+    if benchmark == "TLREF":
+        try:
+            tlref_scraper = TLREFScraper()
+            tlref_df = tlref_scraper.from_csv()
+            son_tlref = tlref_df["value"].iloc[-1]
+            risk_free_daily = TLREFConverter.daily_compound(son_tlref)
+
+            if "tarih" in df.columns and not df["tarih"].empty:
+                bas_date = df["tarih"].iloc[0]
+                daily_rate = risk_free_daily / 100.0
+                gun_sayisi = len(df)
+                risk_free_cum = [(1.0 + daily_rate) ** i for i in range(gun_sayisi)]
+                benchmark_series = pd.Series(
+                    risk_free_cum, index=df.index, name="TLREF (Bilesik)"
+                )
+                risk_free_pct = risk_free_daily * gun_sayisi
+
+            status_parts.append(
+                f"TLREF: %{son_tlref:.2f} (gunluk: %{risk_free_daily:.4f})"
+            )
+            benchmark_name = "TLREF (Risksiz Getiri)"
+            logger.info(
+                "TLREF yuklendi: yillik=%s%% gunluk=%s%%",
+                son_tlref, risk_free_daily,
+            )
+        except Exception as exc:
+            logger.warning("TLREF cekilemedi: %s", exc)
+            status_parts.append(f"TLREF alinamadi: {exc}")
+
+    fig = create_price_chart(
+        df,
+        title=f"{fon_kodu} - Fiyat Grafigi",
+        benchmark_series=benchmark_series,
+        benchmark_name=benchmark_name,
+    )
+
+    logger.info(
+        "Grafik olusturuldu: %s, %s satir, benchmark=%s",
+        fon_kodu, len(df), benchmark,
+    )
+    return fig, {"display": "block"}, " | ".join(status_parts)
