@@ -16,7 +16,7 @@ CACHE_TTL_HOURS = 24
 
 # Getiri tanımı (tek merkezde kontrol)
 # "log" veya "simple" — tüm hesaplamalar bu sabite göre yönlendirilir.
-RETURN_METHOD = "log"
+RETURN_METHOD = "simple"
 
 # Risk-free oran varsayılanı (yıllık, ondalık)
 # Gerçek veri çekilemezse bu değer kullanılır.
