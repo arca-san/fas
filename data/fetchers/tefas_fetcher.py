@@ -63,38 +63,35 @@ class TefasFetcher(AbstractFetcher):
     ) -> pd.DataFrame:
         """
         TEFAS'tan tarihsel fiyat verisi çeker.
-        Tarih verilmezse son 5 yılı getirir (PERIYOD_5YIL ile).
+        Her zaman son 5 yılı (tek API çağrısı) alır, ardından
+        client-side date filter uygular. Böylece chunked/paginated
+        bulk API'nin yavaşlığından kaçınılır.
         """
         symbol = symbol.upper().strip()
 
-        # Tarih yoksa son 5 yıl
-        if start_date is None or end_date is None:
-            logger.info("Tarih aralığı verilmedi, son 5 yıl çekiliyor: %s", symbol)
+        # 5 yıllık veriyi tek seferde çek (fonFiyatBilgiGetir, hızlı)
+        cache_key = hashlib.md5(f"5y_{symbol}".encode()).hexdigest()
+        cache_path = self._cache_path(cache_key)
+
+        if self._is_cache_valid(cache_path):
+            df = self._read_cache(cache_path)
+        else:
+            logger.info("TEFAS 5y veri cekiliyor: %s", symbol)
             raw = _tefas_api.fon_5y_fiyat(symbol)
             df = self._raw_to_dataframe(raw, symbol)
+            if not df.empty:
+                self._write_cache(cache_path, df)
+
+        if df.empty:
             return df
 
-        # Cache kontrolü
-        cache_key = self._cache_key(symbol, start_date, end_date)
-        cache_path = self._cache_path(cache_key)
-        if self._is_cache_valid(cache_path):
-            return self._read_cache(cache_path)
+        # Client-side date filter
+        if start_date:
+            df = df[df["tarih"] >= pd.Timestamp(start_date)]
+        if end_date:
+            df = df[df["tarih"] <= pd.Timestamp(end_date)]
 
-        # API çağrısı
-        logger.info("TEFAS'tan veri çekiliyor: %s (%s → %s)", symbol, start_date, end_date)
-        bas = start_date.strftime("%Y%m%d")
-        bit = end_date.strftime("%Y%m%d")
-        raw = _tefas_api.fonlar_gunluk_detay_aralik(
-            fon_tipi="YAT",
-            bas_tarih=bas,
-            bit_tarih=bit,
-            fon_kodu=symbol,
-        )
-        df = self._raw_to_dataframe(raw, symbol)
-
-        if not df.empty:
-            self._write_cache(cache_path, df)
-        return df
+        return df.reset_index(drop=True)
 
     def search_symbols(self, query: str) -> List[Dict[str, Any]]:
         """Fon kodu/ünvanı araması."""
