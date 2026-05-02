@@ -31,12 +31,21 @@ def create_price_chart(
     if df.empty or "tarih" not in df.columns or "fiyat" not in df.columns:
         return go.Figure()
 
-    # Ilk sifir olmayan fiyati bul, oncesini -inf yapma (cizimde yok say)
-    non_zero = df.loc[df["fiyat"] > 0, "fiyat"]
-    if non_zero.empty:
+    # Ilk sifir olmayan fiyata kadar olan satirlari kirp
+    mask = df["fiyat"].gt(0)
+    if not mask.any():
         return go.Figure()
-    bas_fiyat = non_zero.iloc[0]
+    ilk_idx = mask.idxmax()
+    df = df.loc[ilk_idx:].reset_index(drop=True)
+    if df.empty:
+        return go.Figure()
+
+    bas_fiyat = df["fiyat"].iloc[0]
     cum_return = (df["fiyat"] / bas_fiyat - 1.0) * 100.0
+
+    # benchmark_series de ayni sekilde kirpilmalı
+    if benchmark_series is not None:
+        benchmark_series = benchmark_series.loc[ilk_idx:].reset_index(drop=True)
 
     fig = go.Figure()
     fig.add_trace(
@@ -50,7 +59,7 @@ def create_price_chart(
         )
     )
 
-    if benchmark_series is not None and benchmark_name:
+    if benchmark_series is not None and benchmark_name and not benchmark_series.empty:
         fig.add_trace(
             go.Scatter(
                 x=df["tarih"],
