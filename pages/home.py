@@ -145,16 +145,6 @@ layout = dbc.Container(
 
 @callback(
     Output("fon-select", "data"),
-    Input("fon-select", "searchValue"),
-    prevent_initial_call=True,
-)
-def search_funds(search_value):
-    """Kullanıcı yazdıkça TEFAS'tan fon ara."""
-    if not search_value or len(search_value.strip()) < 2:
-        # Bos veya cok kisa arama: mevcut data'yi koru (secili ogeler kaybolmasin)
-        return dash.no_update
-@callback(
-    Output("fon-select", "data"),
     Output("fon-select", "searchValue"),
     Input("fon-select", "searchValue"),
     prevent_initial_call=True,
