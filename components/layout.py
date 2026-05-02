@@ -15,8 +15,7 @@ def create_navbar() -> dbc.Navbar:
             [
                 html.Img(
                     src="/assets/logo.png",
-                    style={"height": "100%", "width": "auto"},
-                    className="py-1",
+                    style={"height": "100%", "width": "auto", "objectFit": "cover"},
                 ),
                 html.Span(
                     "Fon Analiz Sistemi",

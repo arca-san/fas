@@ -28,9 +28,10 @@ if errorlevel 1 (
 )
 
 echo Uygulama baslatiliyor...
-echo Tarayici http://127.0.0.1:8050 adresinde acilacak...
-start http://127.0.0.1:8050
+echo Tarayici 5 saniye sonra http://127.0.0.1:8050 adresinde acilacak...
 call %VENV_DIR%\Scripts\python index.py
+timeout /t 5 /nobreak >nul
+start http://127.0.0.1:8050
 
 pause
 endlocal

@@ -1,0 +1,22 @@
+:root {
+  --bs-primary: #1abc9c;
+  --bs-primary-rgb: 26, 188, 156;
+}
+
+.navbar.bg-primary {
+  background-color: var(--bs-primary) !important;
+}
+
+.btn-primary {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+}
+
+.btn-primary:hover {
+  background-color: #16a085 !important;
+  border-color: #16a085 !important;
+}
+
+.bg-light.sidebar {
+  background-color: #f0fdfa !important;
+}
