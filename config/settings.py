@@ -22,6 +22,9 @@ RETURN_METHOD = "log"
 # Gerçek veri çekilemezse bu değer kullanılır.
 DEFAULT_RISK_FREE_ANNUAL = 0.45
 
+# TLREF gün sayısı (ACT/365 takvim, iş günü değil)
+TLREF_ANNUAL_DAYS = 365
+
 # Risk-free dönüşüm yöntemi
 # "compound": (1 + r)^(1/252) - 1  (iş günü bazlı)
 # "simple": r / 252
