@@ -128,11 +128,21 @@ class TLREFScraper:
             for name in zf.namelist():
                 if not (name.endswith(".csv") or name.endswith(".CSV")):
                     continue
-                content = zf.read(name).decode("utf-8-sig")
+                raw = zf.read(name)
+                try:
+                    content = raw.decode("utf-8-sig")
+                except UnicodeDecodeError:
+                    content = raw.decode("utf-16")
                 reader = csv.DictReader(io.StringIO(content), delimiter=";")
+                if reader.fieldnames is None:
+                    continue
+                date_col = next((c for c in reader.fieldnames if c.startswith("TARIH")), None)
+                value_col = next((c for c in reader.fieldnames if c.startswith("DEGER") or c.startswith("VALUE")), None)
+                if not date_col or not value_col:
+                    continue
                 for row in reader:
-                    date_str = row.get("TARIH", "").strip()
-                    value_str = row.get("DEGER", "").strip()
+                    date_str = (row.get(date_col) or "").strip()
+                    value_str = (row.get(value_col) or "").strip()
                     if not date_str or not value_str:
                         continue
                     try:
@@ -159,7 +169,11 @@ class TLREFScraper:
             for name in zf.namelist():
                 if not (name.endswith(".csv") or name.endswith(".CSV")):
                     continue
-                content = zf.read(name).decode("utf-8-sig")
+                raw = zf.read(name)
+                try:
+                    content = raw.decode("utf-8-sig")
+                except UnicodeDecodeError:
+                    content = raw.decode("utf-16")
                 reader = csv.DictReader(io.StringIO(content), delimiter=";")
                 for row in reader:
                     rows.append(row)
