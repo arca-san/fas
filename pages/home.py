@@ -236,24 +236,25 @@ def run_analysis(
             tlref_map = dict(zip(tlref_all["date"].dt.date, tlref_all["value"]))
 
             if "tarih" in df.columns and not df["tarih"].empty:
-                gunluk_oranlar = []
+                carpim = 1.0
+                risk_free_cum = []
+                onceki_tarih = None
                 son_bilinen = None
+
                 for tarih in df["tarih"]:
                     t = tarih.date() if hasattr(tarih, "date") else tarih
                     son_bilinen = tlref_map.get(t, son_bilinen)
-                    if son_bilinen is not None:
-                        gunluk_oranlar.append(
-                            TLREFConverter.daily_compound(son_bilinen) / 100.0
-                        )
-                    else:
-                        gunluk_oranlar.append(None)
 
-                carpim = 1.0
-                risk_free_cum = []
-                for r in gunluk_oranlar:
-                    if r is not None:
-                        carpim *= 1.0 + r
+                    if son_bilinen is not None:
+                        daily_r = TLREFConverter.daily_compound(son_bilinen) / 100.0
+                        if onceki_tarih is None:
+                            gap = 1
+                        else:
+                            gap = (t - onceki_tarih).days
+                        carpim *= (1.0 + daily_r) ** gap
+
                     risk_free_cum.append(carpim)
+                    onceki_tarih = t
 
                 benchmark_series = pd.Series(
                     risk_free_cum, index=df.index, name="TLREF (Kumulatif)"
