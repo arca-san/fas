@@ -12,41 +12,41 @@ from config.constants import DEFAULT_COLOR_PALETTE
 
 def create_price_chart(
     df: pd.DataFrame,
-    title: str = "Fon Fiyat Grafigi",
+    title: str = "Fon Getiri Grafigi",
     benchmark_series: pd.Series = None,
     benchmark_name: str = None,
 ) -> go.Figure:
-    """Tekil fon fiyat grafigi.
+    """Fon ve benchmark kumulatif getiri grafigi.
 
-    Tum seriler normalize edilir (baslangic = 100) ve ayni sol Y
-    ekseninde gosterilir.
+    Tum seriler yuzde getiri olarak gosterilir (baslangic = %0).
+    Ayni sol Y ekseninde cizilir.
 
     Parametreler
     ------------
     benchmark_series : pd.Series, optional
-        Benchmark kiyas serisi (index df ile ayni hizada, normalize edilmis).
+        Benchmark yuzde getiri serisi (index df ile ayni hizada, %0 baslangicli).
     benchmark_name : str, optional
         Benchmark serisi etiket adi.
     """
     if df.empty or "tarih" not in df.columns or "fiyat" not in df.columns:
         return go.Figure()
 
-    # Ilk sifir olmayan fiyati bul (bazi fonlarda 0.0 kaydi olabiliyor)
+    # Ilk sifir olmayan fiyati bul, oncesini -inf yapma (cizimde yok say)
     non_zero = df.loc[df["fiyat"] > 0, "fiyat"]
     if non_zero.empty:
         return go.Figure()
     bas_fiyat = non_zero.iloc[0]
-    normalized_price = df["fiyat"].clip(lower=1e-10) / bas_fiyat * 100.0
+    cum_return = (df["fiyat"] / bas_fiyat - 1.0) * 100.0
 
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=df["tarih"],
-            y=normalized_price,
+            y=cum_return,
             mode="lines",
-            name="Fon (Normalize)",
+            name="Fon Getirisi",
             line=dict(color=DEFAULT_COLOR_PALETTE[0], width=2),
-            hovertemplate="%{x|%Y-%m-%d}<br>Deger: %{y:.2f}<extra></extra>",
+            hovertemplate="%{x|%Y-%m-%d}<br>Getiri: %{y:.2f}%<extra></extra>",
         )
     )
 
@@ -65,8 +65,7 @@ def create_price_chart(
     fig.update_layout(
         title=title,
         xaxis_title="Tarih",
-        yaxis_title="Normalize Deger (Baslangic=100, Log Olcek)",
-        yaxis_type="log",
+        yaxis_title="Getiri (%)",
         hovermode="x unified",
         template="plotly_white",
         margin=dict(l=40, r=40, t=60, b=40),
