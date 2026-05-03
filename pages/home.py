@@ -13,22 +13,22 @@ import pandas as pd
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
+from data.fetchers.kyd_fetcher import KydFetcher
 from components.charts import create_price_chart
 from config.logger import get_logger
+from config.benchmarks import benchmark_options as kyd_benchmark_options
+from config.benchmarks import benchmark_koda_gore
+from config.settings import CALENDAR_ALIGN_METHOD
 from tlref_scraper import TLREFScraper, TLREFConverter
 import plotly.graph_objects as go
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/")
 
-# Benchmark seçenekleri (başlangıçta sabit, ileride dinamik)
-_BENCHMARK_OPTIONS = [
-    {"label": "BIST 100", "value": "XU100"},
-    {"label": "Dolar/TL", "value": "USDTRY"},
-    {"label": "Euro/TL", "value": "EURTRY"},
-    {"label": "Altın (Gram)", "value": "GLDGR"},
-    {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"},
-]
+# Benchmark seçenekleri
+_TLREF_OPTION = {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"}
+
+_BENCHMARK_OPTIONS = [_TLREF_OPTION] + kyd_benchmark_options()
 
 # Varsayılan tarih aralığı: son 1 yıl
 _DEFAULT_END = date.today()
@@ -250,7 +250,6 @@ def run_analysis(
                     risk_free_cum, index=df.index, name="TLREF (Kumulatif)"
                 ) * 100.0 - 100.0
 
-            # TLREF'i fon tarih araligina kirp
             tlref_filtre = tlref_all[
                 (tlref_all["date"].dt.date >= df["tarih"].iloc[0].date())
                 & (tlref_all["date"].dt.date <= df["tarih"].iloc[-1].date())
@@ -275,6 +274,59 @@ def run_analysis(
         except Exception as exc:
             logger.warning("TLREF cekilemedi: %s", exc)
             status_parts.append(f"TLREF alinamadi: {exc}")
+
+    elif benchmark:
+        try:
+            endeks_bilgi = benchmark_koda_gore(benchmark)
+            endeks_adi = endeks_bilgi["ad"] if endeks_bilgi else benchmark
+            benchmark_name = endeks_adi
+
+            kyd = KydFetcher()
+            kyd_df = kyd.get_historical_data(benchmark, bas, bit)
+
+            if not kyd_df.empty and "tarih" in df.columns and not df["tarih"].empty:
+                kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
+
+                if CALENDAR_ALIGN_METHOD == "inner":
+                    ortak = pd.merge(
+                        df[["tarih"]].assign(_idx=df.index),
+                        kyd_df[["tarih", "fiyat"]],
+                        on="tarih",
+                        how="inner",
+                    ).sort_values("tarih")
+                    if ortak.empty:
+                        status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
+                    else:
+                        ilk_fiyat = ortak["fiyat"].iloc[0]
+                        benchmark_series = pd.Series(
+                            (ortak["fiyat"] / ilk_fiyat - 1.0) * 100.0,
+                            index=ortak["_idx"],
+                            name=endeks_adi,
+                        )
+                        status_parts.append(
+                            f"{endeks_adi}: {len(ortak)} ortak gun"
+                        )
+                else:
+                    kyd_map = kyd_df.set_index("tarih")["fiyat"]
+                    hizali = kyd_map.reindex(df["tarih"]).ffill()
+                    ilk_fiyat = hizali.iloc[0]
+                    benchmark_series = pd.Series(
+                        (hizali / ilk_fiyat - 1.0) * 100.0,
+                        index=df.index,
+                        name=endeks_adi,
+                    )
+                    status_parts.append(
+                        f"{endeks_adi}: {kyd_df['tarih'].iloc[0].date()}-{kyd_df['tarih'].iloc[-1].date()}"
+                    )
+
+                logger.info(
+                    "KYD benchmark yuklendi: %s (%s kayit)", benchmark, len(kyd_df)
+                )
+            else:
+                status_parts.append(f"{endeks_adi} verisi bos")
+        except Exception as exc:
+            logger.warning("KYD benchmark cekilemedi (%s): %s", benchmark, exc)
+            status_parts.append(f"{benchmark} alinamadi: {exc}")
 
     fig = create_price_chart(
         df,
