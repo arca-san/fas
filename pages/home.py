@@ -73,11 +73,13 @@ layout = dbc.Container(
                                         dmc.MultiSelect(
                                             id="fon-select",
                                             label="Fon kodu veya ünvanı yazın",
-                                            placeholder="En az 2 karakter...",
+                                            placeholder="Fon seçin...",
                                             searchable=True,
                                             clearable=True,
-                                            debounce=400,
-                                            data=[],
+                                            data=[
+                                                {"value": f.get("fonKodu", ""), "label": f"{f.get('fonKodu', '')} - {f.get('fonUnvan', '')}"}
+                                                for f in _ALL_FUNDS if f.get("fonKodu")
+                                            ],
                                         ),
                                     ]
                                 )
@@ -149,32 +151,6 @@ layout = dbc.Container(
     ],
     fluid=True,
 )
-
-
-@callback(
-    Output("fon-select", "data"),
-    Input("fon-select", "searchValue"),
-    State("fon-select", "value"),
-    prevent_initial_call=True,
-)
-def search_funds(search_value, current_value):
-    """Kullanıcı yazdıkça yerel cache'den fon ara (anlık, hızlı)."""
-    if not search_value or len(search_value.strip()) < 1:
-        # Boşsa tüm fonları göster
-        data = [{"value": f.get("fonKodu", ""), "label": f"{f.get('fonKodu', '')} - {f.get('fonUnvan', '')}"} for f in _ALL_FUNDS if f.get("fonKodu")]
-        return data
-    search_up = search_value.strip().upper()
-    try:
-        results = _tefas_api.fon_unvan_ara_local(search_up)
-        data = [
-            {"value": kod, "label": f"{kod} - {f.get('fonUnvan', '')}"}
-            for f in results for kod in [f.get("fonKodu", "")] if kod
-        ]
-        logger.debug("Yerel arama: '%s' -> %s sonuc", search_up, len(data))
-        return data
-    except Exception as exc:
-        logger.warning("Fon arama basarisiz: %s", exc)
-        return dash.no_update
 
 
 @callback(
