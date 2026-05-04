@@ -367,11 +367,13 @@ def run_analysis(
     )
 
     # Metrik hesaplama
-    metrik_html = _build_metrics_table(fund_dict)
+    metrik_html, tooltip_metrics = _build_metrics_table(fund_dict)
 
-    logger.info(
-        "Grafik olusturuldu: %s, %s satir, benchmark=%s",
-        list(fund_dict.keys()), min(len(d) for d in fund_dict.values()), list(benchmark_dict.keys()),
+    fig = create_price_chart(
+        fund_dict=fund_dict,
+        benchmark_dict=benchmark_dict,
+        title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
+        metrics=tooltip_metrics,
     )
     return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html
 
@@ -453,7 +455,7 @@ def _build_metrics_table(fund_dict: dict):
     metrics = calculate_fund_metrics(fund_dict, rf_series, market_series)
 
     if not metrics:
-        return html.Small("Metrik hesaplanamadi", className="text-muted")
+        return html.Small("Metrik hesaplanamadi", className="text-muted"), {}
 
     metrik_keys = [
         METRIC_TOTAL_RETURN,
@@ -493,4 +495,4 @@ def _build_metrics_table(fund_dict: dict):
         size="sm",
         responsive=True,
     )
-    return table
+    return table, metrics

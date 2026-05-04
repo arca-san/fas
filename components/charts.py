@@ -14,6 +14,7 @@ def create_price_chart(
     fund_dict: dict,
     benchmark_dict: dict = None,
     title: str = "Fon Getiri Grafiği",
+    metrics: dict = None,
 ) -> go.Figure:
     """Fon ve benchmark(lar) kumulatif getiri grafigi.
 
@@ -71,6 +72,12 @@ def create_price_chart(
         cum_return = (df_ortak["fiyat"] / bas_fiyat - 1.0) * 100.0
         color = palet[i % len(palet)]
 
+        hover_text = "%{x|%Y-%m-%d}<br>%{customdata}: %{y:.2f}%"
+        if metrics and kod in metrics:
+            m = metrics[kod]
+            hover_text += "<br>Sharpe: %{customdata2}"
+            hover_text += "<br>Volatilite: %{customdata3}%"
+
         fig.add_trace(
             go.Scatter(
                 x=df_ortak["tarih"],
@@ -78,8 +85,10 @@ def create_price_chart(
                 mode="lines",
                 name=kod,
                 line=dict(color=color, width=2),
-                hovertemplate="%{x|%Y-%m-%d}<br>%{customdata}: %{y:.2f}%<extra></extra>",
+                hovertemplate=hover_text + "<extra></extra>",
                 customdata=[kod] * len(cum_return),
+                customdata2=[f"{m.get('Sharpe Orani', 0):.3f}" for m in [metrics.get(kod, {})]] * len(cum_return),
+                customdata3=[f"{m.get('Volatilite (Yillik)', 0):.2f}" for m in [metrics.get(kod, {})]] * len(cum_return),
             )
         )
 
