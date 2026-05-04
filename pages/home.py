@@ -25,6 +25,14 @@ import plotly.graph_objects as go
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/")
 
+# Tüm fonları bir kez yükle (startup'da)
+try:
+    _ALL_FUNDS = _tefas_api.get_all_fonlar()
+    logger.info("Tum fonlar yuklendi: %s adet", len(_ALL_FUNDS))
+except Exception as exc:
+    logger.warning("Fon listesi yuklenemedi: %s", exc)
+    _ALL_FUNDS = []
+
 # Benchmark seçenekleri
 _TLREF_OPTION = {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"}
 
@@ -150,23 +158,19 @@ layout = dbc.Container(
     prevent_initial_call=True,
 )
 def search_funds(search_value, current_value):
-    """Kullanıcı yazdıkça TEFAS'tan fon ara."""
-    if not search_value or len(search_value.strip()) < 2:
-        return dash.no_update
+    """Kullanıcı yazdıkça yerel cache'den fon ara (anlık, hızlı)."""
+    if not search_value or len(search_value.strip()) < 1:
+        # Boşsa tüm fonları göster
+        data = [{"value": f.get("fonKodu", ""), "label": f"{f.get('fonKodu', '')} - {f.get('fonUnvan', '')}"} for f in _ALL_FUNDS if f.get("fonKodu")]
+        return data
     search_up = search_value.strip().upper()
     try:
-        results = _tefas_api.fon_unvan_ara(search_up)
-        seen = set()
-        data = []
-        for r in results:
-            kod = r.get("fonKodu", "")
-            if kod and kod not in seen:
-                seen.add(kod)
-                data.append({
-                    "value": kod,
-                    "label": f"{kod} - {r.get('fonUnvan', '')}",
-                })
-        logger.debug("Arama: '%s' -> %s sonuc (dedup: %s)", search_up, len(results), len(data))
+        results = _tefas_api.fon_unvan_ara_local(search_up)
+        data = [
+            {"value": kod, "label": f"{kod} - {f.get('fonUnvan', '')}"}
+            for f in results for kod in [f.get("fonKodu", "")] if kod
+        ]
+        logger.debug("Yerel arama: '%s' -> %s sonuc", search_up, len(data))
         return data
     except Exception as exc:
         logger.warning("Fon arama basarisiz: %s", exc)
