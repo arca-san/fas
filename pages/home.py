@@ -29,6 +29,8 @@ dash.register_page(__name__, path="/")
 try:
     _ALL_FUNDS = _tefas_api.get_all_fonlar()
     logger.info("Tum fonlar yuklendi: %s adet", len(_ALL_FUNDS))
+    if _ALL_FUNDS:
+        logger.info("Ornek veri: %s", _ALL_FUNDS[0])
 except Exception as exc:
     logger.warning("Fon listesi yuklenemedi: %s", exc)
     _ALL_FUNDS = []
@@ -77,8 +79,8 @@ layout = dbc.Container(
                                             searchable=True,
                                             clearable=True,
                                             data=[
-                                                {"value": f.get("fonKodu", ""), "label": f"{f.get('fonKodu', '')} - {f.get('fonUnvan', '')}"}
-                                                for f in _ALL_FUNDS if f.get("fonKodu")
+                                                {"value": f.get("fonKod", ""), "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}"}
+                                                for f in _ALL_FUNDS if f.get("fonKod")
                                             ],
                                         ),
                                     ]

@@ -680,7 +680,7 @@ def fon_unvan_ara_local(arama: str) -> List[Dict[str, Any]]:
     fonlar = get_all_fonlar()
     return [
         f for f in fonlar
-        if arama_up in f.get("fonKodu", "") or arama_up in f.get("fonUnvan", "")
+        if arama_up in f.get("fonKod", "") or arama_up in f.get("unvan", "")
     ]
 
 
