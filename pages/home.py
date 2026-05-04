@@ -15,6 +15,7 @@ from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
 from data.fetchers.kyd_fetcher import KydFetcher
 from components.charts import create_price_chart
+from components.metrics import calculate_fund_metrics, select_fund_benchmark
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
 from config.benchmarks import benchmark_koda_gore
@@ -67,6 +68,17 @@ layout = dbc.Container(
                                 type="default",
                                 children=dcc.Graph(id="fiyat-grafigi", config={"displayModeBar": True}),
                             ),
+                        ]
+                    )
+                ],
+                className="mb-3",
+            ),
+            dbc.Card(
+                [
+                    dbc.CardBody(
+                        [
+                            html.H5("Fon Metrikleri", className="card-title"),
+                            html.Div(id="metrik-tablosu"),
                         ]
                     )
                 ],
@@ -185,6 +197,7 @@ def uppercase_search(val):
     Output("grafik-alani", "style"),
     Output("analiz-status", "children"),
     Output("tefas-uyari", "style"),
+    Output("metrik-tablosu", "children"),
     Input("analiz-btn", "n_clicks"),
     State("fon-select", "value"),
     State("benchmark-dropdown", "value"),
@@ -353,8 +366,131 @@ def run_analysis(
         title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
     )
 
+    # Metrik hesaplama
+    metrik_html = _build_metrics_table(fund_dict)
+
     logger.info(
         "Grafik olusturuldu: %s, %s satir, benchmark=%s",
         list(fund_dict.keys()), min(len(d) for d in fund_dict.values()), list(benchmark_dict.keys()),
     )
-    return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}
+    return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html
+
+
+def _build_metrics_table(fund_dict: dict):
+    """Fon metriklerini tablo olarak olustur."""
+    from config.constants import (
+        METRIC_TOTAL_RETURN,
+        METRIC_ANNUALIZED_RETURN,
+        METRIC_VOLATILITY,
+        METRIC_DOWNSIDE_VOL,
+        METRIC_SHARPE,
+        METRIC_SORTINO,
+        METRIC_BETA,
+        METRIC_TREYNOR,
+        METRIC_ALPHA,
+        METRIC_INFORMATION_RATIO,
+    )
+
+    # Fon unvanlarini bul
+    fon_unvan_map = {}
+    for f in _ALL_FUNDS:
+        fon_unvan_map[f.get("fonKod", "").upper()] = f.get("unvan", "")
+
+    # Risksiz getiri (TLREF)
+    rf_series = None
+    try:
+        tlref_scraper = TLREFScraper()
+        try:
+            tlref_all = tlref_scraper.from_zip()
+        except Exception:
+            tlref_all = tlref_scraper.from_csv()
+
+        first_df = list(fund_dict.values())[0]
+        tlref_map = dict(zip(tlref_all["date"].dt.date, tlref_all["value"]))
+
+        carpim = 1.0
+        risk_free_daily = []
+        onceki_tarih = None
+        son_bilinen = None
+
+        for tarih in first_df["tarih"]:
+            t = tarih.date() if hasattr(tarih, "date") else tarih
+            son_bilinen = tlref_map.get(t, son_bilinen)
+            if son_bilinen is not None:
+                daily_r = TLREFConverter.daily_compound(son_bilinen) / 100.0
+                if onceki_tarih is None:
+                    gap = 1
+                else:
+                    gap = (t - onceki_tarih).days
+                carpim *= (1.0 + daily_r) ** gap
+            risk_free_daily.append(carpim)
+            onceki_tarih = t
+
+        rf_series = pd.Series(
+            [x - 1 for x in risk_free_daily],
+            index=first_df.index,
+            name="TLREF",
+        )
+    except Exception as exc:
+        logger.warning("TLRF metrik icin alinamadi: %s", exc)
+
+    # Market benchmark (FHISE)
+    market_series = None
+    try:
+        kyd = KydFetcher()
+        end = date.today()
+        start = end - timedelta(days=365 * 5)
+        market_df = kyd.get_historical_data("FHISE", start, end)
+        if not market_df.empty:
+            market_series = pd.Series(
+                market_df["fiyat"].values,
+                index=pd.to_datetime(market_df["tarih"]),
+                name="FHISE",
+            )
+    except Exception as exc:
+        logger.warning("FHISE metrik icin alinamadi: %s", exc)
+
+    metrics = calculate_fund_metrics(fund_dict, rf_series, market_series)
+
+    if not metrics:
+        return html.Small("Metrik hesaplanamadi", className="text-muted")
+
+    metrik_keys = [
+        METRIC_TOTAL_RETURN,
+        METRIC_ANNUALIZED_RETURN,
+        METRIC_VOLATILITY,
+        METRIC_DOWNSIDE_VOL,
+        METRIC_SHARPE,
+        METRIC_SORTINO,
+        METRIC_BETA,
+        METRIC_TREYNOR,
+        METRIC_ALPHA,
+        METRIC_INFORMATION_RATIO,
+    ]
+
+    # Tablo basliklari
+    headers = ["Fon"] + metrik_keys
+    rows = []
+    for fon_kodu, m in metrics.items():
+        unvan = fon_unvan_map.get(fon_kodu.upper(), fon_kodu)
+        row = [f"{fon_kodu}"]
+        for k in metrik_keys:
+            val = m.get(k, "-")
+            if val == "-":
+                row.append("-")
+            else:
+                row.append(f"{val}")
+        rows.append(row)
+
+    table = dbc.Table(
+        [
+            html.Thead(html.Tr([html.Th(h) for h in headers])),
+            html.Tbody([html.Tr([html.Td(c) for c in r]) for r in rows]),
+        ],
+        striped=True,
+        bordered=True,
+        hover=True,
+        size="sm",
+        responsive=True,
+    )
+    return table
