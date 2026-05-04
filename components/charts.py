@@ -83,29 +83,36 @@ def create_price_chart(
             )
         )
 
-# Benchmark(lar): ortak tarihlerle hizala
+# Benchmark(lar): fonlarla aynı tarih aralığında çiz
     if benchmark_dict:
         for bm_kod, bm_series in benchmark_dict.items():
             if bm_series is None or bm_series.empty:
                 continue
-            bm_df = pd.DataFrame({"tarih": bm_series.index, "deger": bm_series.values})
-            bm_ortak = bm_df[bm_df["tarih"].isin(ortak_tarihler)].sort_values("tarih")
-            if not bm_ortak.empty:
-                first_val = bm_ortak["deger"].iloc[0]
-                if first_val != 0:
-                    bm_return = (bm_ortak["deger"] / first_val - 1.0) * 100.0
-                else:
-                    bm_return = bm_ortak["deger"]
-                fig.add_trace(
-                    go.Scatter(
-                        x=bm_ortak["tarih"],
-                        y=bm_return,
-                        mode="lines",
-                        name=bm_kod,
-                        line=dict(color="#666666", width=2, dash="dot"),
-                        hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
-                    )
+            # NaN olmayan ilk değeri bul ve getiri hesapla
+            valid_mask = bm_series.notna()
+            if not valid_mask.any():
+                continue
+            first_valid_idx = valid_mask.idxmax()
+            first_val = bm_series.loc[first_valid_idx]
+            if pd.isna(first_val) or first_val == 0:
+                continue
+            
+            # Aynı tarih aralığında hizala
+            bm_aligned = bm_series.reindex(pd.DatetimeIndex(ortak_tarihler)).ffill()
+            if bm_aligned.dropna().empty:
+                continue
+                
+            bm_return = (bm_aligned / first_val - 1.0) * 100.0
+            fig.add_trace(
+                go.Scatter(
+                    x=ortak_tarihler,
+                    y=bm_return,
+                    mode="lines",
+                    name=bm_kod,
+                    line=dict(color="#666666", width=2, dash="dot"),
+                    hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
                 )
+            )
 
     fig.update_layout(
         title=title,

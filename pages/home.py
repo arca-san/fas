@@ -292,48 +292,34 @@ def run_analysis(
                 kyd = KydFetcher()
                 kyd_df = kyd.get_historical_data(bm, bas, bit)
 
-                if not kyd_df.empty and fund_dict:
+                if kyd_df.empty or not fund_dict:
+                    status_parts.append(f"{endeks_adi} verisi bos")
+                else:
                     first_df = list(fund_dict.values())[0]
-                    if "tarih" in first_df.columns and not first_df["tarih"].empty:
+                    if "tarih" not in first_df.columns or first_df["tarih"].empty:
+                        status_parts.append(f"{endeks_adi} verisi bos")
+                    else:
                         kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
 
-                        if CALENDAR_ALIGN_METHOD == "inner":
-                            ortak = pd.merge(
-                                first_df[["tarih"]].assign(_idx=first_df.index),
-                                kyd_df[["tarih", "fiyat"]],
-                                on="tarih",
-                                how="inner",
-                            ).sort_values("tarih")
-                            if ortak.empty:
-                                status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
-                            else:
-                                ilk_fiyat = ortak["fiyat"].iloc[0]
-                                benchmark_dict[bm] = pd.Series(
-                                    (ortak["fiyat"] / ilk_fiyat - 1.0) * 100.0,
-                                    index=ortak["_idx"].values,
-                                    name=endeks_adi,
-                                )
-                                status_parts.append(
-                                    f"{endeks_adi}: {len(ortak)} ortak gun"
-                                )
+                        kyd_map = kyd_df.set_index("tarih")["fiyat"]
+                        hizali = kyd_map.reindex(first_df["tarih"]).ffill()
+
+                        if hizali.dropna().empty:
+                            status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
                         else:
-                            kyd_map = kyd_df.set_index("tarih")["fiyat"]
-                            hizali = kyd_map.reindex(first_df["tarih"]).ffill()
-                            ilk_fiyat = hizali.iloc[0]
+                            ilk_fiyat = hizali.dropna().iloc[0]
                             benchmark_dict[bm] = pd.Series(
                                 (hizali / ilk_fiyat - 1.0) * 100.0,
                                 index=first_df.index,
                                 name=endeks_adi,
                             )
                             status_parts.append(
-                                f"{endeks_adi}: {kyd_df['tarih'].iloc[0].date()}-{kyd_df['tarih'].iloc[-1].date()}"
+                                f"{endeks_adi}: {hizali.notna().sum()} ortak gun"
                             )
 
                         logger.info(
                             "KYD benchmark yuklendi: %s (%s kayit)", bm, len(kyd_df)
                         )
-                    else:
-                        status_parts.append(f"{endeks_adi} verisi bos")
             except Exception as exc:
                 logger.warning("KYD benchmark cekilemedi (%s): %s", bm, exc)
                 status_parts.append(f"{bm} alinamadi: {exc}")
