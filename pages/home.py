@@ -145,14 +145,14 @@ layout = dbc.Container(
 
 @callback(
     Output("fon-select", "data"),
-    Output("fon-select", "searchValue"),
     Input("fon-select", "searchValue"),
+    State("fon-select", "value"),
     prevent_initial_call=True,
 )
-def search_funds(search_value):
+def search_funds(search_value, current_value):
     """Kullanıcı yazdıkça TEFAS'tan fon ara."""
     if not search_value or len(search_value.strip()) < 2:
-        return dash.no_update, dash.no_update
+        return dash.no_update
     search_up = search_value.strip().upper()
     try:
         results = _tefas_api.fon_unvan_ara(search_up)
@@ -167,10 +167,10 @@ def search_funds(search_value):
                     "label": f"{kod} - {r.get('fonUnvan', '')}",
                 })
         logger.debug("Arama: '%s' -> %s sonuc (dedup: %s)", search_up, len(results), len(data))
-        return data, search_up
+        return data
     except Exception as exc:
         logger.warning("Fon arama basarisiz: %s", exc)
-        return dash.no_update, dash.no_update
+        return dash.no_update
 
 
 @callback(
