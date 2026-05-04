@@ -87,9 +87,11 @@ def create_price_chart(
     import logging
     logger = logging.getLogger(__name__)
     
+    bm_colors = ["#000000", "#333333", "#666666", "#999999"]
+    
     if benchmark_dict:
         logger.warning("=== CHARTS BENCHMARK DICT: %s ===", list(benchmark_dict.keys()))
-        for bm_kod, bm_series in benchmark_dict.items():
+        for i, (bm_kod, bm_series) in enumerate(benchmark_dict.items()):
             logger.warning("BM %s: len=%s, ilk degerler=%s", bm_kod, len(bm_series), bm_series[:5].tolist())
             
             if bm_series is None or bm_series.empty:
@@ -116,7 +118,7 @@ def create_price_chart(
                     y=bm_values,
                     mode="lines",
                     name=bm_kod,
-                    line=dict(color="#666666", width=2, dash="dot"),
+                    line=dict(color=bm_colors[i % len(bm_colors)], width=2, dash="dash"),
                     hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
                 )
             )
