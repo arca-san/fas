@@ -81,9 +81,9 @@ layout = dbc.Container(
                                 dbc.CardBody(
                                     [
                                         html.H5("Benchmark(lar)", className="card-title"),
-                                        dcc.MultiSelect(
+                                        dmc.MultiSelect(
                                             id="benchmark-dropdown",
-                                            options=_BENCHMARK_OPTIONS,
+                                            data=_BENCHMARK_OPTIONS,
                                             placeholder="Benchmark seçin...",
                                             clearable=True,
                                         ),
