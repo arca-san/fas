@@ -89,7 +89,10 @@ layout = dbc.Container(
                                             searchable=True,
                                             clearable=True,
                                             data=[
-                                                {"value": f.get("fonKod", ""), "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}"}
+                                                {
+                                                    "value": f.get("fonKod", "").lower(),
+                                                    "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}",
+                                                }
                                                 for f in _ALL_FUNDS if f.get("fonKod")
                                             ],
                                         ),
@@ -185,6 +188,8 @@ def run_analysis(
     end_date,
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
+    # Lowercase gelen kodları uppercase'e çevir
+    fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
         return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}
