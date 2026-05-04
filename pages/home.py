@@ -312,10 +312,17 @@ def run_analysis(
                         if hizali.dropna().empty:
                             status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
                         else:
-                            ilk_fiyat = hizali.dropna().iloc[0]
+                            # İlk fiyatı al ve getiri hesapla
+                            ilk_fiyat = float(hizali.dropna().iloc[0])
+                            logger.info("ilk_fiyat: %.4f", ilk_fiyat)
+                            
+                            # Getiri hesapla
+                            getiri = (hizali.astype(float) / ilk_fiyat - 1.0) * 100.0
+                            
+                            # Index'i datetime olarak ayarla
                             benchmark_dict[bm] = pd.Series(
-                                (hizali / ilk_fiyat - 1.0) * 100.0,
-                                index=first_df.index,
+                                getiri.values,
+                                index=first_df["tarih"].values,
                                 name=endeks_adi,
                             )
                             logger.info("BM dict olustu: %s, len=%s, ilk=%.4f, NaN=%s", 
