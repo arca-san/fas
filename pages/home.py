@@ -31,6 +31,16 @@ try:
     logger.info("Tum fonlar yuklendi: %s adet", len(_ALL_FUNDS))
     if _ALL_FUNDS:
         logger.info("Ornek veri: %s", _ALL_FUNDS[0])
+    # Tekrarlari temizle
+    seen = set()
+    _ALL_FUNDS_UNIQUE = []
+    for f in _ALL_FUNDS:
+        kod = f.get("fonKod")
+        if kod and kod not in seen:
+            seen.add(kod)
+            _ALL_FUNDS_UNIQUE.append(f)
+    _ALL_FUNDS = _ALL_FUNDS_UNIQUE
+    logger.info("Tekrarsiz fon sayisi: %s", len(_ALL_FUNDS))
 except Exception as exc:
     logger.warning("Fon listesi yuklenemedi: %s", exc)
     _ALL_FUNDS = []
