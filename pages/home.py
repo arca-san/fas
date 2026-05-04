@@ -193,6 +193,7 @@ def run_analysis(
     end_date,
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
+    logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
         return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}
 
@@ -309,7 +310,7 @@ def run_analysis(
                                 ilk_fiyat = ortak["fiyat"].iloc[0]
                                 benchmark_dict[bm] = pd.Series(
                                     (ortak["fiyat"] / ilk_fiyat - 1.0) * 100.0,
-                                    index=ortak["_idx"],
+                                    index=ortak["_idx"].values,
                                     name=endeks_adi,
                                 )
                                 status_parts.append(
