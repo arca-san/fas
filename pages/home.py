@@ -217,7 +217,7 @@ def run_analysis(
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
-        return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}
+        return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted")
 
     from datetime import datetime
     bas = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
@@ -239,7 +239,7 @@ def run_analysis(
             hata_list.append(f"{fon_kodu}: {exc}")
 
     if not fund_dict:
-        return go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}
+        return go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted")
 
     status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
