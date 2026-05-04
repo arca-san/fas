@@ -73,10 +73,15 @@ def create_price_chart(
         color = palet[i % len(palet)]
 
         hover_text = "%{x|%Y-%m-%d}<br>%{customdata}: %{y:.2f}%"
-        if metrics and kod in metrics:
-            m = metrics[kod]
+        m = metrics.get(kod, {}) if metrics else {}
+        if m:
             hover_text += "<br>Sharpe: %{customdata2}"
             hover_text += "<br>Volatilite: %{customdata3}%"
+            cd2 = [f"{m.get('Sharpe Orani', 0):.3f}"] * len(cum_return)
+            cd3 = [f"{m.get('Volatilite (Yillik)', 0):.2f}"] * len(cum_return)
+        else:
+            cd2 = None
+            cd3 = None
 
         fig.add_trace(
             go.Scatter(
@@ -87,8 +92,8 @@ def create_price_chart(
                 line=dict(color=color, width=2),
                 hovertemplate=hover_text + "<extra></extra>",
                 customdata=[kod] * len(cum_return),
-                customdata2=[f"{m.get('Sharpe Orani', 0):.3f}" for m in [metrics.get(kod, {})]] * len(cum_return),
-                customdata3=[f"{m.get('Volatilite (Yillik)', 0):.2f}" for m in [metrics.get(kod, {})]] * len(cum_return),
+                customdata2=cd2,
+                customdata3=cd3,
             )
         )
 
