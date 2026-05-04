@@ -281,7 +281,7 @@ def run_analysis(
                         onceki_tarih = t
 
                     benchmark_dict["TLREF"] = pd.Series(
-                        risk_free_cum, index=first_df.index, name="TLREF"
+                        risk_free_cum, index=first_df["tarih"], name="TLREF"
                     ) * 100.0 - 100.0
 
                 tlref_filtre = tlref_all[
