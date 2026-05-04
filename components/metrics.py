@@ -7,6 +7,7 @@ Sharpe, Sortino, Information Ratio, Treynor, Jensen Alpha.
 
 import numpy as np
 import pandas as pd
+import logging
 
 from config.constants import (
     METRIC_VOLATILITY,
@@ -21,10 +22,13 @@ from config.constants import (
     METRIC_ANNUALIZED_RETURN,
 )
 
+logger = logging.getLogger(__name__)
+
 TRADING_DAYS = 252
 
 
 def _annual_return(daily_returns: pd.Series) -> float:
+    """Gunluk getirilerden yillandirilmis getiri hesapla (bilesik)."""
     n = len(daily_returns)
     if n == 0:
         return 0.0
@@ -33,49 +37,23 @@ def _annual_return(daily_returns: pd.Series) -> float:
 
 
 def _annualized_vol(daily_returns: pd.Series) -> float:
-    std = daily_returns.std()
+    """Gunluk getirilerden yillik volatilite hesapla."""
+    std = daily_returns.std(ddof=1)
     return std * np.sqrt(TRADING_DAYS)
 
 
 def _downside_vol(daily_returns: pd.Series) -> float:
+    """Asagi yonlu yillik volatilite hesapla."""
     neg = daily_returns[daily_returns < 0]
     if len(neg) == 0:
         return 0.0
-    return neg.std() * np.sqrt(TRADING_DAYS)
-
-
-def _beta(fund_returns: pd.Series, market_returns: pd.Series) -> float:
-    common = pd.concat([fund_returns, market_returns], axis=1).dropna()
-    if len(common) < 2:
-        return 0.0
-    cov = common.iloc[:, 0].cov(common.iloc[:, 1])
-    var = common.iloc[:, 1].var()
-    if var == 0:
-        return 0.0
-    return cov / var
-
-
-def _treynor(ann_ret: float, rf: float, beta_val: float) -> float:
-    if beta_val == 0:
-        return 0.0
-    return (ann_ret - rf) / beta_val
-
-
-def _information_ratio(fund_returns: pd.Series, market_returns: pd.Series) -> float:
-    common = pd.concat([fund_returns, market_returns], axis=1).dropna()
-    if len(common) < 2:
-        return 0.0
-    excess = common.iloc[:, 0] - common.iloc[:, 1]
-    te = excess.std() * np.sqrt(TRADING_DAYS)
-    if te == 0:
-        return 0.0
-    return (excess.mean() * TRADING_DAYS) / te
+    return neg.std(ddof=1) * np.sqrt(TRADING_DAYS)
 
 
 def calculate_fund_metrics(
     fund_dict: dict,
-    risk_free_series: pd.Series = None,
-    market_series: pd.Series = None,
+    rf_daily_returns: pd.Series,
+    market_prices: pd.Series,
 ) -> dict:
     """Her fon icin metrikleri hesapla.
 
@@ -83,10 +61,13 @@ def calculate_fund_metrics(
     ----------
     fund_dict : dict
         {"FON_KODU": df, ...} — df'lerde "tarih" ve "fiyat" sutunlari olmali.
-    risk_free_series : pd.Series, optional
-        Gunluk risksiz getiri (onluk form, orn. 0.001).
-    market_series : pd.Series, optional
-        Market benchmark getiri serisi (gunluk, onluk form).
+    rf_daily_returns : pd.Series
+        Gunluk risksiz getiri (onluk form, orn. 0.0012 = %0.12).
+        Index tarih olmali, tum fon tarihlerini kapsamali.
+    market_prices : pd.Series
+        Market benchmark fiyat seviyeleri (index degerleri).
+        Index tarih olmali. Fonlarin tarihleriyle ayni olacak sekilde
+        reindex edilir.
 
     Returns
     -------
@@ -95,28 +76,68 @@ def calculate_fund_metrics(
     """
     results = {}
 
+    # Market getirileri
+    market_returns = market_prices.pct_change().dropna()
+
+    # Risksiz getiri yillik
+    rf_daily = rf_daily_returns.mean() if not rf_daily_returns.empty else 0.0
+    rf_annual = rf_daily * TRADING_DAYS
+
     for kod, df in fund_dict.items():
         if df.empty or "tarih" not in df.columns or "fiyat" not in df.columns:
             continue
 
         df_sorted = df.sort_values("tarih").reset_index(drop=True)
         prices = df_sorted["fiyat"]
+        tarihler = pd.to_datetime(df_sorted["tarih"])
         daily_returns = prices.pct_change().dropna()
+        daily_returns_dates = daily_returns.copy()
+        daily_returns_dates.index = tarihler[1:]  # pct_change ilk satiri dusurur
 
-        if len(daily_returns) < 2:
+        if len(daily_returns_dates) < 2:
             continue
 
-        # Risksiz getiri
-        rf_daily = 0.0
-        if risk_free_series is not None and not risk_free_series.empty:
-            rf_aligned = risk_free_series.reindex(df_sorted.index).ffill().dropna()
-            if len(rf_aligned) > 0:
-                rf_daily = rf_aligned.mean()
+        # Fon yillandirilmis getiri ve volatilite
+        ann_ret = _annual_return(daily_returns_dates)
+        vol = _annualized_vol(daily_returns_dates)
+        downside = _downside_vol(daily_returns_dates)
 
-        rf_annual = rf_daily * TRADING_DAYS
-        ann_ret = _annual_return(daily_returns)
-        vol = _annualized_vol(daily_returns)
-        downside = _downside_vol(daily_returns)
+        # Market getirileri ile align (tarih bazli)
+        market_aligned = market_returns.reindex(daily_returns_dates.index).dropna()
+        
+        # Common tarihler
+        common_dates = daily_returns_dates.index.intersection(market_aligned.index)
+        if len(common_dates) < 2:
+            beta_val = 0.0
+            treynor = 0.0
+            jensen = 0.0
+            info_ratio = 0.0
+        else:
+            fund_common = daily_returns_dates.loc[common_dates]
+            market_common = market_aligned.loc[common_dates]
+            
+            # Beta: Cov(fund, market) / Var(market)
+            cov_fm = fund_common.cov(market_common)
+            var_m = market_common.var()
+            beta_val = cov_fm / var_m if var_m > 0 else 0.0
+            
+            # Treynor: (Rp - Rf) / Beta
+            if beta_val != 0:
+                treynor = (ann_ret - rf_annual) / beta_val
+            else:
+                treynor = 0.0
+            
+            # Jensen Alpha: Rp - [Rf + Beta * (Rm - Rf)]
+            market_ann_ret = _annual_return(market_common)
+            jensen = ann_ret - (rf_annual + beta_val * (market_ann_ret - rf_annual))
+            
+            # Information Ratio: (Rp - Rm) / Tracking Error
+            excess = fund_common - market_common
+            te = excess.std(ddof=1) * np.sqrt(TRADING_DAYS)
+            if te > 0:
+                info_ratio = (excess.mean() * TRADING_DAYS) / te
+            else:
+                info_ratio = 0.0
 
         # Sharpe
         sharpe = (ann_ret - rf_annual) / vol if vol > 0 else 0.0
@@ -124,25 +145,14 @@ def calculate_fund_metrics(
         # Sortino
         sortino = (ann_ret - rf_annual) / downside if downside > 0 else 0.0
 
-        # Beta, Treynor, Jensen, Information Ratio (market benchmark lazim)
-        beta_val = 0.0
-        treynor = 0.0
-        jensen = 0.0
-        info_ratio = 0.0
-
-        if market_series is not None and not market_series.empty:
-            market_daily = market_series.pct_change().dropna()
-            common = pd.DataFrame({"fund": daily_returns, "market": market_daily}).dropna()
-            
-            if len(common) >= 2:
-                beta_val = _beta(common["fund"], common["market"])
-                treynor = _treynor(ann_ret, rf_annual, beta_val)
-                jensen = ann_ret - (rf_annual + beta_val * (_annual_return(market_daily) - rf_annual))
-                info_ratio = _information_ratio(common["fund"], common["market"])
-
+        # Toplam getiri
         total_return = (prices.iloc[-1] / prices.iloc[0] - 1) * 100
-        n_days = len(daily_returns)
         ann_return_pct = ann_ret * 100
+
+        logger.info(
+            "%s: ret=%.2f%%, vol=%.2f%%, rf_ann=%.4f, sharpe=%.3f, beta=%.3f",
+            kod, ann_return_pct, vol * 100, rf_annual, sharpe, beta_val,
+        )
 
         results[kod] = {
             METRIC_TOTAL_RETURN: round(total_return, 2),
