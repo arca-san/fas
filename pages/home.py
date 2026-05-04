@@ -306,6 +306,8 @@ def run_analysis(
 
                         kyd_map = kyd_df.set_index("tarih")["fiyat"]
                         hizali = kyd_map.reindex(first_df["tarih"]).ffill()
+                        logger.info("hizali: %s/%s deger, ilk: %s, NaN: %s", 
+                            hizali.notna().sum(), len(hizali), hizali.iloc[0], hizali.isna().sum())
 
                         if hizali.dropna().empty:
                             status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
