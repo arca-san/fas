@@ -196,25 +196,29 @@ def run_analysis(
     if not fon_kodlari:
         return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}
 
-    fon_kodu = fon_kodlari[0]
+    from datetime import datetime
+    bas = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+    bit = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
+
     fetcher = TefasFetcher()
+    fund_dict = {}
+    hata_list = []
 
-    try:
-        from datetime import datetime
-        bas = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
-        bit = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
-        df = fetcher.get_historical_data(fon_kodu, bas, bit)
-    except Exception as exc:
-        logger.error("Veri cekme hatasi: %s", exc)
-        return go.Figure(), {"display": "none"}, f"Veri cekme hatasi: {exc}", {"display": "none"}
+    for fon_kodu in fon_kodlari:
+        try:
+            df = fetcher.get_historical_data(fon_kodu, bas, bit)
+            if not df.empty:
+                fund_dict[fon_kodu] = df
+            else:
+                hata_list.append(f"{fon_kodu}: veri bulunamadi")
+        except Exception as exc:
+            logger.warning("Veri cekme hatasi %s: %s", fon_kodu, exc)
+            hata_list.append(f"{fon_kodu}: {exc}")
 
-    if df.empty:
-        return go.Figure(), {"display": "none"}, f"{fon_kodu} icin veri bulunamadi.", {"display": "none"}
+    if not fund_dict:
+        return go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}
 
-    risk_free_daily = None
-    benchmark_series = None
-    benchmark_name = None
-    status_parts = [f"{fon_kodu} getiri grafigi hazir. ({len(df)} gun)"]
+    status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
     if benchmark == "TLREF":
         try:
@@ -225,13 +229,15 @@ def run_analysis(
                 tlref_all = tlref_scraper.from_csv()
             tlref_map = dict(zip(tlref_all["date"].dt.date, tlref_all["value"]))
 
-            if "tarih" in df.columns and not df["tarih"].empty:
+            first_df = list(fund_dict.values())[0]
+
+            if "tarih" in first_df.columns and not first_df["tarih"].empty:
                 carpim = 1.0
                 risk_free_cum = []
                 onceki_tarih = None
                 son_bilinen = None
 
-                for tarih in df["tarih"]:
+                for tarih in first_df["tarih"]:
                     t = tarih.date() if hasattr(tarih, "date") else tarih
                     son_bilinen = tlref_map.get(t, son_bilinen)
 
@@ -247,12 +253,12 @@ def run_analysis(
                     onceki_tarih = t
 
                 benchmark_series = pd.Series(
-                    risk_free_cum, index=df.index, name="TLREF (Kumulatif)"
+                    risk_free_cum, index=first_df.index, name="TLREF (Kumulatif)"
                 ) * 100.0 - 100.0
 
             tlref_filtre = tlref_all[
-                (tlref_all["date"].dt.date >= df["tarih"].iloc[0].date())
-                & (tlref_all["date"].dt.date <= df["tarih"].iloc[-1].date())
+                (tlref_all["date"].dt.date >= first_df["tarih"].iloc[0].date())
+                & (tlref_all["date"].dt.date <= first_df["tarih"].iloc[-1].date())
             ]
             if not tlref_filtre.empty:
                 min_t = tlref_filtre["value"].min()
@@ -284,35 +290,37 @@ def run_analysis(
             kyd = KydFetcher()
             kyd_df = kyd.get_historical_data(benchmark, bas, bit)
 
-            if not kyd_df.empty and "tarih" in df.columns and not df["tarih"].empty:
-                kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
+            if not kyd_df.empty and fund_dict:
+                first_df = list(fund_dict.values())[0]
+                if "tarih" in first_df.columns and not first_df["tarih"].empty:
+                    kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
 
-                if CALENDAR_ALIGN_METHOD == "inner":
-                    ortak = pd.merge(
-                        df[["tarih"]].assign(_idx=df.index),
-                        kyd_df[["tarih", "fiyat"]],
-                        on="tarih",
-                        how="inner",
-                    ).sort_values("tarih")
-                    if ortak.empty:
-                        status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
-                    else:
-                        ilk_fiyat = ortak["fiyat"].iloc[0]
-                        benchmark_series = pd.Series(
-                            (ortak["fiyat"] / ilk_fiyat - 1.0) * 100.0,
-                            index=ortak["_idx"],
-                            name=endeks_adi,
-                        )
-                        status_parts.append(
-                            f"{endeks_adi}: {len(ortak)} ortak gun"
-                        )
+                    if CALENDAR_ALIGN_METHOD == "inner":
+                        ortak = pd.merge(
+                            first_df[["tarih"]].assign(_idx=first_df.index),
+                            kyd_df[["tarih", "fiyat"]],
+                            on="tarih",
+                            how="inner",
+                        ).sort_values("tarih")
+                        if ortak.empty:
+                            status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
+                        else:
+                            ilk_fiyat = ortak["fiyat"].iloc[0]
+                            benchmark_series = pd.Series(
+                                (ortak["fiyat"] / ilk_fiyat - 1.0) * 100.0,
+                                index=ortak["_idx"],
+                                name=endeks_adi,
+                            )
+                            status_parts.append(
+                                f"{endeks_adi}: {len(ortak)} ortak gun"
+                            )
                 else:
                     kyd_map = kyd_df.set_index("tarih")["fiyat"]
-                    hizali = kyd_map.reindex(df["tarih"]).ffill()
+                    hizali = kyd_map.reindex(first_df["tarih"]).ffill()
                     ilk_fiyat = hizali.iloc[0]
                     benchmark_series = pd.Series(
                         (hizali / ilk_fiyat - 1.0) * 100.0,
-                        index=df.index,
+                        index=first_df.index,
                         name=endeks_adi,
                     )
                     status_parts.append(
@@ -329,14 +337,14 @@ def run_analysis(
             status_parts.append(f"{benchmark} alinamadi: {exc}")
 
     fig = create_price_chart(
-        df,
-        title=f"{fon_kodu} - Getiri Grafigi",
+        fund_dict=fund_dict,
+        title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
         benchmark_series=benchmark_series,
         benchmark_name=benchmark_name,
     )
 
     logger.info(
         "Grafik olusturuldu: %s, %s satir, benchmark=%s",
-        fon_kodu, len(df), benchmark,
+        list(fund_dict.keys()), min(len(d) for d in fund_dict.values()), benchmark,
     )
     return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}
