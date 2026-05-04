@@ -72,16 +72,9 @@ def create_price_chart(
         cum_return = (df_ortak["fiyat"] / bas_fiyat - 1.0) * 100.0
         color = palet[i % len(palet)]
 
-        hover_text = "%{x|%Y-%m-%d}<br>%{customdata}: %{y:.2f}%"
         m = metrics.get(kod, {}) if metrics else {}
-        if m:
-            hover_text += "<br>Sharpe: %{customdata2}"
-            hover_text += "<br>Volatilite: %{customdata3}%"
-            cd2 = [f"{m.get('Sharpe Orani', 0):.3f}"] * len(cum_return)
-            cd3 = [f"{m.get('Volatilite (Yillik)', 0):.2f}"] * len(cum_return)
-        else:
-            cd2 = None
-            cd3 = None
+        sharpe_str = f"{m.get('Sharpe Orani', 0):.3f}" if m else "N/A"
+        vol_str = f"{m.get('Volatilite (Yillik)', 0):.2f}" if m else "N/A"
 
         fig.add_trace(
             go.Scatter(
@@ -90,10 +83,8 @@ def create_price_chart(
                 mode="lines",
                 name=kod,
                 line=dict(color=color, width=2),
-                hovertemplate=hover_text + "<extra></extra>",
-                customdata=[kod] * len(cum_return),
-                customdata2=cd2,
-                customdata3=cd3,
+                hovertext=f"Sharpe: {sharpe_str}<br>Volatilite: {vol_str}%",
+                hoverinfo="x+y+text+name",
             )
         )
 
