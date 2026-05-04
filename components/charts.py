@@ -87,7 +87,7 @@ def create_price_chart(
     import logging
     logger = logging.getLogger(__name__)
     
-    bm_colors = ["#000000", "#333333", "#666666", "#999999"]
+    bm_colors = ["#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"]
     
     if benchmark_dict:
         logger.warning("=== CHARTS BENCHMARK DICT: %s ===", list(benchmark_dict.keys()))
