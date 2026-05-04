@@ -78,7 +78,7 @@ def create_price_chart(
                 x=df_ortak["tarih"],
                 y=cum_return,
                 mode="lines",
-                name=cod,
+                name=kod,
                 line=dict(color=color, width=2),
                 hovertemplate="%{x|%Y-%m-%d}<br>%{customdata}: %{y:.2f}%<extra></extra>",
                 customdata=[kod] * len(cum_return),
