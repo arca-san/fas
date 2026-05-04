@@ -398,8 +398,8 @@ def _build_metrics_table(fund_dict: dict):
     for f in _ALL_FUNDS:
         fon_unvan_map[f.get("fonKod", "").upper()] = f.get("unvan", "")
 
-    # Risksiz getiri (TLREF)
-    rf_series = None
+    # Risksiz getiri - GUNLUK GETIRI olarak (cumulative degil!)
+    rf_daily_returns = pd.Series(dtype=float)
     try:
         tlref_scraper = TLREFScraper()
         try:
@@ -408,43 +408,52 @@ def _build_metrics_table(fund_dict: dict):
             tlref_all = tlref_scraper.from_csv()
 
         first_df = list(fund_dict.values())[0]
-        tlref_map = dict(zip(tlref_all["date"].dt.date, tlref_all["value"]))
+        fon_tarihler = pd.to_datetime(first_df["tarih"])
+        min_t, max_t = fon_tarihler.min(), fon_tarihler.max()
 
-        carpim = 1.0
-        risk_free_daily = []
-        onceki_tarih = None
-        son_bilinen = None
+        # Fon tarih araligindaki TLREF verileri
+        tlref_filtre = tlref_all[
+            (tlref_all["date"] >= min_t) & (tlref_all["date"] <= max_t)
+        ].copy()
 
-        for tarih in first_df["tarih"]:
-            t = tarih.date() if hasattr(tarih, "date") else tarih
-            son_bilinen = tlref_map.get(t, son_bilinen)
-            if son_bilinen is not None:
-                daily_r = TLREFConverter.daily_compound(son_bilinen) / 100.0
-                if onceki_tarih is None:
-                    gap = 1
-                else:
-                    gap = (t - onceki_tarih).days
-                carpim *= (1.0 + daily_r) ** gap
-            risk_free_daily.append(carpim)
-            onceki_tarih = t
+        if not tlref_filtre.empty:
+            # Her gun icin gunluk bilesik getiriyi hesapla
+            tlref_map = dict(zip(tlref_filtre["date"].dt.date, tlref_filtre["value"]))
 
-        rf_series = pd.Series(
-            [x - 1 for x in risk_free_daily],
-            index=first_df.index,
-            name="TLREF",
-        )
+            daily_rf_list = []
+            onceki_tarih = None
+            carpim = 1.0
+
+            for tarih in fon_tarihler:
+                t = tarih.date() if hasattr(tarih, "date") else tarih
+                deger = tlref_map.get(t)
+
+                if deger is not None:
+                    daily_r = TLREFConverter.daily_compound(deger) / 100.0
+                    if onceki_tarih is None:
+                        gap = 1
+                    else:
+                        gap = max((t - onceki_tarih).days, 1)
+                    carpim *= (1.0 + daily_r) ** gap
+
+                onceki_tarih = t
+                daily_rf_list.append(carpim)
+
+            # Kumulatif seriyi gunluk getirilere cevir
+            cum_series = pd.Series(daily_rf_list, index=fon_tarihler)
+            rf_daily_returns = cum_series.pct_change().fillna(0)
     except Exception as exc:
         logger.warning("TLRF metrik icin alinamadi: %s", exc)
 
-    # Market benchmark (FHISE)
-    market_series = None
+    # Market benchmark (FHISE veya altin fonlari icin ATKAP)
+    market_prices = pd.Series(dtype=float)
     try:
         kyd = KydFetcher()
         end = date.today()
         start = end - timedelta(days=365 * 5)
         market_df = kyd.get_historical_data("FHISE", start, end)
         if not market_df.empty:
-            market_series = pd.Series(
+            market_prices = pd.Series(
                 market_df["fiyat"].values,
                 index=pd.to_datetime(market_df["tarih"]),
                 name="FHISE",
@@ -452,7 +461,7 @@ def _build_metrics_table(fund_dict: dict):
     except Exception as exc:
         logger.warning("FHISE metrik icin alinamadi: %s", exc)
 
-    metrics = calculate_fund_metrics(fund_dict, rf_series, market_series)
+    metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
 
     if not metrics:
         return html.Small("Metrik hesaplanamadi", className="text-muted"), {}
