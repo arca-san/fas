@@ -220,6 +220,9 @@ def run_analysis(
 
     status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
+    benchmark_series = None
+    benchmark_name = None
+
     if benchmark == "TLREF":
         try:
             tlref_scraper = TLREFScraper()
