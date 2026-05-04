@@ -318,6 +318,8 @@ def run_analysis(
                                 index=first_df.index,
                                 name=endeks_adi,
                             )
+                            logger.info("BM dict olustu: %s, len=%s, ilk=%.4f, NaN=%s", 
+                                bm, len(benchmark_dict[bm]), benchmark_dict[bm].iloc[0], benchmark_dict[bm].isna().sum())
                             status_parts.append(
                                 f"{endeks_adi}: {hizali.notna().sum()} ortak gun"
                             )
