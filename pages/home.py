@@ -291,13 +291,14 @@ def run_analysis(
 
                 kyd = KydFetcher()
                 kyd_df = kyd.get_historical_data(bm, bas, bit)
-                logger.info("KYD %s: %s kayit, tarih tipi: %s", bm, len(kyd_df), kyd_df["tarih"].dtype if not kyd_df.empty else "bos")
-                logger.info("FON tarih tipi: %s, ilk: %s", first_df["tarih"].dtype, first_df["tarih"].iloc[0])
 
                 if kyd_df.empty or not fund_dict:
                     status_parts.append(f"{endeks_adi} verisi bos")
                 else:
                     first_df = list(fund_dict.values())[0]
+                    logger.info("KYD %s: %s kayit, tarih tipi: %s", bm, len(kyd_df), kyd_df["tarih"].dtype)
+                    logger.info("FON first_df tarih tipi: %s, ilk: %s", first_df["tarih"].dtype, first_df["tarih"].iloc[0])
+
                     if "tarih" not in first_df.columns or first_df["tarih"].empty:
                         status_parts.append(f"{endeks_adi} verisi bos")
                     else:
