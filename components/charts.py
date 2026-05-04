@@ -90,8 +90,10 @@ def create_price_chart(
     if benchmark_dict:
         logger.info("BENCHMARK DICT: %s", list(benchmark_dict.keys()))
         for bm_kod, bm_series in benchmark_dict.items():
-            logger.info("BM %s: len=%s, index_type=%s, first_val=%s", 
-                bm_kod, len(bm_series), type(bm_series.index), bm_series.iloc[0] if len(bm_series) > 0 else None)
+            logger.info("BM %s: len=%s, idx=%s, ilk=%s,소? %s", 
+                bm_kod, len(bm_series), type(bm_series.index), 
+                bm_series.iloc[0] if len(bm_series) > 0 else "bos",
+                bm_series[:5].tolist())
             
             if bm_series is None or bm_series.empty:
                 continue
