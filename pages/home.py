@@ -90,7 +90,7 @@ layout = dbc.Container(
                                             clearable=True,
                                             data=[
                                                 {
-                                                    "value": f.get("fonKod", "").lower(),
+                                                    "value": f.get("fonKod", ""),
                                                     "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}",
                                                 }
                                                 for f in _ALL_FUNDS if f.get("fonKod")
@@ -166,6 +166,18 @@ layout = dbc.Container(
     ],
     fluid=True,
 )
+
+
+# Kullanıcı yazdıkça otomatik uppercase yap
+@callback(
+    Output("fon-select", "searchValue"),
+    Input("fon-select", "searchValue"),
+    prevent_initial_call=True,
+)
+def uppercase_search(val):
+    if val and val != val.upper():
+        return val.upper()
+    return val
 
 
 @callback(
