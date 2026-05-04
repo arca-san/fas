@@ -28,9 +28,17 @@ if errorlevel 1 (
 )
 
 echo Uygulama baslatiliyor...
-echo Tarayici 5 saniye sonra http://127.0.0.1:8050 adresinde acilacak...
+echo Dash hazir olana kadar bekleniyor...
 start /B "" %VENV_DIR%\Scripts\python index.py
-timeout /t 5 /nobreak >nul
+
+:wait_loop
+timeout /t 1 /nobreak >nul
+curl -s -o NUL http://127.0.0.1:8050 >nul 2>&1
+if errorlevel 1 (
+    goto wait_loop
+)
+
+echo Dash hazir! Tarayici aciliyor...
 start http://127.0.0.1:8050
 
 pause

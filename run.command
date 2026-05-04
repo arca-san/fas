@@ -18,7 +18,19 @@ echo "Bağımlılıklar kontrol ediliyor..."
 "$VENV_DIR/bin/pip" install -q -r requirements.txt
 
 echo "Uygulama başlatılıyor..."
-echo "Tarayıcı 5 saniye sonra http://127.0.0.1:8050 adresinde açılacak..."
 
+# Arka planda Dash'i başlat
+"$VENV_DIR/bin/python" index.py &
+DASH_PID=$!
+
+# Dash hazır olana kadar bekle
+echo "Dash hazır olana kadar bekleniyor..."
+until curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8050" 2>/dev/null | grep -q "200"; do
+    sleep 1
+done
+
+echo "Dash hazır! Tarayıcı açılıyor..."
 open "http://127.0.0.1:8050"
-"$VENV_DIR/bin/python" index.py
+
+# Dash'i beklemeye devam et
+wait $DASH_PID
