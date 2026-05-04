@@ -84,22 +84,32 @@ def create_price_chart(
         )
 
 # Benchmark(lar): fonlarla aynı tarih aralığında çiz
+    import logging
+    logger = logging.getLogger(__name__)
+    
     if benchmark_dict:
+        logger.info("BENCHMARK DICT: %s", list(benchmark_dict.keys()))
         for bm_kod, bm_series in benchmark_dict.items():
+            logger.info("BM %s: len=%s, index_type=%s, first_val=%s", 
+                bm_kod, len(bm_series), type(bm_series.index), bm_series.iloc[0] if len(bm_series) > 0 else None)
+            
             if bm_series is None or bm_series.empty:
                 continue
             # NaN olmayan ilk değeri bul ve getiri hesapla
             valid_mask = bm_series.notna()
             if not valid_mask.any():
+                logger.warning("BM %s: valid deger yok", bm_kod)
                 continue
             first_valid_idx = valid_mask.idxmax()
             first_val = bm_series.loc[first_valid_idx]
+            logger.info("BM %s: first_valid_idx=%s, first_val=%s", bm_kod, first_valid_idx, first_val)
             if pd.isna(first_val) or first_val == 0:
                 continue
             
             # Aynı tarih aralığında hizala
             bm_aligned = bm_series.reindex(pd.DatetimeIndex(ortak_tarihler)).ffill()
             if bm_aligned.dropna().empty:
+                logger.warning("BM %s: reindex sonrasi bos", bm_kod)
                 continue
                 
             bm_return = (bm_aligned / first_val - 1.0) * 100.0
