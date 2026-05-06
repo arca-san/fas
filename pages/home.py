@@ -5,7 +5,7 @@ Ana Sayfa — Fon seçimi, benchmark, tarih aralığı ve analiz parametreleri.
 """
 
 import dash
-from dash import html, dcc, callback, Output, Input, State
+from dash import html, dcc, callback, Output, Input, State, MATCH, ALL
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from datetime import date, timedelta
@@ -15,7 +15,7 @@ from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
 from data.fetchers.kyd_fetcher import KydFetcher
 from components.charts import create_price_chart
-from components.metrics import calculate_fund_metrics, select_fund_benchmark
+from components.metrics import calculate_fund_metrics, select_fund_benchmark, calculate_mix_metrics
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
 from config.benchmarks import benchmark_koda_gore
@@ -55,8 +55,29 @@ _BENCHMARK_OPTIONS = [_TLREF_OPTION] + kyd_benchmark_options()
 _DEFAULT_END = date.today()
 _DEFAULT_START = _DEFAULT_END - timedelta(days=365)
 
+# Mix Benchmark Modal
+mix_modal = dbc.Modal(
+    [
+        dbc.ModalHeader(dbc.ModalTitle("Mix Benchmark Oluştur")),
+        dbc.ModalBody([
+            html.P("Benchmarklar için ağırlık atayın (toplam otomatik %100'e normalize edilir):"),
+            html.Div(id="mix-benchmark-inputs"),
+            html.Hr(),
+            html.Div(id="mix-weight-total", className="mt-2 fw-bold"),
+        ]),
+        dbc.ModalFooter([
+            dbc.Button("Oluştur", id="create-mix-btn", color="primary", className="me-2"),
+            dbc.Button("İptal", id="cancel-mix-btn", color="secondary"),
+        ]),
+    ],
+    id="mix-modal",
+    size="md",
+    is_open=False,
+)
+
 layout = dbc.Container(
     [
+        dcc.Store(id="mix-benchmark-store"),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
                 [
@@ -124,6 +145,15 @@ layout = dbc.Container(
                                             placeholder="Benchmark seçin...",
                                             clearable=True,
                                         ),
+                                        html.Div(
+                                            dbc.Button(
+                                                "Mix Benchmark Oluştur",
+                                                id="open-mix-modal-btn",
+                                                color="secondary",
+                                                size="sm",
+                                                className="mt-2 w-100",
+                                            ),
+                                        ),
                                     ]
                                 )
                             ],
@@ -175,10 +205,10 @@ layout = dbc.Container(
                 ),
             ]
         ),
+        mix_modal,
     ],
     fluid=True,
 )
-
 
 # Kullanıcı yazdıkça otomatik uppercase yap
 @callback(
@@ -203,6 +233,7 @@ def uppercase_search(val):
     State("benchmark-dropdown", "value"),
     State("tarih-araligi", "start_date"),
     State("tarih-araligi", "end_date"),
+    State("mix-benchmark-store", "data"),
     prevent_initial_call=True,
 )
 def run_analysis(
@@ -211,6 +242,7 @@ def run_analysis(
     benchmark,
     start_date,
     end_date,
+    mix_data,
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
     # Lowercase gelen kodları uppercase'e çevir
@@ -366,19 +398,42 @@ def run_analysis(
         title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
     )
 
+    # Mix benchmark hesaplama
+    mix_series = None
+    mix_name = None
+    if mix_data and mix_data.get("benchmarks"):
+        mix_weights = mix_data["benchmarks"]
+        mix_name = mix_data.get("name", "Mix Benchmark")
+        
+        # Tum benchmark serilerini al ve agirliklandir
+        first_df = list(fund_dict.values())[0]
+        tarihler = first_df["tarih"]
+        
+        # Mix serisi hesaplama
+        mix_cum = pd.Series(0.0, index=tarihler, dtype=float)
+        
+        for bm_kod, weight in mix_weights.items():
+            if bm_kod in benchmark_dict:
+                bm_series = benchmark_dict[bm_kod]
+                bm_aligned = bm_series.reindex(tarihler).ffill()
+                mix_cum += bm_aligned * weight
+        
+        mix_series = mix_cum.rename(mix_name)
+
     # Metrik hesaplama
-    metrik_html, tooltip_metrics = _build_metrics_table(fund_dict)
+    metrik_html, tooltip_metrics = _build_metrics_table(fund_dict, mix_series=mix_series, mix_name=mix_data.get("name") if mix_data else None)
 
     fig = create_price_chart(
         fund_dict=fund_dict,
         benchmark_dict=benchmark_dict,
         title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
         metrics=tooltip_metrics,
+        mix_benchmark={"name": mix_data.get("name", "Mix Benchmark"), "series": mix_series} if mix_series is not None else None,
     )
     return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html
 
 
-def _build_metrics_table(fund_dict: dict):
+def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None):
     """Fon metriklerini tablo olarak olustur."""
     from config.constants import (
         METRIC_TOTAL_RETURN,
@@ -463,6 +518,15 @@ def _build_metrics_table(fund_dict: dict):
 
     metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
 
+    # Mix benchmark metriklerini ekle
+    if mix_series is not None and mix_name:
+        try:
+            mix_metrics = calculate_mix_metrics(mix_series, rf_daily_returns, market_prices, mix_name)
+            if mix_metrics:
+                metrics[mix_name] = mix_metrics
+        except Exception as exc:
+            logger.warning("Mix benchmark metrikleri hesaplanamadi: %s", exc)
+
     if not metrics:
         return html.Small("Metrik hesaplanamadi", className="text-muted"), {}
 
@@ -483,8 +547,14 @@ def _build_metrics_table(fund_dict: dict):
     headers = ["Fon"] + metrik_keys
     rows = []
     for fon_kodu, m in metrics.items():
-        unvan = fon_unvan_map.get(fon_kodu.upper(), fon_kodu)
-        row = [f"{fon_kodu}"]
+        # Mix benchmark icin unvan arama
+        if fon_kodu in fon_unvan_map:
+            unvan = fon_unvan_map.get(fon_kodu.upper(), fon_kodu)
+            row = [f"{fon_kodu}"]
+        else:
+            # Mix benchmark
+            row = [html.Strong(fon_kodu)]
+        
         for k in metrik_keys:
             val = m.get(k, "-")
             if val == "-":
@@ -505,3 +575,104 @@ def _build_metrics_table(fund_dict: dict):
         responsive=True,
     )
     return table, metrics
+
+
+@callback(
+    Output("mix-modal", "is_open"),
+    Input("open-mix-modal-btn", "n_clicks"),
+    Input("cancel-mix-btn", "n_clicks"),
+    Input("create-mix-btn", "n_clicks"),
+    State("mix-modal", "is_open"),
+    prevent_initial_call=True,
+)
+def toggle_mix_modal(open_click, cancel_click, create_click, is_open):
+    if dash.callback_context.triggered_id == "open-mix-modal-btn":
+        return True
+    return False
+
+
+@callback(
+    Output("mix-benchmark-inputs", "children"),
+    Input("open-mix-modal-btn", "n_clicks"),
+    State("benchmark-dropdown", "value"),
+    prevent_initial_call=True,
+)
+def build_mix_inputs(open_click, selected_benchmarks):
+    if not selected_benchmarks or len(selected_benchmarks) < 2:
+        return html.P("En az 2 benchmark seçmelisiniz.", className="text-danger")
+    
+    inputs = []
+    for bm in selected_benchmarks:
+        bm_info = benchmark_koda_gore(bm)
+        label = bm_info["ad"] if bm_info else bm
+        inputs.append(
+            dbc.Row(
+                [
+                    dbc.Col(html.Label(label, className="fw-bold"), xs=8),
+                    dbc.Col(
+                        dbc.Input(
+                            id={"type": "mix-weight-input", "index": bm},
+                            type="number",
+                            placeholder="%",
+                            min=0,
+                            max=100,
+                            step=1,
+                            className="w-100",
+                        ),
+                        xs=4,
+                    ),
+                ],
+                className="mb-2 align-items-center",
+            )
+        )
+    return inputs
+
+
+@callback(
+    Output("mix-weight-total", "children"),
+    Input({"type": "mix-weight-input", "index": ALL}, "value"),
+    prevent_initial_call=False,
+)
+def update_weight_total(weight_values):
+    total = sum(v for v in weight_values if v is not None)
+    return html.Span(f"Toplam: {total:.0f}%", className="text-muted")
+
+
+@callback(
+    Output("mix-benchmark-store", "data"),
+    Input("create-mix-btn", "n_clicks"),
+    State("benchmark-dropdown", "value"),
+    State({"type": "mix-weight-input", "index": ALL}, "value"),
+    State({"type": "mix-weight-input", "index": ALL}, "id"),
+    prevent_initial_call=True,
+)
+def create_mix_benchmark(create_click, selected_benchmarks, weight_values, weight_ids):
+    if not create_click or not selected_benchmarks:
+        return None
+    
+    weights = {}
+    total = 0
+    
+    for i, input_id in enumerate(weight_ids):
+        bm = input_id["index"]
+        w = weight_values[i] if i < len(weight_values) else None
+        if w is not None and w > 0:
+            weights[bm] = w
+            total += w
+    
+    if total == 0:
+        return None
+    
+    normalized = {bm: w / total for bm, w in weights.items()}
+    
+    mix_parts = []
+    for bm, w in normalized.items():
+        short_label = bm
+        mix_parts.append(f"{short_label} %{w*100:.0f}")
+    
+    mix_name = f"Mix ({', '.join(mix_parts)})"
+    
+    return {
+        "benchmarks": normalized,
+        "name": mix_name,
+    }
