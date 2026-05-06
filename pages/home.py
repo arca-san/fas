@@ -544,7 +544,24 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
     ]
 
     # Tablo basliklari
-    headers = ["Fon"] + metrik_keys
+    from config.constants import METRIC_DESCRIPTIONS
+
+    headers = [html.Th("Fon")]
+    tooltip_components = []
+    for k_idx, mk in enumerate(metrik_keys):
+        desc = METRIC_DESCRIPTIONS.get(mk, "")
+        header_id = f"metric-header-{k_idx}"
+        if desc:
+            headers.append(
+                html.Th([
+                    mk,
+                    html.Span("?", id=header_id, className="ms-1 text-muted", style={"cursor": "help", "fontSize": "0.85em"}),
+                ])
+            )
+            tooltip_components.append(dbc.Tooltip(desc, target=header_id, placement="top"))
+        else:
+            headers.append(html.Th(mk))
+
     rows = []
     for fon_kodu, m in metrics.items():
         # Mix benchmark icin unvan arama
@@ -563,18 +580,20 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
                 row.append(f"{val}")
         rows.append(row)
 
-    table = dbc.Table(
-        [
-            html.Thead(html.Tr([html.Th(h) for h in headers])),
-            html.Tbody([html.Tr([html.Td(c) for c in r]) for r in rows]),
-        ],
-        striped=True,
-        bordered=True,
-        hover=True,
-        size="sm",
-        responsive=True,
-    )
-    return table, metrics
+    table_container = html.Div([
+        dbc.Table(
+            [
+                html.Thead(html.Tr(headers)),
+                html.Tbody([html.Tr([html.Td(c) for c in r]) for r in rows]),
+            ],
+            striped=True,
+            bordered=True,
+            hover=True,
+            size="sm",
+            responsive=True,
+        ),
+    ] + tooltip_components)
+    return table_container, metrics
 
 
 @callback(
