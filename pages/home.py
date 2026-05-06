@@ -78,6 +78,7 @@ mix_modal = dbc.Modal(
 layout = dbc.Container(
     [
         dcc.Store(id="mix-benchmark-store"),
+        dcc.Store(id="auto-benchmarks-store"),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
                 [
@@ -228,6 +229,7 @@ def uppercase_search(val):
     Output("analiz-status", "children"),
     Output("tefas-uyari", "style"),
     Output("metrik-tablosu", "children"),
+    Output("auto-benchmarks-store", "data"),
     Input("analiz-btn", "n_clicks"),
     State("fon-select", "value"),
     State("benchmark-dropdown", "value"),
@@ -398,7 +400,8 @@ def run_analysis(
 
     # Fon benchmarklarını yükle ve karışım hesapla
     fon_benchmark_series = {}
-    fon_benchmark_sources = {}  # fon_kodu -> "kap_cache" | "kap_scraping" | "mapping"
+    fon_benchmark_sources = {}
+    auto_bm_codes_set = set()
     
     for fon_kodu in fund_dict:
         kategori = fund_kategoriler.get(fon_kodu, "")
@@ -407,6 +410,8 @@ def run_analysis(
         
         benchmarks = bm_result["benchmarks"]
         if benchmarks:
+            for bm_info in benchmarks:
+                auto_bm_codes_set.add(bm_info["kod"])
             tarihler = fund_dict[fon_kodu]["tarih"]
             mix_cum = pd.Series(0.0, index=tarihler, dtype=float)
             
@@ -480,6 +485,7 @@ def run_analysis(
         mix_name=all_mix_names.get("user_mix"),
         fon_benchmark_series=fon_benchmark_series,
         fon_benchmark_sources=fon_benchmark_sources,
+        fon_benchmark_correlations=fon_benchmark_correlations,
     )
 
     # Grafik için mix benchmark (kullanıcı mix'i veya ilk fon benchmark'ı)
@@ -490,17 +496,33 @@ def run_analysis(
         first_fon = list(fon_benchmark_series.keys())[0]
         chart_mix = {"name": fon_benchmark_series[first_fon].name, "series": fon_benchmark_series[first_fon]}
 
+    # Korelasyon hesaplama: her fon ile kendi benchmark mix'i arasinda
+    fon_benchmark_correlations = {}
+    for fon_kodu, mix_series in fon_benchmark_series.items():
+        if fon_kodu not in fund_dict:
+            continue
+        fund_df = fund_dict[fon_kodu].sort_values("tarih")
+        fund_returns = fund_df["fiyat"].pct_change().dropna()
+        mix_returns = mix_series.pct_change().dropna()
+        common_idx = fund_returns.index.intersection(mix_returns.index)
+        if len(common_idx) > 2:
+            corr = fund_returns.loc[common_idx].corr(mix_returns.loc[common_idx])
+            fon_benchmark_correlations[fon_kodu] = round(corr, 4) if not pd.isna(corr) else None
+
     fig = create_price_chart(
         fund_dict=fund_dict,
         benchmark_dict=benchmark_dict,
         title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
         metrics=tooltip_metrics,
         mix_benchmark=chart_mix,
+        correlations=fon_benchmark_correlations,
     )
-    return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html
+    auto_bm_codes = list(auto_bm_codes_set)
+
+    return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
 
 
-def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None):
+def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None, fon_benchmark_correlations: dict = None):
     """Fon metriklerini tablo olarak olustur."""
     from config.constants import (
         METRIC_TOTAL_RETURN,
@@ -690,6 +712,15 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
         else:
             headers.append(html.Th(mk))
 
+    corr_header_id = "metric-header-corr"
+    headers.append(
+        html.Th([
+            "BM Korelasyon",
+            html.Span("?", id=corr_header_id, className="ms-1 text-muted", style={"cursor": "help", "fontSize": "0.85em"}),
+        ])
+    )
+    tooltip_components.append(dbc.Tooltip("Fon ile kendi benchmark mix'i arasındaki korelasyon (1'e yakın = yüksek uyum)", target=corr_header_id, placement="top"))
+
     rows = []
     for fon_kodu, m in metrics.items():
         # Mix benchmark icin unvan arama
@@ -706,6 +737,20 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
                 row.append("-")
             else:
                 row.append(f"{val}")
+        
+        # Korelasyon degerini ekle
+        corr_val = fon_benchmark_correlations.get(fon_kodu) if fon_benchmark_correlations else None
+        if corr_val is not None:
+            corr_str = f"{corr_val:.4f}"
+            if corr_val >= 0.9:
+                corr_color = "success"
+            elif corr_val >= 0.7:
+                corr_color = "warning"
+            else:
+                corr_color = "danger"
+            row.append(html.Span(corr_str, style={"color": corr_color, "fontWeight": "bold"}))
+        else:
+            row.append("-")
         rows.append(row)
 
     table_container = html.Div(
@@ -825,3 +870,23 @@ def create_mix_benchmark(create_click, selected_benchmarks, weight_values, weigh
         "benchmarks": normalized,
         "name": mix_name,
     }
+
+
+@callback(
+    Output("benchmark-dropdown", "value"),
+    Input("auto-benchmarks-store", "data"),
+    State("benchmark-dropdown", "value"),
+    prevent_initial_call=True,
+)
+def update_benchmark_with_auto(auto_bm_codes, current_value):
+    """Auto-benchmark kodlarini dropdown'a ekle (sadece ilk yuklemede)."""
+    if not auto_bm_codes:
+        return dash.no_update
+
+    current = current_value or []
+    has_auto = any(c in current for c in auto_bm_codes)
+    if has_auto:
+        return dash.no_update
+
+    merged = list(current) + list(auto_bm_codes)
+    return merged

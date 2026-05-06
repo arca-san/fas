@@ -16,6 +16,7 @@ def create_price_chart(
     title: str = "Fon Getiri Grafiği",
     metrics: dict = None,
     mix_benchmark: dict = None,
+    correlations: dict = None,
 ) -> go.Figure:
     """Fon ve benchmark(lar) kumulatif getiri grafigi.
 
@@ -81,6 +82,8 @@ def create_price_chart(
         m = metrics.get(kod, {}) if metrics else {}
         sharpe_str = f"{m.get('Sharpe Orani', 0):.3f}" if m else "N/A"
         vol_str = f"{m.get('Volatilite (Yillik)', 0):.2f}" if m else "N/A"
+        corr_val = correlations.get(kod) if correlations else None
+        corr_str = f"{corr_val:.4f}" if corr_val is not None else "N/A"
 
         fig.add_trace(
             go.Scatter(
@@ -89,7 +92,7 @@ def create_price_chart(
                 mode="lines",
                 name=kod,
                 line=dict(color=color, width=2),
-                hovertext=f"Sharpe: {sharpe_str}<br>Volatilite: {vol_str}%",
+                hovertext=f"Sharpe: {sharpe_str}<br>Volatilite: {vol_str}%<br>BM Korelasyon: {corr_str}",
                 hoverinfo="x+y+text+name",
             )
         )
