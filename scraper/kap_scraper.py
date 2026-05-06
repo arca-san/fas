@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 CACHE_DIR = Path(__file__).parent / "cache"
 CACHE_FILE = CACHE_DIR / "benchmarks.json"
 CACHE_TTL_HOURS = 24
+PAGE_LOAD_TIMEOUT_SEC = 5
+RENDER_WAIT_SEC = 2
+
+import os
+SKIP_SCRAPING = os.environ.get("KAP_SKIP_SCRAPING", "1").lower() in ("1", "true", "yes")
 
 
 class KAPScraper:
@@ -97,6 +102,10 @@ class KAPScraper:
         list | None
             [{"kod": str, "agirlik": float, "ad": str}, ...] veya None
         """
+        if SKIP_SCRAPING:
+            logger.debug("KAP scraping atlandi (KAP_SKIP_SCRAPING=1)")
+            return None
+
         fund_code = fund_code.upper().strip()
         url = f"https://www.kap.org.tr/tr/fon-bilgileri/genel/{fund_code.lower()}"
 
@@ -110,13 +119,12 @@ class KAPScraper:
             opts.add_argument("--disable-dev-shm-usage")
 
             driver = webdriver.Edge(options=opts)
-            driver.set_page_load_timeout(15)
+            driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT_SEC)
 
             logger.info("KAP sayfasi yükleniyor: %s", url)
             driver.get(url)
 
-            # Sayfanın JS ile render edilmesi için bekle
-            time.sleep(5)
+            time.sleep(RENDER_WAIT_SEC)
 
             # Hata sayfası kontrolü
             body = driver.find_element(By.TAG_NAME, "body")
