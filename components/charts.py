@@ -15,11 +15,13 @@ def create_price_chart(
     benchmark_dict: dict = None,
     title: str = "Fon Getiri Grafiği",
     metrics: dict = None,
+    mix_benchmark: dict = None,
 ) -> go.Figure:
     """Fon ve benchmark(lar) kumulatif getiri grafigi.
 
     Tum fonlar ayni grafikte cizilir (düz cizgi, ayri renk).
     Tum benchmarklar ayni grafikte cizilir (kesikli cizgi, gri).
+    Mix benchmark varsa kalın siyah çizgi ile gösterilir.
 
     Parametreler
     ------------
@@ -29,6 +31,10 @@ def create_price_chart(
     benchmark_dict : dict, optional
         {"BENCHMARK_KODU": pd.Series, ...} seklinde benchmark serileri.
         Seriler yuzde getiri (%0 baslangicli) olmali.
+    mix_benchmark : dict, optional
+        {"name": str, "series": pd.Series} seklinde mix benchmark.
+        name: "Mix (TD91G %65 + TUFE %35)" gibi.
+        series: yuzde getiri serisi.
     """
     if not fund_dict:
         return go.Figure()
@@ -124,6 +130,27 @@ def create_price_chart(
                     mode="lines",
                     name=bm_kod,
                     line=dict(color=bm_colors[i % len(bm_colors)], width=2, dash="dash"),
+                    hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
+                )
+            )
+
+    # Mix benchmark: kalın siyah çizgi
+    if mix_benchmark and mix_benchmark.get("series") is not None:
+        mix_series = mix_benchmark["series"]
+        mix_name = mix_benchmark.get("name", "Mix Benchmark")
+        
+        if not mix_series.empty:
+            mix_filled = mix_series.ffill()
+            tarihler = list(ortak_tarihler)
+            mix_values = mix_filled.reindex(pd.DatetimeIndex(tarihler)).ffill().values
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=tarihler,
+                    y=mix_values,
+                    mode="lines",
+                    name=mix_name,
+                    line=dict(color="#000000", width=3, dash="dot"),
                     hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
                 )
             )
