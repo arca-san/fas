@@ -206,3 +206,109 @@ def select_fund_benchmark(unvan: str, kyd_fetcher) -> pd.Series:
         pass
 
     return None
+
+
+def calculate_mix_metrics(
+    mix_series: pd.Series,
+    rf_daily_returns: pd.Series,
+    market_prices: pd.Series,
+    mix_name: str = "Mix Benchmark",
+) -> dict:
+    """Mix benchmark icin metrikleri hesapla.
+
+    Parameters
+    ----------
+    mix_series : pd.Series
+        Mix benchmark getiri serisi (yuzde getiri, %0 baslangicli).
+        Index tarih olmali.
+    rf_daily_returns : pd.Series
+        Gunluk risksiz getiri (onluk form, orn. 0.0012 = %0.12).
+    market_prices : pd.Series
+        Market benchmark fiyat seviyeleri (index degerleri).
+    mix_name : str
+        Mix benchmark gorunen adi.
+
+    Returns
+    -------
+    dict
+        {metric_name: value, ...}
+    """
+    if mix_series is None or mix_series.empty:
+        return {}
+
+    # Yuzde getiri serisini decimal getiriyi cevir
+    mix_returns_pct = mix_series.dropna()
+    if len(mix_returns_pct) < 2:
+        return {}
+
+    # Toplam getiri (son deger - ilk deger, zaten %0 baslangicli)
+    total_return = mix_returns_pct.iloc[-1] - mix_returns_pct.iloc[0]
+    
+    # % getiri -> decimal (100'e bol)
+    mix_decimal = mix_returns_pct / 100.0 + 1  # 1 ekleyerek fiyat seviyesi yap
+    
+    # Gunluk getirileri hesapla (pct_change)
+    mix_daily = mix_decimal.pct_change().dropna()
+    
+    if len(mix_daily) < 2:
+        return {}
+
+    # Risksiz getiri
+    rf_daily = rf_daily_returns.mean() if not rf_daily_returns.empty else 0.0
+    rf_annual = rf_daily * TRADING_DAYS
+
+    # Yillandirilmis getiri ve volatilite
+    ann_ret = _annual_return(mix_daily)
+    vol = _annualized_vol(mix_daily)
+    downside = _downside_vol(mix_daily)
+
+    # Market getirileri ile align
+    market_returns = market_prices.pct_change().dropna()
+    market_aligned = market_returns.reindex(mix_daily.index).dropna()
+    common_dates = mix_daily.index.intersection(market_aligned.index)
+    
+    if len(common_dates) < 2:
+        beta_val = 0.0
+        treynor = 0.0
+        jensen = 0.0
+        info_ratio = 0.0
+    else:
+        mix_common = mix_daily.loc[common_dates]
+        market_common = market_aligned.loc[common_dates]
+        
+        cov_fm = mix_common.cov(market_common)
+        var_m = market_common.var()
+        beta_val = cov_fm / var_m if var_m > 0 else 0.0
+        
+        if beta_val != 0:
+            treynor = (ann_ret - rf_annual) / beta_val
+        else:
+            treynor = 0.0
+        
+        market_ann_ret = _annual_return(market_common)
+        jensen = ann_ret - (rf_annual + beta_val * (market_ann_ret - rf_annual))
+        
+        excess = mix_common - market_common
+        te = excess.std(ddof=1) * np.sqrt(TRADING_DAYS)
+        if te > 0:
+            info_ratio = (excess.mean() * TRADING_DAYS) / te
+        else:
+            info_ratio = 0.0
+
+    sharpe = (ann_ret - rf_annual) / vol if vol > 0 else 0.0
+    sortino = (ann_ret - rf_annual) / downside if downside > 0 else 0.0
+    
+    ann_return_pct = ann_ret * 100
+
+    return {
+        METRIC_TOTAL_RETURN: round(total_return, 2),
+        METRIC_ANNUALIZED_RETURN: round(ann_return_pct, 2),
+        METRIC_VOLATILITY: round(vol * 100, 2),
+        METRIC_DOWNSIDE_VOL: round(downside * 100, 2),
+        METRIC_SHARPE: round(sharpe, 3),
+        METRIC_SORTINO: round(sortino, 3),
+        METRIC_BETA: round(beta_val, 3),
+        METRIC_TREYNOR: round(treynor, 3),
+        METRIC_ALPHA: round(jensen, 3),
+        METRIC_INFORMATION_RATIO: round(info_ratio, 3),
+    }
