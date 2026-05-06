@@ -478,23 +478,6 @@ def run_analysis(
     if user_mix_series is not None:
         all_mix_series["user_mix"] = user_mix_series
         all_mix_names["user_mix"] = user_mix_name
-    
-    metrik_html, tooltip_metrics = _build_metrics_table(
-        fund_dict, 
-        mix_series=all_mix_series.get("user_mix"), 
-        mix_name=all_mix_names.get("user_mix"),
-        fon_benchmark_series=fon_benchmark_series,
-        fon_benchmark_sources=fon_benchmark_sources,
-        fon_benchmark_correlations=fon_benchmark_correlations,
-    )
-
-    # Grafik için mix benchmark (kullanıcı mix'i veya ilk fon benchmark'ı)
-    chart_mix = None
-    if user_mix_series is not None:
-        chart_mix = {"name": user_mix_name, "series": user_mix_series}
-    elif fon_benchmark_series:
-        first_fon = list(fon_benchmark_series.keys())[0]
-        chart_mix = {"name": fon_benchmark_series[first_fon].name, "series": fon_benchmark_series[first_fon]}
 
     # Korelasyon hesaplama: her fon ile kendi benchmark mix'i arasinda
     fon_benchmark_correlations = {}
@@ -508,6 +491,23 @@ def run_analysis(
         if len(common_idx) > 2:
             corr = fund_returns.loc[common_idx].corr(mix_returns.loc[common_idx])
             fon_benchmark_correlations[fon_kodu] = round(corr, 4) if not pd.isna(corr) else None
+
+    metrik_html, tooltip_metrics = _build_metrics_table(
+        fund_dict,
+        mix_series=all_mix_series.get("user_mix"),
+        mix_name=all_mix_names.get("user_mix"),
+        fon_benchmark_series=fon_benchmark_series,
+        fon_benchmark_sources=fon_benchmark_sources,
+        fon_benchmark_correlations=fon_benchmark_correlations,
+    )
+
+    # Grafik için mix benchmark (kullanıcı mix'i veya ilk fon benchmark'ı)
+    chart_mix = None
+    if user_mix_series is not None:
+        chart_mix = {"name": user_mix_name, "series": user_mix_series}
+    elif fon_benchmark_series:
+        first_fon = list(fon_benchmark_series.keys())[0]
+        chart_mix = {"name": fon_benchmark_series[first_fon].name, "series": fon_benchmark_series[first_fon]}
 
     fig = create_price_chart(
         fund_dict=fund_dict,
