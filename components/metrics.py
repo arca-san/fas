@@ -315,21 +315,21 @@ def calculate_mix_metrics(
 
 
 def get_fund_benchmarks(fon_kodu: str, fon_kategori: str = None) -> dict:
-    """Fon benchmarklarını al (önce TEFAS dene, başarısız olursa mapping kullan).
+    """Fon benchmarklarini al (KAP cache -> KAP scraping -> mapping fallback).
 
     Parameters
     ----------
     fon_kodu : str
-        TEFAS fon kodu (örn: "MAC")
+        TEFAS fon kodu (orn: "MAC")
     fon_kategori : str, optional
-        Fon kategorisi (örn: "Hisse Senedi Fonu")
+        Fon kategorisi (orn: "Hisse Senedi Fonu")
 
     Returns
     -------
     dict
         {
             "benchmarks": [{"kod": str, "agirlik": float}, ...],
-            "source": "api" | "mapping",
+            "source": "kap_cache" | "kap_scraping" | "mapping",
             "message": str,
         }
     """

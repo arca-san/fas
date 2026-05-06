@@ -396,14 +396,14 @@ def run_analysis(
                 logger.warning("KYD benchmark cekilemedi (%s): %s", bm, exc)
                 status_parts.append(f"{bm} alinamadi: {exc}")
 
-    # Fon benchmarklarını yükle (kategoriden) ve karışım hesapla
+    # Fon benchmarklarını yükle ve karışım hesapla
     fon_benchmark_series = {}
-    fon_benchmark_messages = []
+    fon_benchmark_sources = {}  # fon_kodu -> "kap_cache" | "kap_scraping" | "mapping"
     
     for fon_kodu in fund_dict:
         kategori = fund_kategoriler.get(fon_kodu, "")
         bm_result = get_fund_benchmarks(fon_kodu, kategori)
-        fon_benchmark_messages.append(bm_result["message"])
+        fon_benchmark_sources[fon_kodu] = bm_result["source"]
         
         benchmarks = bm_result["benchmarks"]
         if benchmarks:
@@ -479,6 +479,7 @@ def run_analysis(
         mix_series=all_mix_series.get("user_mix"), 
         mix_name=all_mix_names.get("user_mix"),
         fon_benchmark_series=fon_benchmark_series,
+        fon_benchmark_sources=fon_benchmark_sources,
     )
 
     # Grafik için mix benchmark (kullanıcı mix'i veya ilk fon benchmark'ı)
@@ -499,7 +500,7 @@ def run_analysis(
     return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html
 
 
-def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None):
+def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None):
     """Fon metriklerini tablo olarak olustur."""
     from config.constants import (
         METRIC_TOTAL_RETURN,
@@ -600,6 +601,8 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
     notifications = []
     if fon_benchmark_series:
         for fon_kodu, series in fon_benchmark_series.items():
+            source = fon_benchmark_sources.get(fon_kodu, "mapping") if fon_benchmark_sources else "mapping"
+            
             kategori = ""
             for f in _ALL_FUNDS:
                 if f.get("fonKod", "").upper() == fon_kodu:
@@ -620,6 +623,24 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
                 ad = bm_info["ad"] if bm_info else kod
                 bm_details.append(f"{ad} (%{agirlik*100:.0f})")
             
+            # Kaynaga gore alert rengi ve mesaji
+            if source == "kap_cache":
+                color = "success"
+                source_msg = "KAP.org.tr cache'den okundu (24 saat gecerli)."
+                extra_msg = ""
+            elif source == "kap_scraping":
+                color = "success"
+                source_msg = "KAP.org.tr'den canlı olarak çekildi."
+                extra_msg = ""
+            else:
+                color = "info"
+                source_msg = f"Fon turune gore atandi ({kategori})."
+                extra_msg = html.Small(
+                    "KAP scraping basarisiz oldu, kategori bazli mapping kullanildi.",
+                    className="text-warning",
+                    style={"cursor": "help", "title": "KAP.org.tr'den benchmark verisi cekilemedi. Benchmarklar fon kategorisine gore atanmistir."},
+                )
+            
             notifications.append(
                 dbc.Alert(
                     [
@@ -628,17 +649,9 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
                         html.Br(),
                         html.Small(" + ".join(bm_details)),
                         html.Br(),
-                        html.Small(
-                            f"Kaynak: Fon türüne göre atandı ({kategori}). ",
-                            className="text-muted",
-                        ),
-                        html.Small(
-                            "TEFAS API benchmark verisi döndürmemektedir.",
-                            className="text-warning",
-                            style={"cursor": "help", "title": "TEFAS'ın mevcut API endpoint'leri fon benchmark verisi döndürmemektedir. Benchmarklar fon kategorisine göre atanmaktadır."},
-                        ),
-                    ],
-                    color="info",
+                        html.Small(f"Kaynak: {source_msg}", className="text-muted"),
+                    ] + ([extra_msg] if extra_msg else []),
+                    color=color,
                     dismissable=True,
                     className="mb-2 py-2",
                     style={"fontSize": "0.9em"},
