@@ -15,7 +15,7 @@ from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
 from data.fetchers.kyd_fetcher import KydFetcher
 from components.charts import create_price_chart
-from components.metrics import calculate_fund_metrics, select_fund_benchmark, calculate_mix_metrics
+from components.metrics import calculate_fund_metrics, select_fund_benchmark, calculate_mix_metrics, get_fund_benchmarks
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
 from config.benchmarks import benchmark_koda_gore
@@ -245,7 +245,6 @@ def run_analysis(
     mix_data,
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
-    # Lowercase gelen kodları uppercase'e çevir
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
@@ -257,6 +256,7 @@ def run_analysis(
 
     fetcher = TefasFetcher()
     fund_dict = {}
+    fund_kategoriler = {}
     hata_list = []
 
     for fon_kodu in fon_kodlari:
@@ -264,6 +264,13 @@ def run_analysis(
             df = fetcher.get_historical_data(fon_kodu, bas, bit)
             if not df.empty:
                 fund_dict[fon_kodu] = df
+                # Fon kategorisini al
+                try:
+                    info = _tefas_api.fon_anlik_bilgi(fon_kodu)
+                    if info:
+                        fund_kategoriler[fon_kodu] = info.get("fonKategori", "")
+                except Exception:
+                    pass
             else:
                 hata_list.append(f"{fon_kodu}: veri bulunamadi")
         except Exception as exc:
@@ -276,9 +283,9 @@ def run_analysis(
     status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
     benchmark_dict = {}
-
     benchmark_list = benchmark if benchmark else []
 
+    # Kullanıcı benchmark seçimi yükle
     for bm in benchmark_list:
         if bm == "TLREF":
             try:
@@ -366,14 +373,11 @@ def run_analysis(
                         if hizali.dropna().empty:
                             status_parts.append(f"{endeks_adi} ile ortak gun bulunamadi")
                         else:
-                            # İlk fiyatı al ve getiri hesapla
                             ilk_fiyat = float(hizali.dropna().iloc[0])
                             logger.info("ilk_fiyat: %.4f", ilk_fiyat)
                             
-                            # Getiri hesapla
                             getiri = (hizali.astype(float) / ilk_fiyat - 1.0) * 100.0
                             
-                            # Index'i datetime olarak ayarla
                             benchmark_dict[bm] = pd.Series(
                                 getiri.values,
                                 index=first_df["tarih"].values,
@@ -392,24 +396,64 @@ def run_analysis(
                 logger.warning("KYD benchmark cekilemedi (%s): %s", bm, exc)
                 status_parts.append(f"{bm} alinamadi: {exc}")
 
-    fig = create_price_chart(
-        fund_dict=fund_dict,
-        benchmark_dict=benchmark_dict,
-        title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
-    )
+    # Fon benchmarklarını yükle (kategoriden) ve karışım hesapla
+    fon_benchmark_series = {}
+    fon_benchmark_messages = []
+    
+    for fon_kodu in fund_dict:
+        kategori = fund_kategoriler.get(fon_kodu, "")
+        bm_result = get_fund_benchmarks(fon_kodu, kategori)
+        fon_benchmark_messages.append(bm_result["message"])
+        
+        benchmarks = bm_result["benchmarks"]
+        if benchmarks:
+            tarihler = fund_dict[fon_kodu]["tarih"]
+            mix_cum = pd.Series(0.0, index=tarihler, dtype=float)
+            
+            for bm_info in benchmarks:
+                bm_kod = bm_info["kod"]
+                agirlik = bm_info["agirlik"]
+                
+                # Benchmark verisini yükle
+                if bm_kod not in benchmark_dict:
+                    try:
+                        kyd = KydFetcher()
+                        kyd_df = kyd.get_historical_data(bm_kod, bas, bit)
+                        if not kyd_df.empty:
+                            kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
+                            kyd_map = kyd_df.set_index("tarih")["fiyat"]
+                            hizali = kyd_map.reindex(tarihler).ffill()
+                            
+                            if not hizali.dropna().empty:
+                                ilk_fiyat = float(hizali.dropna().iloc[0])
+                                getiri = (hizali.astype(float) / ilk_fiyat - 1.0) * 100.0
+                                benchmark_dict[bm_kod] = pd.Series(
+                                    getiri.values,
+                                    index=tarihler.values,
+                                    name=bm_kod,
+                                )
+                    except Exception as exc:
+                        logger.warning("Fon benchmark yüklenemedi (%s): %s", bm_kod, exc)
+                        continue
+                
+                if bm_kod in benchmark_dict:
+                    bm_series = benchmark_dict[bm_kod]
+                    bm_aligned = bm_series.reindex(tarihler).ffill()
+                    mix_cum += bm_aligned * agirlik
+            
+            mix_name = f"{fon_kodu} Benchmark Mix"
+            fon_benchmark_series[fon_kodu] = mix_cum.rename(mix_name)
 
-    # Mix benchmark hesaplama
-    mix_series = None
-    mix_name = None
+    # Kullanıcı mix benchmark hesaplama
+    user_mix_series = None
+    user_mix_name = None
     if mix_data and mix_data.get("benchmarks"):
         mix_weights = mix_data["benchmarks"]
-        mix_name = mix_data.get("name", "Mix Benchmark")
+        user_mix_name = mix_data.get("name", "Mix Benchmark")
         
-        # Tum benchmark serilerini al ve agirliklandir
         first_df = list(fund_dict.values())[0]
         tarihler = first_df["tarih"]
         
-        # Mix serisi hesaplama
         mix_cum = pd.Series(0.0, index=tarihler, dtype=float)
         
         for bm_kod, weight in mix_weights.items():
@@ -418,22 +462,44 @@ def run_analysis(
                 bm_aligned = bm_series.reindex(tarihler).ffill()
                 mix_cum += bm_aligned * weight
         
-        mix_series = mix_cum.rename(mix_name)
+        user_mix_series = mix_cum.rename(user_mix_name)
 
-    # Metrik hesaplama
-    metrik_html, tooltip_metrics = _build_metrics_table(fund_dict, mix_series=mix_series, mix_name=mix_data.get("name") if mix_data else None)
+    # Metrik hesaplama - fon benchmark mix'lerini de ekle
+    all_mix_series = {}
+    all_mix_names = {}
+    for fon_kodu, series in fon_benchmark_series.items():
+        all_mix_series[fon_kodu] = series
+        all_mix_names[fon_kodu] = series.name
+    if user_mix_series is not None:
+        all_mix_series["user_mix"] = user_mix_series
+        all_mix_names["user_mix"] = user_mix_name
+    
+    metrik_html, tooltip_metrics = _build_metrics_table(
+        fund_dict, 
+        mix_series=all_mix_series.get("user_mix"), 
+        mix_name=all_mix_names.get("user_mix"),
+        fon_benchmark_series=fon_benchmark_series,
+    )
+
+    # Grafik için mix benchmark (kullanıcı mix'i veya ilk fon benchmark'ı)
+    chart_mix = None
+    if user_mix_series is not None:
+        chart_mix = {"name": user_mix_name, "series": user_mix_series}
+    elif fon_benchmark_series:
+        first_fon = list(fon_benchmark_series.keys())[0]
+        chart_mix = {"name": fon_benchmark_series[first_fon].name, "series": fon_benchmark_series[first_fon]}
 
     fig = create_price_chart(
         fund_dict=fund_dict,
         benchmark_dict=benchmark_dict,
         title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi",
         metrics=tooltip_metrics,
-        mix_benchmark={"name": mix_data.get("name", "Mix Benchmark"), "series": mix_series} if mix_series is not None else None,
+        mix_benchmark=chart_mix,
     )
     return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html
 
 
-def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None):
+def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None):
     """Fon metriklerini tablo olarak olustur."""
     from config.constants import (
         METRIC_TOTAL_RETURN,
@@ -530,6 +596,46 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
     if not metrics:
         return html.Small("Metrik hesaplanamadi", className="text-muted"), {}
 
+    # Benchmark bildirimleri
+    notifications = []
+    if fon_benchmark_series:
+        for fon_kodu, series in fon_benchmark_series.items():
+            kategori = ""
+            for f in _ALL_FUNDS:
+                if f.get("fonKod", "").upper() == fon_kodu:
+                    try:
+                        info = _tefas_api.fon_anlik_bilgi(fon_kodu)
+                        if info:
+                            kategori = info.get("fonKategori", "")
+                    except Exception:
+                        pass
+                    break
+            
+            # Benchmark detaylarını çıkar
+            bm_details = []
+            from config.benchmark_mapping import get_fallback_benchmarks
+            mapping = get_fallback_benchmarks(kategori)
+            for kod, agirlik in mapping.items():
+                bm_info = benchmark_koda_gore(kod)
+                ad = bm_info["ad"] if bm_info else kod
+                bm_details.append(f"{ad} (%{agirlik*100:.0f})")
+            
+            notifications.append(
+                dbc.Alert(
+                    [
+                        html.I(className="bi bi-info-circle me-2"),
+                        html.Strong(f"{fon_kodu}: "),
+                        html.Span(f"Benchmarklar fon türüne göre atandı ({kategori}). "),
+                        html.Br(),
+                        html.Small(" + ".join(bm_details)),
+                    ],
+                    color="info",
+                    dismissable=True,
+                    className="mb-2 py-2",
+                    style={"fontSize": "0.9em"},
+                )
+            )
+
     metrik_keys = [
         METRIC_TOTAL_RETURN,
         METRIC_ANNUALIZED_RETURN,
@@ -580,19 +686,21 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
                 row.append(f"{val}")
         rows.append(row)
 
-    table_container = html.Div([
-        dbc.Table(
-            [
-                html.Thead(html.Tr(headers)),
-                html.Tbody([html.Tr([html.Td(c) for c in r]) for r in rows]),
-            ],
-            striped=True,
-            bordered=True,
-            hover=True,
-            size="sm",
-            responsive=True,
-        ),
-    ] + tooltip_components)
+    table_container = html.Div(
+        notifications + [
+            dbc.Table(
+                [
+                    html.Thead(html.Tr(headers)),
+                    html.Tbody([html.Tr([html.Td(c) for c in r]) for r in rows]),
+                ],
+                striped=True,
+                bordered=True,
+                hover=True,
+                size="sm",
+                responsive=True,
+            ),
+        ] + tooltip_components
+    )
     return table_container, metrics
 
 
