@@ -624,10 +624,19 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
                 dbc.Alert(
                     [
                         html.I(className="bi bi-info-circle me-2"),
-                        html.Strong(f"{fon_kodu}: "),
-                        html.Span(f"Benchmarklar fon türüne göre atandı ({kategori}). "),
+                        html.Strong(f"{fon_kodu} Benchmark Mix: "),
                         html.Br(),
                         html.Small(" + ".join(bm_details)),
+                        html.Br(),
+                        html.Small(
+                            f"Kaynak: Fon türüne göre atandı ({kategori}). ",
+                            className="text-muted",
+                        ),
+                        html.Small(
+                            "TEFAS API benchmark verisi döndürmemektedir.",
+                            className="text-warning",
+                            style={"cursor": "help", "title": "TEFAS'ın mevcut API endpoint'leri fon benchmark verisi döndürmemektedir. Benchmarklar fon kategorisine göre atanmaktadır."},
+                        ),
                     ],
                     color="info",
                     dismissable=True,
