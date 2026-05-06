@@ -1,0 +1,1 @@
+# KAP scraper modulu

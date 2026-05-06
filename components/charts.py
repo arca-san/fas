@@ -11,65 +11,152 @@ from config.constants import DEFAULT_COLOR_PALETTE
 
 
 def create_price_chart(
-    df: pd.DataFrame,
-    title: str = "Fon Getiri Grafigi",
-    benchmark_series: pd.Series = None,
-    benchmark_name: str = None,
+    fund_dict: dict,
+    benchmark_dict: dict = None,
+    title: str = "Fon Getiri Grafiği",
+    metrics: dict = None,
+    mix_benchmark: dict = None,
+    correlations: dict = None,
 ) -> go.Figure:
-    """Fon ve benchmark kumulatif getiri grafigi.
+    """Fon ve benchmark(lar) kumulatif getiri grafigi.
 
-    Tum seriler yuzde getiri olarak gosterilir (baslangic = %0).
-    Ayni sol Y ekseninde cizilir.
+    Tum fonlar ayni grafikte cizilir (düz cizgi, ayri renk).
+    Tum benchmarklar ayni grafikte cizilir (kesikli cizgi, gri).
+    Mix benchmark varsa kalın siyah çizgi ile gösterilir.
 
     Parametreler
     ------------
-    benchmark_series : pd.Series, optional
-        Benchmark yuzde getiri serisi (index df ile ayni hizada, %0 baslangicli).
-    benchmark_name : str, optional
-        Benchmark serisi etiket adi.
+    fund_dict : dict
+        {"FON_KODU": df, ...} seklinde fon verileri.
+        df'lerde "tarih" ve "fiyat" sutunlari olmali.
+    benchmark_dict : dict, optional
+        {"BENCHMARK_KODU": pd.Series, ...} seklinde benchmark serileri.
+        Seriler yuzde getiri (%0 baslangicli) olmali.
+    mix_benchmark : dict, optional
+        {"name": str, "series": pd.Series} seklinde mix benchmark.
+        name: "Mix (TD91G %65 + TUFE %35)" gibi.
+        series: yuzde getiri serisi.
     """
-    if df.empty or "tarih" not in df.columns or "fiyat" not in df.columns:
+    if not fund_dict:
         return go.Figure()
 
-    # Ilk sifir olmayan fiyata kadar olan satirlari kirp
-    mask = df["fiyat"].gt(0)
-    if not mask.any():
+    # Tum fonlarin ortak tarih araligini bul (inner join)
+    date_sets = []
+    for kod, df in fund_dict.items():
+        if df.empty or "tarih" not in df.columns or "fiyat" not in df.columns:
+            continue
+        mask = df["tarih"].notna()
+        date_sets.append(set(df.loc[mask, "tarih"]))
+
+    if not date_sets:
         return go.Figure()
-    ilk_idx = mask.idxmax()
-    df = df.loc[ilk_idx:].reset_index(drop=True)
-    if df.empty:
+
+    ortak_tarihler = set.intersection(*date_sets) if len(date_sets) > 1 else date_sets[0]
+    if not ortak_tarihler:
         return go.Figure()
 
-    bas_fiyat = df["fiyat"].iloc[0]
-    cum_return = (df["fiyat"] / bas_fiyat - 1.0) * 100.0
+    ortak_tarihler = sorted(ortak_tarihler)
 
-    # benchmark_series de ayni sekilde kirpilmalı
-    if benchmark_series is not None:
-        benchmark_series = benchmark_series.loc[ilk_idx:].reset_index(drop=True)
-
+    # Her fon icin ayri trace, dongusel renk
     fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=df["tarih"],
-            y=cum_return,
-            mode="lines",
-            name="Fon Getirisi",
-            line=dict(color=DEFAULT_COLOR_PALETTE[0], width=2),
-            hovertemplate="%{x|%Y-%m-%d}<br>Getiri: %{y:.2f}%<extra></extra>",
-        )
-    )
+    palet = DEFAULT_COLOR_PALETTE
 
-    if benchmark_series is not None and benchmark_name and not benchmark_series.empty:
+    for i, (kod, df) in enumerate(fund_dict.items()):
+        # Sadece ortak tarihleri tut
+        df_ortak = df[df["tarih"].isin(ortak_tarihler)].sort_values("tarih")
+        if df_ortak.empty:
+            continue
+
+        # Sifir olmayan fiyatla başla
+        mask = df_ortak["fiyat"].gt(0)
+        if not mask.any():
+            continue
+        df_ortak = df_ortak.loc[mask.idxmax():].reset_index(drop=True)
+        if df_ortak.empty:
+            continue
+
+        bas_fiyat = df_ortak["fiyat"].iloc[0]
+        cum_return = (df_ortak["fiyat"] / bas_fiyat - 1.0) * 100.0
+        color = palet[i % len(palet)]
+
+        m = metrics.get(kod, {}) if metrics else {}
+        sharpe_str = f"{m.get('Sharpe Orani', 0):.3f}" if m else "N/A"
+        vol_str = f"{m.get('Volatilite (Yillik)', 0):.2f}" if m else "N/A"
+        corr_val = correlations.get(kod) if correlations else None
+        corr_str = f"{corr_val:.4f}" if corr_val is not None else "N/A"
+
         fig.add_trace(
             go.Scatter(
-                x=df["tarih"],
-                y=benchmark_series,
+                x=df_ortak["tarih"],
+                y=cum_return,
                 mode="lines",
-                name=benchmark_name,
-                line=dict(color=DEFAULT_COLOR_PALETTE[1], width=2, dash="dot"),
-                hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}<extra></extra>",
+                name=kod,
+                line=dict(color=color, width=2),
+                hovertext=f"Sharpe: {sharpe_str}<br>Volatilite: {vol_str}%<br>BM Korelasyon: {corr_str}",
+                hoverinfo="x+y+text+name",
             )
         )
+
+# Benchmark(lar): fonlarla aynı tarih aralığında çiz
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    bm_colors = ["#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"]
+    
+    if benchmark_dict:
+        logger.warning("=== CHARTS BENCHMARK DICT: %s ===", list(benchmark_dict.keys()))
+        for i, (bm_kod, bm_series) in enumerate(benchmark_dict.items()):
+            logger.warning("BM %s: len=%s, ilk degerler=%s", bm_kod, len(bm_series), bm_series[:5].tolist())
+            
+            if bm_series is None or bm_series.empty:
+                continue
+            
+            # Forward fill ile NaN'ları doldur
+            bm_filled = bm_series.ffill()
+            if bm_filled.dropna().empty:
+                logger.warning("BM %s: ffill sonrasi bos", bm_kod)
+                continue
+            
+            # İlk geçerli değer (her zaman 0 olmalı, çünkü normalize ettik)
+            first_val = 1.0  # Normalize ettiğimiz için her zaman 1.0
+            
+            # Tarihleri al
+            tarihler = list(ortak_tarihler)
+            bm_values = bm_filled.reindex(pd.DatetimeIndex(tarihler)).ffill().values
+            
+            logger.warning("BM reindex: len=%s, ilk=%s", len(bm_values), bm_values[:5])
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=tarihler,
+                    y=bm_values,
+                    mode="lines",
+                    name=bm_kod,
+                    line=dict(color=bm_colors[i % len(bm_colors)], width=2, dash="dash"),
+                    hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
+                )
+            )
+
+    # Mix benchmark: kalın siyah çizgi
+    if mix_benchmark and mix_benchmark.get("series") is not None:
+        mix_series = mix_benchmark["series"]
+        mix_name = mix_benchmark.get("name", "Mix Benchmark")
+        
+        if not mix_series.empty:
+            mix_filled = mix_series.ffill()
+            tarihler = list(ortak_tarihler)
+            mix_values = mix_filled.reindex(pd.DatetimeIndex(tarihler)).ffill().values
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=tarihler,
+                    y=mix_values,
+                    mode="lines",
+                    name=mix_name,
+                    line=dict(color="#000000", width=3, dash="dot"),
+                    hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
+                )
+            )
 
     fig.update_layout(
         title=title,

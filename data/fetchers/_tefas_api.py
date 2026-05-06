@@ -661,6 +661,35 @@ def tum_fonlar(fon_tipi: str = "YAT") -> List[Dict[str, Any]]:
                  {"fonTipi": fon_tipi}).get("data") or []
 
 
+_tum_fonlar_cache: Optional[List[Dict[str, Any]]] = None
+
+
+def get_all_fonlar() -> List[Dict[str, Any]]:
+    """Tüm fonları bir kez yükle, cache'le."""
+    global _tum_fonlar_cache
+    if _tum_fonlar_cache is None:
+        _tum_fonlar_cache = tum_fonlar("YAT")
+    return _tum_fonlar_cache
+
+
+def fon_unvan_ara_local(arama: str) -> List[Dict[str, Any]]:
+    """Cache'lenmiş fonları yerel ara (hızlı)."""
+    if not arama:
+        return []
+    arama_up = arama.strip().upper()
+    fonlar = get_all_fonlar()
+    return [
+        f for f in fonlar
+        if arama_up in f.get("fonKod", "") or arama_up in f.get("unvan", "")
+    ]
+
+
+def fon_unvan_ara(arama: str = "") -> List[Dict[str, Any]]:
+    """Fon kodu/ünvanından arama."""
+    return _post("/api/funds/fonUnvanAra",
+                 {"aramaMetni": arama} if arama else {}).get("resultList") or []
+
+
 # ============================================================
 #  8) İSTATİSTİKLER
 # ============================================================
