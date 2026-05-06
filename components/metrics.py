@@ -312,3 +312,28 @@ def calculate_mix_metrics(
         METRIC_ALPHA: round(jensen, 3),
         METRIC_INFORMATION_RATIO: round(info_ratio, 3),
     }
+
+
+def get_fund_benchmarks(fon_kodu: str, fon_kategori: str = None) -> dict:
+    """Fon benchmarklarını al (önce TEFAS dene, başarısız olursa mapping kullan).
+
+    Parameters
+    ----------
+    fon_kodu : str
+        TEFAS fon kodu (örn: "MAC")
+    fon_kategori : str, optional
+        Fon kategorisi (örn: "Hisse Senedi Fonu")
+
+    Returns
+    -------
+    dict
+        {
+            "benchmarks": [{"kod": str, "agirlik": float}, ...],
+            "source": "api" | "mapping",
+            "message": str,
+        }
+    """
+    from data.fetchers.tefas_benchmark_scraper import TefasBenchmarkScraper
+
+    scraper = TefasBenchmarkScraper()
+    return scraper.get_fund_benchmarks(fon_kodu, fon_kategori)
