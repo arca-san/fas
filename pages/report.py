@@ -255,7 +255,7 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         METRIC_BETA, METRIC_TREYNOR, METRIC_ALPHA, METRIC_R_SQUARED, METRIC_INFORMATION_RATIO,
     ]
 
-    # Benchmark verilerini yükle (pseudo-fon olarak ekle)
+    # Benchmark verilerini yükle ve ana metrik tablosuna ekle
     benchmark_list = benchmark if benchmark else []
     benchmarks = []
     for bm in benchmark_list:
@@ -269,16 +269,12 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
                 kyd = KydFetcher()
                 kyd_df = kyd.get_historical_data(bm, bas, bit)
                 if not kyd_df.empty:
-                    fund_dict[f"BM:{bm}"] = kyd_df
+                    fund_dict[ad] = kyd_df
             except Exception as exc:
                 logger.warning("Benchmark verisi alinamadi %s: %s", bm, exc)
 
     # Tüm metrikleri hesapla (fonlar + benchmarklar birlikte)
-    all_metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
-
-    # Ayristir
-    metrics = {k: v for k, v in all_metrics.items() if not k.startswith("BM:")}
-    benchmark_metrics = {k.replace("BM:", ""): v for k, v in all_metrics.items() if k.startswith("BM:")}
+    metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
 
     template = env.get_template("report.html.j2")
     html_content = template.render(
@@ -289,7 +285,6 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         benchmarks=benchmarks,
         metrik_isimleri=metrik_isimleri,
         metrikler=metrics,
-        benchmark_metrics=benchmark_metrics,
         metrik_aciklamalari=METRIC_DESCRIPTIONS,
     )
 

@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <title>Fon Analiz Raporu</title>
 <style>
-  @page { size: A4 landscape; margin: 1.2cm; }
-  body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; color: #333; }
-  h1 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 4px; font-size: 16pt; }
-  h2 { color: #2c3e50; margin-top: 16px; font-size: 13pt; }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 8pt; }
-  th, td { border: 1px solid #ccc; padding: 3px 4px; text-align: center; white-space: nowrap; }
-  th { background: #1a5276; color: #fff; font-size: 7pt; }
+  @page { size: A4 landscape; margin: 1cm; }
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 8pt; color: #333; }
+  h1 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 3px; font-size: 14pt; }
+  h2 { color: #2c3e50; margin-top: 12px; font-size: 11pt; }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 7pt; }
+  th, td { border: 1px solid #bbb; padding: 2px 3px; text-align: center; }
+  th { background: #1a5276; color: #fff; font-size: 6.5pt; }
   tr:nth-child(even) { background: #f8f9fa; }
-  .header { text-align: center; margin-bottom: 16px; }
-  .header p { color: #666; font-size: 9pt; }
-  .info-box { background: #eaf2f8; padding: 8px; border-left: 4px solid #1a5276; margin: 8px 0; font-size: 9pt; }
-  .footer { text-align: center; color: #999; font-size: 7pt; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 8px; }
+  .header { text-align: center; margin-bottom: 12px; }
+  .header p { color: #666; font-size: 8pt; }
+  .info-box { background: #eaf2f8; padding: 6px; border-left: 4px solid #1a5276; margin: 6px 0; font-size: 8pt; }
+  .footer { text-align: center; color: #999; font-size: 6pt; margin-top: 16px; border-top: 1px solid #ddd; padding-top: 6px; }
 </style>
 </head>
 <body>
@@ -51,30 +51,6 @@
     {% endfor %}
   </tbody>
 </table>
-
-{% if benchmark_metrics %}
-<h2>Benchmark Metrikleri</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Benchmark</th>
-      {% for metrik in metrik_isimleri %}
-      <th>{{ metrik }}</th>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for bm_ad, m in benchmark_metrics.items() %}
-    <tr>
-      <td><strong>{{ bm_ad }}</strong></td>
-      {% for mk in metrik_isimleri %}
-      <td>{{ m.get(mk, "-") }}</td>
-      {% endfor %}
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endif %}
 
 <h2>Metrik Açıklamaları</h2>
 <table>
