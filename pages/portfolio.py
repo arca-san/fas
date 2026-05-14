@@ -465,11 +465,18 @@ def _build_summary_table(results_data: dict, selected_metric: str) -> html.Div:
     # Sıralı period listesi
     sorted_periods = sorted(periods, key=lambda p: PERIOD_ORDER.index(p["value"]))
 
-    # Tüm satır etiketleri (fonlar + varsa mix)
+    # Kullanici benchmark etiketlerini topla
+    user_bm_labels = set()
+    for p in sorted_periods:
+        for bm_label in p.get("user_benchmark_metrics", {}):
+            user_bm_labels.add(bm_label)
+
+    # Tüm satır etiketleri (fonlar + varsa mix + benchmarklar)
     row_labels = list(fund_codes)
     has_mix = mix_name and any(p.get("mix_metrics") for p in sorted_periods)
     if has_mix:
         row_labels.append(mix_name)
+    row_labels.extend(sorted(user_bm_labels))
 
     # Metric değerlerini topla
     values = {}  # {period_value: {fund_code: value}}
@@ -481,6 +488,8 @@ def _build_summary_table(results_data: dict, selected_metric: str) -> html.Div:
             values[pv][kod] = m.get(selected_metric, None)
         if has_mix and p.get("mix_metrics"):
             values[pv][mix_name] = p["mix_metrics"].get(selected_metric, None)
+        for bm_label, bm_m in p.get("user_benchmark_metrics", {}).items():
+            values[pv][bm_label] = bm_m.get(selected_metric, None)
 
     # Kolon bazında en iyi/en kötü bul
     best_in_col = {}
@@ -504,7 +513,14 @@ def _build_summary_table(results_data: dict, selected_metric: str) -> html.Div:
     rows = []
     for label in row_labels:
         is_mix = label == mix_name
-        cells = [html.Strong(label) if is_mix else label]
+        is_bm = label in user_bm_labels
+        if is_mix:
+            label_el = html.Strong(label)
+        elif is_bm:
+            label_el = html.Span(label, style={"fontStyle": "italic", "color": "#555"})
+        else:
+            label_el = label
+        cells = [label_el]
         for p in sorted_periods:
             pv = p["value"]
             val = values[pv].get(label)
@@ -601,6 +617,15 @@ def _build_detail_tab_content(
         for k in metric_keys:
             val = mix_metrics.get(k, "-")
             row.append(html.Span(f"{val}", style={"fontWeight": "bold"}) if val != "-" else "-")
+        rows.append(html.Tr([html.Td(c) for c in row]))
+
+    # Kullanici secimi benchmark satirlari
+    user_benchmark_metrics = period_data.get("user_benchmark_metrics", {})
+    for bm_ad, bm_m in user_benchmark_metrics.items():
+        row = [html.Span(bm_ad, style={"fontStyle": "italic", "color": "#555"})]
+        for k in metric_keys:
+            val = bm_m.get(k, "-")
+            row.append(f"{val}" if val != "-" else "-")
         rows.append(html.Tr([html.Td(c) for c in row]))
 
     # Benchmark uyarilari
@@ -889,6 +914,20 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
             if bm_m:
                 benchmark_mix_metrics[fon_kodu] = bm_m
 
+        # Kullanici secimi benchmark metrikleri
+        user_benchmark_metrics = {}
+        for bm_kod, bm_series in benchmark_dict.items():
+            if bm_kod == "TLREF":
+                continue
+            bm_subset = bm_series.reindex(idx).ffill()
+            if bm_subset.dropna().empty:
+                continue
+            endeks_bilgi = benchmark_koda_gore(bm_kod)
+            bm_ad = endeks_bilgi["ad"] if endeks_bilgi else bm_kod
+            bm_m = calculate_mix_metrics(bm_subset, rf_subset, market_prices, bm_ad)
+            if bm_m:
+                user_benchmark_metrics[bm_ad] = bm_m
+
         periods_data.append({
             "value": p,
             "label": p_label,
@@ -896,6 +935,7 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
             "mix_metrics": mix_metrics,
             "mix_name": user_mix_name,
             "benchmark_mix_metrics": benchmark_mix_metrics,
+            "user_benchmark_metrics": user_benchmark_metrics,
         })
 
     # sonuclari hazirla
