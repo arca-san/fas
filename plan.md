@@ -54,6 +54,8 @@
 - Mobil uyum (responsive tablo/grafik)
 - Tema desteği (açık/koyu)
 - Favori fon listesi ve kalıcılık
+- Tablolarda tıklanan şeyde artan/azalan sıralama
+- Fon bulucu ekranında en üst sıradaki fonun metriklerinin bold olması, her metrikte en iyi olan 1. olmasa bile genelde yeşil/vb. bir renkle belli olması
 
 ### 5. Performans
 - Büyük portföylerde sayfa yüklenme süresinin iyileştirilmesi
