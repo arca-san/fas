@@ -12,6 +12,7 @@ import logging
 from config.constants import (
     METRIC_VOLATILITY,
     METRIC_DOWNSIDE_VOL,
+    METRIC_MAX_DRAWDOWN,
     METRIC_SHARPE,
     METRIC_SORTINO,
     METRIC_TREYNOR,
@@ -48,6 +49,17 @@ def _downside_vol(daily_returns: pd.Series) -> float:
     if len(neg) == 0:
         return 0.0
     return neg.std(ddof=1) * np.sqrt(TRADING_DAYS)
+
+
+def _max_drawdown(daily_returns: pd.Series) -> float:
+    """Maksimum dusus (peak-to-trough) yuzdesini hesapla, pozitif deger."""
+    if len(daily_returns) < 2:
+        return 0.0
+    cum = (1 + daily_returns).cumprod()
+    running_max = cum.expanding().max()
+    drawdown = (cum - running_max) / running_max
+    max_dd = drawdown.min()
+    return abs(max_dd) * 100
 
 
 def calculate_fund_metrics(
@@ -154,11 +166,14 @@ def calculate_fund_metrics(
             kod, ann_return_pct, vol * 100, rf_annual, sharpe, beta_val,
         )
 
-        results[kod] = {
+        max_dd = _max_drawdown(daily_returns_dates)
+
+    results[kod] = {
             METRIC_TOTAL_RETURN: round(total_return, 2),
             METRIC_ANNUALIZED_RETURN: round(ann_return_pct, 2),
             METRIC_VOLATILITY: round(vol * 100, 2),
             METRIC_DOWNSIDE_VOL: round(downside * 100, 2),
+            METRIC_MAX_DRAWDOWN: round(max_dd, 2),
             METRIC_SHARPE: round(sharpe, 3),
             METRIC_SORTINO: round(sortino, 3),
             METRIC_BETA: round(beta_val, 3),
@@ -295,6 +310,8 @@ def calculate_mix_metrics(
         else:
             info_ratio = 0.0
 
+    max_dd = _max_drawdown(mix_daily)
+
     sharpe = (ann_ret - rf_annual) / vol if vol > 0 else 0.0
     sortino = (ann_ret - rf_annual) / downside if downside > 0 else 0.0
     
@@ -305,6 +322,7 @@ def calculate_mix_metrics(
         METRIC_ANNUALIZED_RETURN: round(ann_return_pct, 2),
         METRIC_VOLATILITY: round(vol * 100, 2),
         METRIC_DOWNSIDE_VOL: round(downside * 100, 2),
+        METRIC_MAX_DRAWDOWN: round(max_dd, 2),
         METRIC_SHARPE: round(sharpe, 3),
         METRIC_SORTINO: round(sortino, 3),
         METRIC_BETA: round(beta_val, 3),
