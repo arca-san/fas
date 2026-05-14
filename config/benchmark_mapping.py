@@ -16,14 +16,14 @@ FON_KATEGORI_BENCHMARK_MAPPING = {
     
     # Karma/değişken fonlar
     "Karma Fon": {"FHISE": 0.6, "TD91G": 0.4},
-    "Değişken Fon": {"FHISE": 0.5, "TD91G": 0.3, "TUFE": 0.2},
+    "Değişken Fon": {"FHISE": 0.5, "TD91G": 0.5},
     
     # Sabit getiri fonları
-    "Borçlanma Araçları Fonu": {"TD91G": 0.7, "TUFE": 0.3},
-    "Borçlanma Araçları Yoğun Fon": {"TD91G": 0.85, "TUFE": 0.15},
+    "Borçlanma Araçları Fonu": {"TD91G": 1.0},
+    "Borçlanma Araçları Yoğun Fon": {"TD91G": 1.0},
     
     # Para piyasası
-    "Para Piyasası Fonu": {"TUFE": 1.0},
+    "Para Piyasası Fonu": {"TD91G": 1.0},
     
     # Kıymetli madenler
     "Kıymetli Madenler Fonu": {"ATKAP": 1.0},
@@ -32,35 +32,35 @@ FON_KATEGORI_BENCHMARK_MAPPING = {
     "Emtia Fonu": {"ATKAP": 0.8, "FHISE": 0.2},
     
     # Katılım fonları
-    "Katılım Fonu": {"FHISE": 0.5, "TD91G": 0.3, "TUFE": 0.2},
+    "Katılım Fonu": {"FHISE": 0.5, "TD91G": 0.5},
     "Katılım Hisse Fonu": {"FHISE": 1.0},
-    "Katılım Para Piyasası Fonu": {"TUFE": 1.0},
+    "Katılım Para Piyasası Fonu": {"TD91G": 1.0},
     
     # Fon sepeti
-    "Fon Sepeti Fonu": {"FHISE": 0.4, "TD91G": 0.3, "TUFE": 0.3},
-    "Fon Sepeti Dengeli Fon": {"FHISE": 0.5, "TD91G": 0.3, "TUFE": 0.2},
-    "Fon Sepeti Agresif Fon": {"FHISE": 0.8, "TD91G": 0.1, "TUFE": 0.1},
-    "Fon Sepeti Muhafazakar Fon": {"TD91G": 0.5, "TUFE": 0.3, "FHISE": 0.2},
+    "Fon Sepeti Fonu": {"FHISE": 0.4, "TD91G": 0.6},
+    "Fon Sepeti Dengeli Fon": {"FHISE": 0.5, "TD91G": 0.5},
+    "Fon Sepeti Agresif Fon": {"FHISE": 0.8, "TD91G": 0.2},
+    "Fon Sepeti Muhafazakar Fon": {"TD91G": 0.8, "FHISE": 0.2},
     
     # Serbest fonlar
-    "Serbest Fon": {"FHISE": 0.4, "TD91G": 0.3, "TUFE": 0.3},
+    "Serbest Fon": {"FHISE": 0.4, "TD91G": 0.6},
     
     # Gayrimenkul
-    "Gayrimenkul Fonu": {"TUFE": 0.6, "TD91G": 0.4},
+    "Gayrimenkul Fonu": {"TD91G": 1.0},
     
     # Girişim sermayesi
     "Girişim Sermayesi Fonu": {"FHISE": 1.0},
     
     # Sürdürülebilirlik
-    "Sürdürülebilirlik Fonu": {"FHISE": 0.8, "TUFE": 0.2},
+    "Sürdürülebilirlik Fonu": {"FHISE": 0.8, "TD91G": 0.2},
     
     # Yabancı fonlar
-    "Yabancı Hisse Senedi Fonu": {"FHISE": 0.5, "TUFE": 0.5},
-    "Yabancı Fon Sepeti Fonu": {"FHISE": 0.4, "TD91G": 0.2, "TUFE": 0.4},
+    "Yabancı Hisse Senedi Fonu": {"FHISE": 0.5, "TD91G": 0.5},
+    "Yabancı Fon Sepeti Fonu": {"FHISE": 0.4, "TD91G": 0.6},
 }
 
 # Bilinmeyen kategoriler için default mapping
-DEFAULT_BENCHMARK_MAPPING = {"FHISE": 0.5, "TD91G": 0.3, "TUFE": 0.2}
+DEFAULT_BENCHMARK_MAPPING = {"FHISE": 0.5, "TD91G": 0.5}
 
 
 def get_fallback_benchmarks(kategori: str) -> dict[str, float]:
@@ -82,13 +82,13 @@ def get_fallback_benchmarks(kategori: str) -> dict[str, float]:
     keyword_mapping = [
         (["hisse", "stock", "equity"], {"FHISE": 1.0}),
         (["altın", "gold", "kıymetli maden", "emtia"], {"ATKAP": 1.0}),
-        (["para piyasası", "para piyasasi", "money market", "likit"], {"TUFE": 1.0}),
-        (["borçlanma", "borclanma", "fixed income", "tahvil", "bono"], {"TD91G": 0.7, "TUFE": 0.3}),
+        (["para piyasası", "para piyasasi", "money market", "likit"], {"TD91G": 1.0}),
+        (["borçlanma", "borclanma", "fixed income", "tahvil", "bono"], {"TD91G": 1.0}),
         (["karma", "balanced", "değişken", "degisken"], {"FHISE": 0.6, "TD91G": 0.4}),
-        (["fon sepeti", "fund of funds"], {"FHISE": 0.4, "TD91G": 0.3, "TUFE": 0.3}),
-        (["katılım", "participation", "faizsiz"], {"FHISE": 0.5, "TD91G": 0.3, "TUFE": 0.2}),
-        (["gayrimenkul", "real estate"], {"TUFE": 0.6, "TD91G": 0.4}),
-        (["serbest", "flexible"], {"FHISE": 0.4, "TD91G": 0.3, "TUFE": 0.3}),
+        (["fon sepeti", "fund of funds"], {"FHISE": 0.4, "TD91G": 0.6}),
+        (["katılım", "participation", "faizsiz"], {"FHISE": 0.5, "TD91G": 0.5}),
+        (["gayrimenkul", "real estate"], {"TD91G": 1.0}),
+        (["serbest", "flexible"], {"FHISE": 0.4, "TD91G": 0.6}),
     ]
     
     for keywords, mapping in keyword_mapping:
