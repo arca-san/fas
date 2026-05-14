@@ -159,7 +159,7 @@ layout = dbc.Container([
                         ],
                     ),
                 ])
-            ], className="mb-3"),
+            ], className="h-100 mb-3"),
         ], xs=12, md=4),
 
         dbc.Col([
@@ -180,7 +180,7 @@ layout = dbc.Container([
                         className="mt-2 w-100",
                     ),
                 ])
-            ], className="mb-3"),
+            ], className="h-100 mb-3"),
         ], xs=12, md=4),
 
         dbc.Col([
@@ -214,9 +214,9 @@ layout = dbc.Container([
                         className="text-muted d-block mt-1",
                     ),
                 ])
-            ], className="mb-3"),
+            ], className="h-100 mb-3"),
         ], xs=12, md=4),
-    ]),
+    ], className="align-items-stretch"),
 
     html.Div(id="pf-results", style={"display": "none"}, children=[
         dbc.Tabs([
