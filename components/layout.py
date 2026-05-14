@@ -40,7 +40,6 @@ def create_sidebar() -> html.Div:
                 [
                     dbc.NavLink("Ana Sayfa", href="/", active="exact"),
                     dbc.NavLink("Portföy Analizi", href="/portfolio", active="exact"),
-                    dbc.NavLink("Karşılaştırma", href="/comparison", active="exact"),
                     dbc.NavLink("Rapor", href="/report", active="exact"),
                 ],
                 vertical=True,
