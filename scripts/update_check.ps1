@@ -2,17 +2,6 @@ $repo = 'arca-san/fas'
 $versionFile = Join-Path $PSScriptRoot 'version.txt'
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 
-# --- branch oku ---
-$headPath = Join-Path $projectRoot '.git\HEAD'
-$currentBranch = ''
-if (Test-Path $headPath) {
-    $headContent = Get-Content $headPath -Raw -ErrorAction SilentlyContinue
-    if ($headContent -match 'ref: refs/heads/(.+?)[\r\n]') {
-        $currentBranch = $matches[1]
-    }
-}
-$onMaster = ($currentBranch -eq 'master')
-
 # --- local version oku ---
 $localSha = ''
 if (Test-Path $versionFile) {
@@ -36,17 +25,11 @@ if ($remoteSha -eq $localSha) {
     exit 0
 }
 
-# --- sadece master branch'inde guncelleme uygula ---
-if (-not $onMaster) {
-    Write-Host ('Guncelleme var (su an ' + $currentBranch + ' dalinda). Gecmek icin master dalina gecin.')
-    exit 0
-}
-
-# --- ata/soy kontrolu ---
+# --- ata/soy kontrolu: version.txt'teki SHA, remote'un atasi mi? ---
 if ($localSha -ne 'unknown') {
     git merge-base --is-ancestor $localSha $remoteSha 2>$null
     if ($LASTEXITCODE -ne 0) {
-        Write-Host 'Guncelleme yok (yerel dal remote master ile ayni veya ileride).'
+        Write-Host 'Guncelleme yok (yerel surum remote master ile ayni veya ileride).'
         exit 0
     }
 }

@@ -19,6 +19,9 @@ data/cache/*.parquet
 # GTK runtime (auto-downloaded)
 .gtk/
 
+# Versyon takip dosyasi (auto-update tarafindan yonetilir)
+scripts/version.txt
+
 # IDE
 .vscode/
 .idea/
