@@ -25,7 +25,7 @@ from data.fetchers import _tefas_api
 from tlref_scraper import TLREFScraper, TLREFConverter
 from data.fetchers.tefas_fetcher import TefasFetcher
 from data.fetchers.kyd_fetcher import KydFetcher
-from components.metrics import calculate_fund_metrics, calculate_mix_metrics, select_fund_benchmark
+from components.metrics import calculate_fund_metrics, select_fund_benchmark
 from config.constants import METRIC_DESCRIPTIONS
 from config.logger import get_logger
 from config.settings import PROJECT_ROOT
@@ -242,19 +242,22 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
     except Exception as exc:
         logger.warning("FHISE alinamadi: %s", exc)
 
-    metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
-
+    from config.constants import (
+        METRIC_TOTAL_RETURN, METRIC_ANNUALIZED_RETURN, METRIC_VOLATILITY,
+        METRIC_DOWNSIDE_VOL, METRIC_MAX_DRAWDOWN,
+        METRIC_VAR, METRIC_CVAR, METRIC_SHARPE, METRIC_SORTINO,
+        METRIC_BETA, METRIC_TREYNOR, METRIC_ALPHA, METRIC_R_SQUARED, METRIC_INFORMATION_RATIO,
+    )
     metrik_isimleri = [
-        "Toplam Getiri", "Yıllıklandırılmış Getiri", "Volatilite (Yıllık)",
-        "Aşağı Yönlü Volatilite", "Maksimum Düşüş (Max Drawdown)",
-        "VaR (%95)", "CVaR (%95)", "Sharpe Oranı", "Sortino Oranı",
-        "Beta", "Treynor Oranı", "Alpha", "R²", "Information Ratio",
+        METRIC_TOTAL_RETURN, METRIC_ANNUALIZED_RETURN, METRIC_VOLATILITY,
+        METRIC_DOWNSIDE_VOL, METRIC_MAX_DRAWDOWN,
+        METRIC_VAR, METRIC_CVAR, METRIC_SHARPE, METRIC_SORTINO,
+        METRIC_BETA, METRIC_TREYNOR, METRIC_ALPHA, METRIC_R_SQUARED, METRIC_INFORMATION_RATIO,
     ]
 
-    # Benchmark verilerini yükle
+    # Benchmark verilerini yükle (pseudo-fon olarak ekle)
     benchmark_list = benchmark if benchmark else []
     benchmarks = []
-    benchmark_metrics = {}
     for bm in benchmark_list:
         if bm == "TLREF":
             benchmarks.append("TLREF (Risksiz Getiri)")
@@ -263,24 +266,19 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
             ad = bm_info["ad"] if bm_info else bm
             benchmarks.append(ad)
             try:
-                first_df = list(fund_dict.values())[0]
                 kyd = KydFetcher()
                 kyd_df = kyd.get_historical_data(bm, bas, bit)
-                if not kyd_df.empty and "tarih" in first_df.columns:
-                    kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
-                    kyd_map = kyd_df.set_index("tarih")["fiyat"]
-                    hizali = kyd_map.reindex(first_df["tarih"]).ffill()
-                    if not hizali.dropna().empty:
-                        ilk_fiyat = float(hizali.dropna().iloc[0])
-                        bm_series = pd.Series(
-                            (hizali.astype(float) / ilk_fiyat - 1.0) * 100.0,
-                            index=first_df["tarih"].values,
-                            name=ad,
-                        )
-                        bm_metrics = calculate_mix_metrics(bm_series, rf_daily_returns, market_prices, ad)
-                        benchmark_metrics[ad] = bm_metrics
+                if not kyd_df.empty:
+                    fund_dict[f"BM:{bm}"] = kyd_df
             except Exception as exc:
-                logger.warning("Benchmark metrik alinamadi %s: %s", bm, exc)
+                logger.warning("Benchmark verisi alinamadi %s: %s", bm, exc)
+
+    # Tüm metrikleri hesapla (fonlar + benchmarklar birlikte)
+    all_metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
+
+    # Ayristir
+    metrics = {k: v for k, v in all_metrics.items() if not k.startswith("BM:")}
+    benchmark_metrics = {k.replace("BM:", ""): v for k, v in all_metrics.items() if k.startswith("BM:")}
 
     template = env.get_template("report.html.j2")
     html_content = template.render(

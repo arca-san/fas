@@ -4,25 +4,24 @@
 <meta charset="UTF-8">
 <title>Fon Analiz Raporu</title>
 <style>
-  @page { size: A4; margin: 2cm; }
-  body { font-family: 'DejaVu Sans', sans-serif; font-size: 11pt; color: #333; }
-  h1 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 5px; }
-  h2 { color: #2c3e50; margin-top: 20px; }
-  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
-  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: center; }
-  th { background: #1a5276; color: #fff; }
+  @page { size: A4 landscape; margin: 1.2cm; }
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; color: #333; }
+  h1 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 4px; font-size: 16pt; }
+  h2 { color: #2c3e50; margin-top: 16px; font-size: 13pt; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 8pt; }
+  th, td { border: 1px solid #ccc; padding: 3px 4px; text-align: center; white-space: nowrap; }
+  th { background: #1a5276; color: #fff; font-size: 7pt; }
   tr:nth-child(even) { background: #f8f9fa; }
-  .header { text-align: center; margin-bottom: 20px; }
-  .header p { color: #666; font-size: 10pt; }
-  .info-box { background: #eaf2f8; padding: 10px; border-left: 4px solid #1a5276; margin: 10px 0; font-size: 10pt; }
-  .footer { text-align: center; color: #999; font-size: 8pt; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
+  .header { text-align: center; margin-bottom: 16px; }
+  .header p { color: #666; font-size: 9pt; }
+  .info-box { background: #eaf2f8; padding: 8px; border-left: 4px solid #1a5276; margin: 8px 0; font-size: 9pt; }
+  .footer { text-align: center; color: #999; font-size: 7pt; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 8px; }
 </style>
 </head>
 <body>
 <div class="header">
   <h1>Fon Analiz Raporu</h1>
-  <p>Tarih Aralığı: {{ start_date }} — {{ end_date }}</p>
-  <p>Oluşturulma: {{ generated_at }}</p>
+  <p>Tarih Aralığı: {{ start_date }} — {{ end_date }} | Oluşturulma: {{ generated_at }}</p>
 </div>
 
 <h2>Özet Bilgiler</h2>
