@@ -14,7 +14,7 @@ import pandas as pd
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
 from data.fetchers.kyd_fetcher import KydFetcher
-from components.charts import create_price_chart
+from components.charts import create_price_chart, create_risk_return_scatter
 from components.metrics import calculate_fund_metrics, select_fund_benchmark, calculate_mix_metrics, get_fund_benchmarks
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
@@ -101,6 +101,21 @@ layout = dbc.Container(
                         [
                             html.H5("Fon Metrikleri", className="card-title"),
                             html.Div(id="metrik-tablosu"),
+                        ]
+                    )
+                ],
+                className="mb-3",
+            ),
+            dbc.Card(
+                [
+                    dbc.CardBody(
+                        [
+                            html.H5("Risk-Getiri Saçılım Grafiği", className="card-title"),
+                            dcc.Loading(
+                                id="loading-scatter",
+                                type="default",
+                                children=dcc.Graph(id="risk-getiri-scatter", config={"displayModeBar": True}),
+                            ),
                         ]
                     )
                 ],
@@ -225,6 +240,7 @@ def uppercase_search(val):
 
 @callback(
     Output("fiyat-grafigi", "figure"),
+    Output("risk-getiri-scatter", "figure"),
     Output("grafik-alani", "style"),
     Output("analiz-status", "children"),
     Output("tefas-uyari", "style"),
@@ -250,7 +266,7 @@ def run_analysis(
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
-        return go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted")
+        return go.Figure(), go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), []
 
     from datetime import datetime
     bas = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
@@ -280,7 +296,7 @@ def run_analysis(
             hata_list.append(f"{fon_kodu}: {exc}")
 
     if not fund_dict:
-        return go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted")
+        return go.Figure(), go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), []
 
     status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
@@ -519,7 +535,9 @@ def run_analysis(
     )
     auto_bm_codes = list(auto_bm_codes_set)
 
-    return fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
+    scatter_fig = create_risk_return_scatter(tooltip_metrics)
+
+    return fig, scatter_fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
 
 
 def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None, fon_benchmark_correlations: dict = None):
