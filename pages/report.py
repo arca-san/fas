@@ -26,9 +26,7 @@ from tlref_scraper import TLREFScraper, TLREFConverter
 from data.fetchers.tefas_fetcher import TefasFetcher
 from data.fetchers.kyd_fetcher import KydFetcher
 from components.metrics import (
-    calculate_fund_metrics, select_fund_benchmark,
-    _annual_return, _annualized_vol, _downside_vol, _max_drawdown,
-    _value_at_risk, _conditional_var, TRADING_DAYS,
+    calculate_fund_metrics,
 )
 from config.constants import METRIC_DESCRIPTIONS
 from config.logger import get_logger
@@ -260,65 +258,30 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         METRIC_BETA, METRIC_TREYNOR, METRIC_ALPHA, METRIC_R_SQUARED, METRIC_INFORMATION_RATIO,
     ]
 
-    # Önce fon metriklerini hesapla
-    metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
-
-    # Benchmark verilerini yükle ve metriklerini hesapla
+    # Benchmark verilerini fund_dict'e pseudo-fon olarak ekle (calculate_fund_metrics oncesi)
     benchmark_list = benchmark if benchmark else []
-    benchmarks = []
+    benchmark_labels = []
     for bm in benchmark_list:
         if bm == "TLREF":
-            benchmarks.append("TLREF (Risksiz Getiri)")
+            benchmark_labels.append("TLREF (Risksiz Getiri)")
         else:
             bm_info = benchmark_koda_gore(bm)
             ad = bm_info["ad"] if bm_info else bm
-            benchmarks.append(ad)
             try:
                 kyd = KydFetcher()
                 kyd_df = kyd.get_historical_data(bm, bas, bit)
                 if kyd_df.empty or "tarih" not in kyd_df.columns or "fiyat" not in kyd_df.columns:
+                    logger.warning("Benchmark verisi bos veya eksik sutun: %s", bm)
                     continue
                 kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
-                fiyat = kyd_df["fiyat"]
-                tarih = pd.to_datetime(kyd_df["tarih"])
-                gunluk = fiyat.pct_change().dropna()
-                if len(gunluk) < 2:
-                    continue
-                gunluk.index = tarih[-len(gunluk):]
-
-                toplam = (fiyat.iloc[-1] / fiyat.iloc[0] - 1) * 100
-                yillik = _annual_return(gunluk)
-                vol = _annualized_vol(gunluk)
-                down = _downside_vol(gunluk)
-                maks_dd = _max_drawdown(gunluk)
-                var_95 = _value_at_risk(gunluk)
-                cvar_95 = _conditional_var(gunluk)
-
-                rf_daily = rf_daily_returns.mean() if not rf_daily_returns.empty else 0.0
-                rf_ann = rf_daily * TRADING_DAYS
-                ann_pct = yillik * 100
-
-                sharpe = (yillik - rf_ann) / vol if vol > 0 else 0.0
-                sortino = (yillik - rf_ann) / down if down > 0 else 0.0
-
-                metrics[ad] = {
-                    METRIC_TOTAL_RETURN: round(toplam, 2),
-                    METRIC_ANNUALIZED_RETURN: round(ann_pct, 2),
-                    METRIC_VOLATILITY: round(vol * 100, 2),
-                    METRIC_DOWNSIDE_VOL: round(down * 100, 2),
-                    METRIC_MAX_DRAWDOWN: round(maks_dd, 2),
-                    METRIC_VAR: round(var_95, 2),
-                    METRIC_CVAR: round(cvar_95, 2),
-                    METRIC_SHARPE: round(sharpe, 3),
-                    METRIC_SORTINO: round(sortino, 3),
-                    METRIC_BETA: "-",
-                    METRIC_TREYNOR: "-",
-                    METRIC_ALPHA: "-",
-                    METRIC_R_SQUARED: "-",
-                    METRIC_INFORMATION_RATIO: "-",
-                }
+                fund_dict[ad] = kyd_df
+                benchmark_labels.append(ad)
+                logger.info("Benchmark eklendi: %s (%d satir)", ad, len(kyd_df))
             except Exception as exc:
-                logger.warning("Benchmark metrik hatasi %s: %s", bm, exc)
+                logger.exception("Benchmark yuklenemedi %s: %s", bm, exc)
+
+    # Fon + benchmark metriklerini birlikte hesapla
+    metrics = calculate_fund_metrics(fund_dict, rf_daily_returns, market_prices)
 
     template = env.get_template("report.html.j2")
     html_content = template.render(
@@ -326,7 +289,7 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         end_date=bit.isoformat() if bit else "",
         generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
         fon_kodlari=fon_kodlari,
-        benchmarks=benchmarks,
+        benchmarks=benchmark_labels,
         metrik_isimleri=metrik_isimleri,
         metrikler=metrics,
         metrik_aciklamalari=METRIC_DESCRIPTIONS,
