@@ -13,15 +13,19 @@ from config.constants import (
     METRIC_VOLATILITY,
     METRIC_DOWNSIDE_VOL,
     METRIC_MAX_DRAWDOWN,
+    METRIC_VAR,
+    METRIC_CVAR,
     METRIC_SHARPE,
     METRIC_SORTINO,
     METRIC_TREYNOR,
     METRIC_ALPHA,
     METRIC_BETA,
+    METRIC_R_SQUARED,
     METRIC_INFORMATION_RATIO,
     METRIC_TOTAL_RETURN,
     METRIC_ANNUALIZED_RETURN,
 )
+from config.settings import VAR_CONFIDENCE
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +64,36 @@ def _max_drawdown(daily_returns: pd.Series) -> float:
     drawdown = (cum - running_max) / running_max
     max_dd = drawdown.min()
     return abs(max_dd) * 100
+
+
+def _value_at_risk(daily_returns: pd.Series) -> float:
+    """Tarihsel Value at Risk (VaR) %95 guven duzeyinde, pozitif yuzde."""
+    if len(daily_returns) < 2:
+        return 0.0
+    var = np.percentile(daily_returns, (1 - VAR_CONFIDENCE) * 100)
+    return abs(var) * 100
+
+
+def _conditional_var(daily_returns: pd.Series) -> float:
+    """Tarihsel CVaR (Expected Shortfall) %95, pozitif yuzde."""
+    if len(daily_returns) < 2:
+        return 0.0
+    threshold = np.percentile(daily_returns, (1 - VAR_CONFIDENCE) * 100)
+    tail = daily_returns[daily_returns <= threshold]
+    if len(tail) == 0:
+        return 0.0
+    return abs(tail.mean()) * 100
+
+
+def _r_squared(fund_returns: pd.Series, market_returns: pd.Series) -> float:
+    """R² = korelasyon(fon, benchmark)²"""
+    common = fund_returns.index.intersection(market_returns.index)
+    if len(common) < 3:
+        return 0.0
+    corr = fund_returns.loc[common].corr(market_returns.loc[common])
+    if pd.isna(corr):
+        return 0.0
+    return round(corr ** 2, 4)
 
 
 def calculate_fund_metrics(
@@ -170,6 +204,9 @@ def calculate_fund_metrics(
         )
 
         max_dd = _max_drawdown(daily_returns_dates)
+        var_95 = _value_at_risk(daily_returns_dates)
+        cvar_95 = _conditional_var(daily_returns_dates)
+        r2_val = _r_squared(daily_returns_dates, market_returns)
 
         results[kod] = {
             METRIC_TOTAL_RETURN: round(total_return, 2),
@@ -177,11 +214,14 @@ def calculate_fund_metrics(
             METRIC_VOLATILITY: round(vol * 100, 2),
             METRIC_DOWNSIDE_VOL: round(downside * 100, 2),
             METRIC_MAX_DRAWDOWN: round(max_dd, 2),
+            METRIC_VAR: round(var_95, 2),
+            METRIC_CVAR: round(cvar_95, 2),
             METRIC_SHARPE: round(sharpe, 3),
             METRIC_SORTINO: round(sortino, 3),
             METRIC_BETA: round(beta_val, 3),
             METRIC_TREYNOR: round(treynor, 3),
             METRIC_ALPHA: round(jensen, 3),
+            METRIC_R_SQUARED: r2_val,
             METRIC_INFORMATION_RATIO: round(info_ratio, 3),
         }
 
@@ -314,6 +354,9 @@ def calculate_mix_metrics(
             info_ratio = 0.0
 
     max_dd = _max_drawdown(mix_daily)
+    var_95 = _value_at_risk(mix_daily)
+    cvar_95 = _conditional_var(mix_daily)
+    r2_val = _r_squared(mix_daily, market_returns)
 
     sharpe = (ann_ret - rf_annual) / vol if vol > 0 else 0.0
     sortino = (ann_ret - rf_annual) / downside if downside > 0 else 0.0
@@ -326,11 +369,14 @@ def calculate_mix_metrics(
         METRIC_VOLATILITY: round(vol * 100, 2),
         METRIC_DOWNSIDE_VOL: round(downside * 100, 2),
         METRIC_MAX_DRAWDOWN: round(max_dd, 2),
+        METRIC_VAR: round(var_95, 2),
+        METRIC_CVAR: round(cvar_95, 2),
         METRIC_SHARPE: round(sharpe, 3),
         METRIC_SORTINO: round(sortino, 3),
         METRIC_BETA: round(beta_val, 3),
         METRIC_TREYNOR: round(treynor, 3),
         METRIC_ALPHA: round(jensen, 3),
+        METRIC_R_SQUARED: r2_val,
         METRIC_INFORMATION_RATIO: round(info_ratio, 3),
     }
 
