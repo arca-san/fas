@@ -31,10 +31,14 @@ if errorlevel 1 (
 )
 
 echo WeasyPrint / GTK kontrol ediliyor...
-set "GTK_PATH=C:\Program Files\GTK3-Runtime Win64\bin"
-if exist "%GTK_PATH%\libgobject-2.0-0.dll" (
-    set "PATH=%GTK_PATH%;%PATH%"
-) else (
+for %%p in (
+    "C:\Program Files\GTK3-Runtime Win64\bin"
+    "C:\Program Files\gtk3-runtime\bin"
+    "%LOCALAPPDATA%\GTK3-Runtime Win64\bin"
+) do (
+    if exist "%%~p\libgobject-2.0-0.dll" set "PATH=%%~p;%PATH%"
+)
+where libgobject-2.0-0.dll >nul 2>&1 || (
     echo UYARI: GTK kutuphanesi bulunamadi. WeasyPrint PDF raporlari calismaz.
     echo Cozum: winget install --id tschoonj.GTKForWindows -e
 )

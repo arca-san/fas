@@ -19,7 +19,7 @@ from jinja2 import Environment, FileSystemLoader
 
 # WeasyPrint macOS brew lib path
 os.environ.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
-from weasyprint import HTML
+# NOTE: weasyprint import is lazy (inside generate_report) to avoid crash when GTK is missing
 
 from data.fetchers import _tefas_api
 from tlref_scraper import TLREFScraper, TLREFConverter
@@ -295,8 +295,9 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         metrik_aciklamalari=METRIC_DESCRIPTIONS,
     )
 
-    # PDF
+    # PDF (lazy import — GTK olmayan makinelerde app crash olmasin)
     try:
+        from weasyprint import HTML
         pdf_bytes = HTML(string=html_content).write_pdf()
         pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
         download_link = html.A(
