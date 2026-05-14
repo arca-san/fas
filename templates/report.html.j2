@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Fon Analiz Raporu</title>
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 11pt; color: #333; }
+  h1 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 5px; }
+  h2 { color: #2c3e50; margin-top: 20px; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
+  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: center; }
+  th { background: #1a5276; color: #fff; }
+  tr:nth-child(even) { background: #f8f9fa; }
+  .header { text-align: center; margin-bottom: 20px; }
+  .header p { color: #666; font-size: 10pt; }
+  .info-box { background: #eaf2f8; padding: 10px; border-left: 4px solid #1a5276; margin: 10px 0; font-size: 10pt; }
+  .footer { text-align: center; color: #999; font-size: 8pt; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Fon Analiz Raporu</h1>
+  <p>Tarih Aralığı: {{ start_date }} — {{ end_date }}</p>
+  <p>Oluşturulma: {{ generated_at }}</p>
+</div>
+
+<h2>Özet Bilgiler</h2>
+<div class="info-box">
+  <strong>Fon(lar):</strong> {{ fon_kodlari | join(", ") }}<br>
+  <strong>Benchmark(lar):</strong> {{ benchmarks | join(", ") if benchmarks else "Seçilmedi" }}
+</div>
+
+<h2>Performans Metrikleri</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Fon</th>
+      {% for metrik in metrik_isimleri %}
+      <th>{{ metrik }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for fon_kodu, m in metrikler.items() %}
+    <tr>
+      <td><strong>{{ fon_kodu }}</strong></td>
+      {% for mk in metrik_isimleri %}
+      <td>{{ m.get(mk, "-") }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Metrik Açıklamaları</h2>
+<table>
+  <thead>
+    <tr><th>Metrik</th><th>Açıklama</th></tr>
+  </thead>
+  <tbody>
+    {% for metrik, aciklama in metrik_aciklamalari.items() %}
+    <tr><td><strong>{{ metrik }}</strong></td><td style="text-align:left">{{ aciklama }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="footer">
+  <p>Fon Analiz Sistemi &mdash; Bu rapor otomatik oluşturulmuştur, yatırım tavsiyesi değildir.</p>
+</div>
+</body>
+</html>
