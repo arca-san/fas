@@ -256,7 +256,7 @@ def fonlari_bul(n_clicks, kategori_kod, vade):
             className="text-muted", style={"fontSize": "0.9em"},
         ),
     ])
-    durum = f"{len(top_fonlar)} fon bulundu"
+    durum = f"Seçilen zaman aralığına ({period_label}) göre en yüksek getiriyi sağlamış {len(top_fonlar)} fon getirildi"
 
     return {"display": "block"}, table, fig, durum, tavsiye
 
