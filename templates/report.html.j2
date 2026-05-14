@@ -4,18 +4,19 @@
 <meta charset="UTF-8">
 <title>Fon Analiz Raporu</title>
 <style>
-  @page { size: A4 landscape; margin: 1cm; }
-  body { font-family: 'DejaVu Sans', sans-serif; font-size: 8pt; color: #333; }
-  h1 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 3px; font-size: 14pt; }
-  h2 { color: #2c3e50; margin-top: 12px; font-size: 11pt; }
-  table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 7pt; }
-  th, td { border: 1px solid #bbb; padding: 2px 3px; text-align: center; }
-  th { background: #1a5276; color: #fff; font-size: 6.5pt; }
+  @page { size: A4 landscape; margin: 0.8cm; }
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 7.5pt; color: #333; }
+  h1 { color: #1a5276; border-bottom: 2px solid #1a5276; padding-bottom: 2px; font-size: 13pt; }
+  h2 { color: #2c3e50; margin-top: 10px; font-size: 10pt; }
+  h3 { color: #2c3e50; font-size: 9pt; margin: 6px 0 2px; }
+  table { width: 100%; border-collapse: collapse; margin: 3px 0; font-size: 6.5pt; }
+  th, td { border: 1px solid #bbb; padding: 2px 2px; text-align: center; }
+  th { background: #1a5276; color: #fff; font-size: 6pt; }
   tr:nth-child(even) { background: #f8f9fa; }
-  .header { text-align: center; margin-bottom: 12px; }
-  .header p { color: #666; font-size: 8pt; }
-  .info-box { background: #eaf2f8; padding: 6px; border-left: 4px solid #1a5276; margin: 6px 0; font-size: 8pt; }
-  .footer { text-align: center; color: #999; font-size: 6pt; margin-top: 16px; border-top: 1px solid #ddd; padding-top: 6px; }
+  .header { text-align: center; margin-bottom: 8px; }
+  .header p { color: #666; font-size: 7pt; }
+  .info-box { background: #eaf2f8; padding: 4px 6px; border-left: 4px solid #1a5276; margin: 4px 0; font-size: 7pt; }
+  .footer { text-align: center; color: #999; font-size: 5.5pt; margin-top: 12px; border-top: 1px solid #ddd; padding-top: 4px; }
 </style>
 </head>
 <body>
@@ -31,11 +32,13 @@
 </div>
 
 <h2>Performans Metrikleri</h2>
+
+<h3>Getiri ve Risk Metrikleri</h3>
 <table>
   <thead>
     <tr>
       <th>Fon</th>
-      {% for metrik in metrik_isimleri %}
+      {% for metrik in metrik_isimleri[:7] %}
       <th>{{ metrik }}</th>
       {% endfor %}
     </tr>
@@ -44,7 +47,29 @@
     {% for fon_kodu, m in metrikler.items() %}
     <tr>
       <td><strong>{{ fon_kodu }}</strong></td>
-      {% for mk in metrik_isimleri %}
+      {% for mk in metrik_isimleri[:7] %}
+      <td>{{ m.get(mk, "-") }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3>Oran ve Piyasa Metrikleri</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Fon</th>
+      {% for metrik in metrik_isimleri[7:] %}
+      <th>{{ metrik }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for fon_kodu, m in metrikler.items() %}
+    <tr>
+      <td><strong>{{ fon_kodu }}</strong></td>
+      {% for mk in metrik_isimleri[7:] %}
       <td>{{ m.get(mk, "-") }}</td>
       {% endfor %}
     </tr>
@@ -59,7 +84,7 @@
   </thead>
   <tbody>
     {% for metrik, aciklama in metrik_aciklamalari.items() %}
-    <tr><td><strong>{{ metrik }}</strong></td><td style="text-align:left">{{ aciklama }}</td></tr>
+    <tr><td style="white-space:nowrap"><strong>{{ metrik }}</strong></td><td style="text-align:left">{{ aciklama }}</td></tr>
     {% endfor %}
   </tbody>
 </table>
