@@ -19,7 +19,7 @@ jinja2>=3.1
 weasyprint>=60.0
 
 # Veri (alternatif endeksler)
-yfinance>=1.2
+yfinance==1.2.0
 
 # Test
 pytest>=7.4
