@@ -31,17 +31,8 @@ if errorlevel 1 (
 )
 
 echo WeasyPrint / GTK kontrol ediliyor...
-for %%p in (
-    "C:\Program Files\GTK3-Runtime Win64\bin"
-    "C:\Program Files\gtk3-runtime\bin"
-    "%LOCALAPPDATA%\GTK3-Runtime Win64\bin"
-) do (
-    if exist "%%~p\libgobject-2.0-0.dll" set "PATH=%%~p;%PATH%"
-)
-where libgobject-2.0-0.dll >nul 2>&1 || (
-    echo UYARI: GTK kutuphanesi bulunamadi. WeasyPrint PDF raporlari calismaz.
-    echo Cozum: winget install --id tschoonj.GTKForWindows -e
-)
+for /f "usebackq delims=" %%p in (`powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install_gtk.ps1`) do set "PATH=%%p;%PATH%"
+if errorlevel 1 echo [!] GTK bulunamadi. PDF raporlari calismaz.
 
 echo Uygulama baslatiliyor...
 echo Dash hazir olana kadar bekleniyor...
