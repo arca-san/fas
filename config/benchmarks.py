@@ -101,3 +101,32 @@ def benchmark_koda_gore(kod: str):
         if e["kod"] == kod:
             return e
     return None
+
+
+# ── Yahoo Finance endeksleri ──────────────────────────────────────────────
+
+def all_benchmark_options():
+    from config.yahoo_benchmarks import yahoo_benchmark_options
+    return benchmark_options() + yahoo_benchmark_options()
+
+
+def get_benchmark_data(kod: str, bas, bit):
+    """KYD veya Yahoo'dan endeks verisini ceker.
+    Donus: DataFrame(tarih, fiyat, endeks_kodu)
+    """
+    from config.yahoo_benchmarks import yahoo_benchmark_koda_gore
+    from data.fetchers.kyd_fetcher import KydFetcher
+    from data.fetchers.yahoo_fetcher import YahooFetcher
+
+    kyd_info = benchmark_koda_gore(kod)
+    if kyd_info:
+        kyd = KydFetcher()
+        return kyd.get_historical_data(kod, bas, bit)
+
+    yahoo_info = yahoo_benchmark_koda_gore(kod)
+    if yahoo_info:
+        yf = YahooFetcher()
+        return yf.get_historical_data(kod, bas, bit)
+
+    import pandas as pd
+    return pd.DataFrame(columns=["tarih", "fiyat", "endeks_kodu"])

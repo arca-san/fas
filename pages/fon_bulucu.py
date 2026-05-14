@@ -374,11 +374,11 @@ def _load_market_for_category(fon_kodlari: list, fon_unvan_map: dict) -> pd.Seri
     )
     symbol = "ATKAP" if use_atkap else "FHISE"
     try:
-        from data.fetchers.kyd_fetcher import KydFetcher
-        kyd = KydFetcher()
+        from config.benchmarks import get_benchmark_data
+
         end = date.today()
         start = end - timedelta(days=365 * 5)
-        df = kyd.get_historical_data(symbol, start, end)
+        df = get_benchmark_data(symbol, start, end)
         if not df.empty:
             return pd.Series(df["fiyat"].values, index=pd.to_datetime(df["tarih"]), name=symbol)
     except Exception as exc:

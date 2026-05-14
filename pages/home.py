@@ -13,12 +13,11 @@ import pandas as pd
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
-from data.fetchers.kyd_fetcher import KydFetcher
 from components.charts import create_price_chart, create_risk_return_scatter
 from components.metrics import calculate_fund_metrics, select_fund_benchmark, calculate_mix_metrics, get_fund_benchmarks
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
-from config.benchmarks import benchmark_koda_gore
+from config.benchmarks import benchmark_koda_gore, all_benchmark_options, get_benchmark_data
 from config.settings import CALENDAR_ALIGN_METHOD
 from tlref_scraper import TLREFScraper, TLREFConverter
 import plotly.graph_objects as go
@@ -49,7 +48,7 @@ except Exception as exc:
 # Benchmark seçenekleri
 _TLREF_OPTION = {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"}
 
-_BENCHMARK_OPTIONS = [_TLREF_OPTION] + kyd_benchmark_options()
+_BENCHMARK_OPTIONS = [_TLREF_OPTION] + all_benchmark_options()
 
 # Varsayılan tarih aralığı: son 1 yıl
 _DEFAULT_END = date.today()
@@ -369,8 +368,7 @@ def run_analysis(
                 endeks_bilgi = benchmark_koda_gore(bm)
                 endeks_adi = endeks_bilgi["ad"] if endeks_bilgi else bm
 
-                kyd = KydFetcher()
-                kyd_df = kyd.get_historical_data(bm, bas, bit)
+                kyd_df = get_benchmark_data(bm, bas, bit)
 
                 if kyd_df.empty or not fund_dict:
                     status_parts.append(f"{endeks_adi} verisi bos")
@@ -439,8 +437,7 @@ def run_analysis(
                 # Benchmark verisini yükle
                 if bm_kod not in benchmark_dict:
                     try:
-                        kyd = KydFetcher()
-                        kyd_df = kyd.get_historical_data(bm_kod, bas, bit)
+                        kyd_df = get_benchmark_data(bm_kod, bas, bit)
                         if not kyd_df.empty:
                             kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
                             kyd_map = kyd_df.set_index("tarih")["fiyat"]
@@ -611,10 +608,9 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
     # Market benchmark (FHISE veya altin fonlari icin ATKAP)
     market_prices = pd.Series(dtype=float)
     try:
-        kyd = KydFetcher()
         end = date.today()
         start = end - timedelta(days=365 * 5)
-        market_df = kyd.get_historical_data("FHISE", start, end)
+        market_df = get_benchmark_data("FHISE", start, end)
         if not market_df.empty:
             market_prices = pd.Series(
                 market_df["fiyat"].values,

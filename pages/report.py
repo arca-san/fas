@@ -24,15 +24,13 @@ os.environ.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
 from data.fetchers import _tefas_api
 from tlref_scraper import TLREFScraper, TLREFConverter
 from data.fetchers.tefas_fetcher import TefasFetcher
-from data.fetchers.kyd_fetcher import KydFetcher
 from components.metrics import (
     calculate_fund_metrics,
 )
 from config.constants import METRIC_DESCRIPTIONS
 from config.logger import get_logger
 from config.settings import PROJECT_ROOT
-from config.benchmarks import benchmark_options as kyd_benchmark_options
-from config.benchmarks import benchmark_koda_gore
+from config.benchmarks import benchmark_koda_gore, all_benchmark_options, get_benchmark_data
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/report")
@@ -55,7 +53,7 @@ except Exception as exc:
     _ALL_FUNDS = []
 
 _TLREF_OPTION = {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"}
-_BENCHMARK_OPTIONS = [_TLREF_OPTION] + kyd_benchmark_options()
+_BENCHMARK_OPTIONS = [_TLREF_OPTION] + all_benchmark_options()
 
 _DEFAULT_END = date.today()
 _DEFAULT_START = _DEFAULT_END - timedelta(days=365)
@@ -232,10 +230,9 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         logger.warning("TLREF alinamadi: %s", exc)
 
     try:
-        kyd = KydFetcher()
         end = date.today()
         start = end - timedelta(days=365 * 5)
-        market_df = kyd.get_historical_data("FHISE", start, end)
+        market_df = get_benchmark_data("FHISE", start, end)
         if not market_df.empty:
             market_prices = pd.Series(
                 market_df["fiyat"].values,
@@ -268,8 +265,7 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
             bm_info = benchmark_koda_gore(bm)
             ad = bm_info["ad"] if bm_info else bm
             try:
-                kyd = KydFetcher()
-                kyd_df = kyd.get_historical_data(bm, bas, bit)
+                kyd_df = get_benchmark_data(bm, bas, bit)
                 if kyd_df.empty or "tarih" not in kyd_df.columns or "fiyat" not in kyd_df.columns:
                     logger.warning("Benchmark verisi bos veya eksik sutun: %s", bm)
                     continue

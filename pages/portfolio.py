@@ -14,7 +14,6 @@ import numpy as np
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
-from data.fetchers.kyd_fetcher import KydFetcher
 from components.metrics import (
     calculate_fund_metrics,
     calculate_mix_metrics,
@@ -22,8 +21,7 @@ from components.metrics import (
 )
 from components.charts import create_price_chart
 from config.logger import get_logger
-from config.benchmarks import benchmark_options as kyd_benchmark_options
-from config.benchmarks import benchmark_koda_gore
+from config.benchmarks import benchmark_koda_gore, all_benchmark_options, get_benchmark_data
 from config.constants import (
     METRIC_SHARPE,
     METRIC_SORTINO,
@@ -61,7 +59,7 @@ except Exception as exc:
     _ALL_FUNDS = []
 
 _TLREF_OPTION = {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"}
-_BENCHMARK_OPTIONS = [_TLREF_OPTION] + kyd_benchmark_options()
+_BENCHMARK_OPTIONS = [_TLREF_OPTION] + all_benchmark_options()
 
 # ── Dönem tanımları ──────────────────────────────────────────────────
 PERIOD_DEFS = {
@@ -416,11 +414,10 @@ def _load_market_prices(tarih_series: pd.Series, fon_kodlari: list) -> pd.Series
     symbol = "ATKAP" if use_atkap else "FHISE"
 
     try:
-        kyd = KydFetcher()
         fon_tarihler = pd.to_datetime(tarih_series)
         end = date.today()
         start = end - timedelta(days=365 * 5)
-        df = kyd.get_historical_data(symbol, start, end)
+        df = get_benchmark_data(symbol, start, end)
         if not df.empty:
             market_prices = pd.Series(
                 df["fiyat"].values,
@@ -438,8 +435,7 @@ def _load_benchmark_series(
 ) -> pd.Series:
     """Tek bir benchmark serisini yuzde getiri olarak yukle (0 baslangicli)."""
     try:
-        kyd = KydFetcher()
-        df = kyd.get_historical_data(bm_kod, bas, bit)
+        df = get_benchmark_data(bm_kod, bas, bit)
         if df.empty:
             return None
         df = df.sort_values("tarih").reset_index(drop=True)
