@@ -4,6 +4,11 @@
 Dash uygulaması giriş noktası.
 """
 
+import os
+
+# macOS: WeasyPrint için Homebrew kütüphane yolu
+os.environ.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
+
 import dash
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
