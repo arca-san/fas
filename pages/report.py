@@ -8,6 +8,7 @@ import base64
 import io
 import logging
 import os
+import sys
 from datetime import date, timedelta, datetime
 
 import dash
@@ -18,7 +19,8 @@ import pandas as pd
 from jinja2 import Environment, FileSystemLoader
 
 # WeasyPrint macOS brew lib path
-os.environ.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
+if sys.platform == "darwin":
+    os.environ.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
 # NOTE: weasyprint import is lazy (inside generate_report) to avoid crash when GTK is missing
 
 from data.fetchers import _tefas_api
@@ -291,18 +293,21 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         metrik_aciklamalari=METRIC_DESCRIPTIONS,
     )
 
-    # PDF (lazy import — GTK olmayan makinelerde app crash olmasin)
+    # PDF (opsiyonel — GTK olmayan makinelerde crash olmasin)
     try:
-        from weasyprint import HTML
-        pdf_bytes = HTML(string=html_content).write_pdf()
+        import contextlib
+        with contextlib.redirect_stderr(io.StringIO()):
+            from weasyprint import HTML
+            pdf_bytes = HTML(string=html_content).write_pdf()
         pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
         download_link = html.A(
             dbc.Button("PDF İndir", color="success", className="w-100"),
             href=f"data:application/pdf;base64,{pdf_b64}",
             download=f"fon_raporu_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
         )
-    except Exception as exc:
-        logger.warning("PDF olusturulamadi: %s", exc)
-        download_link = html.Span("PDF oluşturulamadı.", className="text-danger")
+    except ImportError:
+        download_link = html.Span("PDF için: pip install weasyprint", className="text-muted small")
+    except Exception:
+        download_link = html.Span("PDF için GTK runtime gerekli", className="text-muted small")
 
     return html_content, download_link, {"display": "block"}, f"Rapor oluşturuldu: {len(fund_dict)} fon."
