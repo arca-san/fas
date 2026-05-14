@@ -1,6 +1,27 @@
 $repo = 'arca-san/fas'
 $err = $null
 
+# GTK / WeasyPrint kontrolu
+$gtkOk = $false
+$pythonCode = @"
+import sys
+try:
+    import weasyprint
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+"@
+$pythonCheck = python -c $pythonCode 2>&1
+if ($LASTEXITCODE -eq 0) {
+    $gtkOk = $true
+}
+
+if (-not $gtkOk) {
+    Write-Host 'UYARI: WeasyPrint icin gerekli GTK kutuphanesi bulunamadi.'
+    Write-Host '  Cozum: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer'
+    Write-Host '  Veya su komutu calistirin: winget install --id tschoonj.GTKForWindows -e'
+}
+
 $currentBranch = ''
 $headPath = '.git\HEAD'
 if (Test-Path $headPath) {
@@ -41,7 +62,9 @@ try {
         } else {
             Write-Host ('main branch''i guncel (su an ' + $currentBranch + '). Otomatik guncelleme atlandi.')
         }
+    } else {
+        Write-Host 'Guncelleme yok.'
     }
 } catch {
-    $err = $_.Exception.Message
+    Write-Host 'Guncelleme kontrol edilemedi (Internet yok?).'
 }

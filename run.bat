@@ -30,6 +30,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo WeasyPrint / GTK kontrol ediliyor...
+set "GTK_PATH=C:\Program Files\GTK3-Runtime Win64\bin"
+if exist "%GTK_PATH%\libgobject-2.0-0.dll" (
+    set "PATH=%GTK_PATH%;%PATH%"
+) else (
+    echo UYARI: GTK kutuphanesi bulunamadi. WeasyPrint PDF raporlari calismaz.
+    echo Cozum: winget install --id tschoonj.GTKForWindows -e
+)
+
 echo Uygulama baslatiliyor...
 echo Dash hazir olana kadar bekleniyor...
 start /B "" %VENV_DIR%\Scripts\python index.py
