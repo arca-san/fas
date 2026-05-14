@@ -4,13 +4,6 @@
 Dash uygulaması giriş noktası.
 """
 
-import os
-import sys
-
-# macOS: WeasyPrint icin Homebrew kutuphane yolu
-if sys.platform == "darwin":
-    os.environ.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
-
 import dash
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
