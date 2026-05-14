@@ -28,6 +28,7 @@ from components.metrics import calculate_fund_metrics, select_fund_benchmark
 from config.constants import METRIC_DESCRIPTIONS
 from config.logger import get_logger
 from config.settings import PROJECT_ROOT
+from config.benchmarks import benchmark_options as kyd_benchmark_options
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/report")
@@ -48,6 +49,9 @@ try:
 except Exception as exc:
     logger.warning("Fon listesi yuklenemedi: %s", exc)
     _ALL_FUNDS = []
+
+_TLREF_OPTION = {"label": "TLREF (Risksiz Getiri)", "value": "TLREF"}
+_BENCHMARK_OPTIONS = [_TLREF_OPTION] + kyd_benchmark_options()
 
 _DEFAULT_END = date.today()
 _DEFAULT_START = _DEFAULT_END - timedelta(days=365)
@@ -101,6 +105,25 @@ layout = dbc.Container(
                         ])
                     , className="mb-3"),
                 ], xs=12, md=4),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody([
+                            html.H5("Benchmark", className="card-title"),
+                            dmc.MultiSelect(
+                                id="report-benchmark-select",
+                                data=_BENCHMARK_OPTIONS,
+                                placeholder="Benchmark seçin (isteğe bağlı)...",
+                                clearable=True,
+                            ),
+                        ]),
+                        className="mb-3",
+                    ),
+                    xs=12,
+                ),
             ]
         ),
         dbc.Card(
