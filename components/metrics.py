@@ -104,7 +104,10 @@ def calculate_fund_metrics(
         tarihler = pd.to_datetime(df_sorted["tarih"])
         daily_returns = prices.pct_change().dropna()
         daily_returns_dates = daily_returns.copy()
-        daily_returns_dates.index = tarihler[1:]  # pct_change ilk satiri dusurur
+        if len(daily_returns_dates) != len(tarihler) - 1:
+            daily_returns_dates.index = tarihler[-len(daily_returns_dates):]
+        else:
+            daily_returns_dates.index = tarihler[1:]
 
         if len(daily_returns_dates) < 2:
             continue
@@ -168,7 +171,7 @@ def calculate_fund_metrics(
 
         max_dd = _max_drawdown(daily_returns_dates)
 
-    results[kod] = {
+        results[kod] = {
             METRIC_TOTAL_RETURN: round(total_return, 2),
             METRIC_ANNUALIZED_RETURN: round(ann_return_pct, 2),
             METRIC_VOLATILITY: round(vol * 100, 2),

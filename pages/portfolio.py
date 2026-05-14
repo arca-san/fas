@@ -160,7 +160,9 @@ layout = dbc.Container([
                     ),
                 ])
             ], className="mb-3"),
+        ], xs=12, md=4),
 
+        dbc.Col([
             dbc.Card([
                 dbc.CardBody([
                     html.H5("Benchmark(lar)", className="card-title"),
@@ -204,7 +206,7 @@ layout = dbc.Container([
                         "Analiz Et",
                         id="pf-analiz-btn",
                         color="primary",
-                        className="mt-3 w-100",
+                        className="mt-4 w-100",
                     ),
                     html.Div(id="pf-analiz-status", className="mt-2 text-info"),
                     html.Small(
@@ -852,19 +854,17 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
             mask = (pd.to_datetime(df["tarih"]) >= pd.Timestamp(p_start)) & \
                    (pd.to_datetime(df["tarih"]) <= pd.Timestamp(p_end))
             subset = df[mask].copy()
-            if len(subset) > 1:
+            if len(subset) >= 3:
                 period_fund_dict[kod] = subset
 
         if not period_fund_dict:
             continue
 
-        # rf ve marketi alt kumeye ayir
         idx = pd.to_datetime(list(period_fund_dict.values())[0]["tarih"])
         rf_subset = rf_daily_returns.reindex(idx).fillna(0) if not rf_daily_returns.empty else pd.Series(0, index=idx)
 
         metrics = calculate_fund_metrics(period_fund_dict, rf_subset, market_prices)
 
-        # Mix metrik
         mix_metrics = None
         if user_mix_series is not None:
             mix_subset_values = user_mix_series.reindex(idx).ffill()
