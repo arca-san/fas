@@ -20,6 +20,16 @@ $gtkDir = Join-Path $projectRoot '.gtk'
 $gtkBin = Join-Path $gtkDir 'bin'
 $dllPath = Join-Path $gtkBin $dllName
 
+function Find-GtkBin {
+    param([string]$SearchRoot)
+    $dll = Get-ChildItem -Path $SearchRoot -Recurse -Filter $dllName -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($dll) {
+        return $dll.DirectoryName
+    }
+    return $null
+}
+
 # 2. Local .gtk klasöründe kontrol et
 if (Test-Path $dllPath) {
     Write-Output $gtkBin
@@ -55,12 +65,27 @@ try {
 
     Write-Host '  Ayiklaniyor...'
     $tmpDir = Join-Path $gtkDir '_tmp'
+    if (Test-Path $tmpDir) { Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue }
     Expand-Archive -Path $zipPath -DestinationPath $tmpDir -ErrorAction Stop
 
-    $root = Get-ChildItem -Path $tmpDir -Directory | Select-Object -First 1
-    if ($root) {
-        Get-ChildItem -Path $root.FullName | Move-Item -Destination $gtkDir -Force
+    $extractedGtkBin = Find-GtkBin -SearchRoot $tmpDir
+    if (-not $extractedGtkBin) {
+        throw "Zip icinde $dllName bulunamadi."
     }
+
+    $runtimeRoot = Split-Path $extractedGtkBin -Parent
+    if (Test-Path $gtkBin) {
+        Remove-Item -Path $gtkBin -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    $releaseRootName = Split-Path $runtimeRoot -Leaf
+    if ($releaseRootName -eq 'release') {
+        Get-ChildItem -Path $runtimeRoot | Move-Item -Destination $gtkDir -Force
+    } else {
+        New-Item -ItemType Directory -Path $gtkBin -Force | Out-Null
+        Get-ChildItem -Path $extractedGtkBin | Move-Item -Destination $gtkBin -Force
+    }
+
     Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue
 
