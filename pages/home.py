@@ -155,12 +155,13 @@ layout = dbc.Container(
                                 dbc.CardBody(
                                     [
                                         html.H5("Benchmark(lar)", className="card-title"),
-                                        dmc.MultiSelect(
-                                            id="benchmark-dropdown",
-                                            data=_BENCHMARK_OPTIONS,
-                                            placeholder="Benchmark seçin...",
-                                            clearable=True,
-                                        ),
+                    dmc.MultiSelect(
+                        id="benchmark-dropdown",
+                        data=_BENCHMARK_OPTIONS,
+                        placeholder="Benchmark seçin...",
+                        searchable=True,
+                        clearable=True,
+                    ),
                                         html.Div(
                                             dbc.Button(
                                                 "Mix Benchmark Oluştur",

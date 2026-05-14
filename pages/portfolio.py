@@ -166,12 +166,13 @@ layout = dbc.Container([
             dbc.Card([
                 dbc.CardBody([
                     html.H5("Benchmark(lar)", className="card-title"),
-                    dmc.MultiSelect(
-                        id="pf-benchmark-select",
-                        data=_BENCHMARK_OPTIONS,
-                        placeholder="Benchmark seçin...",
-                        clearable=True,
-                    ),
+                dmc.MultiSelect(
+                    id="pf-benchmark-select",
+                    data=_BENCHMARK_OPTIONS,
+                    placeholder="Benchmark seçin...",
+                    searchable=True,
+                    clearable=True,
+                ),
                     dbc.Button(
                         "Mix Benchmark Oluştur",
                         id="pf-open-mix-btn",

@@ -127,6 +127,7 @@ layout = dbc.Container(
                                 id="report-benchmark-select",
                                 data=_BENCHMARK_OPTIONS,
                                 placeholder="Benchmark seçin (isteğe bağlı)...",
+                                searchable=True,
                                 clearable=True,
                             ),
                         ]),
