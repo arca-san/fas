@@ -17,11 +17,12 @@ try {
 
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $gtkDir = Join-Path $projectRoot '.gtk'
-$dllPath = Join-Path $gtkDir 'bin' $dllName
+$gtkBin = Join-Path $gtkDir 'bin'
+$dllPath = Join-Path $gtkBin $dllName
 
 # 2. Local .gtk klasöründe kontrol et
 if (Test-Path $dllPath) {
-    Write-Output (Join-Path $gtkDir 'bin')
+    Write-Output $gtkBin
     exit 0
 }
 
@@ -37,8 +38,20 @@ try {
     New-Item -ItemType Directory -Path $gtkDir -Force | Out-Null
 
     Write-Host '  GTK3 runtime indiriliyor (~300MB)...'
-    $wc = New-Object System.Net.WebClient
-    $wc.DownloadFile($zipUrl, $zipPath)
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    try {
+        Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing -ErrorAction Stop
+    } catch {
+        Write-Host "  PowerShell indirici basarisiz, curl deneniyor: $_"
+        $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
+        if (-not $curl) {
+            throw
+        }
+        & $curl.Source -L --http1.1 --ssl-no-revoke --fail --retry 3 --output $zipPath $zipUrl
+        if ($LASTEXITCODE -ne 0) {
+            throw "curl indirme hatasi (exit: $LASTEXITCODE)"
+        }
+    }
 
     Write-Host '  Ayiklaniyor...'
     $tmpDir = Join-Path $gtkDir '_tmp'
@@ -56,7 +69,7 @@ try {
     }
 
     Write-Host '  GTK kurulumu tamamlandi.'
-    Write-Output (Join-Path $gtkDir 'bin')
+    Write-Output $gtkBin
     exit 0
 } catch {
     Write-Host "  GTK KURULUM HATASI: $_"

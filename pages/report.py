@@ -5,11 +5,10 @@ Rapor — HTML önizleme ve PDF indirme.
 """
 
 import base64
-import io
-import logging
 import os
 import sys
 from datetime import date, timedelta, datetime
+from io import StringIO
 
 import dash
 from dash import html, dcc, callback, Output, Input, State
@@ -26,6 +25,7 @@ if sys.platform == "darwin":
 from data.fetchers import _tefas_api
 from tlref_scraper import TLREFScraper, TLREFConverter
 from data.fetchers.tefas_fetcher import TefasFetcher
+from core.pdf_runtime import ensure_weasyprint_ready
 from components.metrics import (
     calculate_fund_metrics,
 )
@@ -295,19 +295,16 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
 
     # PDF (opsiyonel — GTK olmayan makinelerde crash olmasin)
     try:
-        import contextlib
-        with contextlib.redirect_stderr(io.StringIO()):
-            from weasyprint import HTML
-            pdf_bytes = HTML(string=html_content).write_pdf()
+        HTML = ensure_weasyprint_ready()
+        pdf_bytes = HTML(file_obj=StringIO(html_content)).write_pdf()
         pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
         download_link = html.A(
             dbc.Button("PDF İndir", color="success", className="w-100"),
             href=f"data:application/pdf;base64,{pdf_b64}",
             download=f"fon_raporu_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
         )
-    except ImportError:
-        download_link = html.Span("PDF için: pip install weasyprint", className="text-muted small")
-    except Exception:
-        download_link = html.Span("PDF için GTK runtime gerekli", className="text-muted small")
+    except Exception as exc:
+        logger.exception("PDF runtime kurulamadı veya PDF olusturulamadi: %s", exc)
+        download_link = html.Span("PDF runtime kurulamadı", className="text-muted small")
 
     return html_content, download_link, {"display": "block"}, f"Rapor oluşturuldu: {len(fund_dict)} fon."
