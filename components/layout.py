@@ -39,6 +39,7 @@ def create_sidebar() -> html.Div:
             dbc.Nav(
                 [
                     dbc.NavLink("Ana Sayfa", href="/", active="exact"),
+                    dbc.NavLink("Fon Bulucu", href="/fon-bulucu", active="exact"),
                     dbc.NavLink("Portföy Analizi", href="/portfolio", active="exact"),
                     dbc.NavLink("Rapor", href="/report", active="exact"),
                 ],

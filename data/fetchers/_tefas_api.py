@@ -580,16 +580,18 @@ def fonlar_portfoy_dagilimi_aralik(
 # ============================================================
 def fonlar_donemsel_getiri(fon_tipi: str = "YAT",
                             bas_tarih: Optional[str] = None,
-                            bit_tarih: Optional[str] = None) -> List[Dict[str, Any]]:
+                            bit_tarih: Optional[str] = None,
+                            fon_tur_kod: Optional[int] = None) -> List[Dict[str, Any]]:
     """Tüm fonların dönemsel getiri yüzdeleri (TEK İSTEKTE).
 
     POST /api/funds/fonGetiriBazliBilgiGetir
     bas/bit verilirse: getiriOrani o aralık için döner; verilmezse 1a/3a/6a/yb/1y/3y/5y.
+    fon_tur_kod: sfonTuru ile filtreleme (None=tümü).
     """
     aralikli = bool(bas_tarih and bit_tarih)
     body = {
         "dil": "TR", "fonTipi": fon_tipi, "kurucuKodu": None,
-        "sfonTurKod": None, "fonTurAciklama": None, "islem": 1,
+        "sfonTurKod": fon_tur_kod, "fonTurAciklama": None, "islem": 1,
         "fonTurKod": None, "fonGrubu": None,
         "donemGetiri1a": "0" if aralikli else "1",
         "donemGetiri3a": "0" if aralikli else "1",
