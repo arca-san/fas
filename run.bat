@@ -20,6 +20,7 @@ if not exist "%VENV_DIR%\Scripts\python.exe" (
         pause
         exit /b 1
     )
+    %VENV_DIR%\Scripts\python -m pip install --upgrade pip >nul
 )
 
 echo Bagimliliklar kontrol ediliyor...
