@@ -22,9 +22,10 @@ os.environ.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
 from weasyprint import HTML
 
 from data.fetchers import _tefas_api
+from tlref_scraper import TLREFScraper, TLREFConverter
 from data.fetchers.tefas_fetcher import TefasFetcher
 from data.fetchers.kyd_fetcher import KydFetcher
-from components.metrics import calculate_fund_metrics, select_fund_benchmark
+from components.metrics import calculate_fund_metrics, calculate_mix_metrics, select_fund_benchmark
 from config.constants import METRIC_DESCRIPTIONS
 from config.logger import get_logger
 from config.settings import PROJECT_ROOT
@@ -63,7 +64,7 @@ layout = dbc.Container(
         html.P("Fon analiz raporu oluşturun. HTML önizleme ve PDF indirme seçenekleri mevcuttur.",
                className="text-muted"),
         dbc.Row(
-            className="align-items-stretch",
+            className="align-items-stretch mb-3",
             children=[
                 dbc.Col([
                     dbc.Card(
@@ -82,7 +83,7 @@ layout = dbc.Container(
                                 ],
                             ),
                         ]),
-                        className="h-100 mb-3",
+                        className="h-100",
                     ),
                 ], xs=12, md=4),
                 dbc.Col([
@@ -96,7 +97,7 @@ layout = dbc.Container(
                                 display_format="YYYY-MM-DD",
                             ),
                         ]),
-                        className="h-100 mb-3",
+                        className="h-100",
                     ),
                 ], xs=12, md=4),
                 dbc.Col([
@@ -107,7 +108,7 @@ layout = dbc.Container(
                                        color="primary", className="w-100 mb-2"),
                             html.Div(id="report-status", className="text-info small"),
                         ]),
-                        className="h-100 mb-3",
+                        className="h-100",
                     ),
                 ], xs=12, md=4),
             ]
@@ -250,14 +251,36 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         "Beta", "Treynor Oranı", "Alpha", "R²", "Information Ratio",
     ]
 
+    # Benchmark verilerini yükle
     benchmark_list = benchmark if benchmark else []
     benchmarks = []
+    benchmark_metrics = {}
     for bm in benchmark_list:
         if bm == "TLREF":
             benchmarks.append("TLREF (Risksiz Getiri)")
         else:
             bm_info = benchmark_koda_gore(bm)
-            benchmarks.append(bm_info["ad"] if bm_info else bm)
+            ad = bm_info["ad"] if bm_info else bm
+            benchmarks.append(ad)
+            try:
+                first_df = list(fund_dict.values())[0]
+                kyd = KydFetcher()
+                kyd_df = kyd.get_historical_data(bm, bas, bit)
+                if not kyd_df.empty and "tarih" in first_df.columns:
+                    kyd_df = kyd_df.sort_values("tarih").reset_index(drop=True)
+                    kyd_map = kyd_df.set_index("tarih")["fiyat"]
+                    hizali = kyd_map.reindex(first_df["tarih"]).ffill()
+                    if not hizali.dropna().empty:
+                        ilk_fiyat = float(hizali.dropna().iloc[0])
+                        bm_series = pd.Series(
+                            (hizali.astype(float) / ilk_fiyat - 1.0) * 100.0,
+                            index=first_df["tarih"].values,
+                            name=ad,
+                        )
+                        bm_metrics = calculate_mix_metrics(bm_series, rf_daily_returns, market_prices, ad)
+                        benchmark_metrics[ad] = bm_metrics
+            except Exception as exc:
+                logger.warning("Benchmark metrik alinamadi %s: %s", bm, exc)
 
     template = env.get_template("report.html.j2")
     html_content = template.render(
@@ -268,6 +291,7 @@ def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
         benchmarks=benchmarks,
         metrik_isimleri=metrik_isimleri,
         metrikler=metrics,
+        benchmark_metrics=benchmark_metrics,
         metrik_aciklamalari=METRIC_DESCRIPTIONS,
     )
 

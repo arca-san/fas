@@ -53,6 +53,30 @@
   </tbody>
 </table>
 
+{% if benchmark_metrics %}
+<h2>Benchmark Metrikleri</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Benchmark</th>
+      {% for metrik in metrik_isimleri %}
+      <th>{{ metrik }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for bm_ad, m in benchmark_metrics.items() %}
+    <tr>
+      <td><strong>{{ bm_ad }}</strong></td>
+      {% for mk in metrik_isimleri %}
+      <td>{{ m.get(mk, "-") }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
 <h2>Metrik Açıklamaları</h2>
 <table>
   <thead>
