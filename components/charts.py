@@ -34,7 +34,7 @@ def create_price_chart(
         Seriler yuzde getiri (%0 baslangicli) olmali.
     mix_benchmark : dict, optional
         {"name": str, "series": pd.Series} seklinde mix benchmark.
-        name: "Mix (TD91G %65 + TUFE %35)" gibi.
+        name: "Mix (FHISE %50 + TD91G %50)" gibi.
         series: yuzde getiri serisi.
     """
     if not fund_dict:
