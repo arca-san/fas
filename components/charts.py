@@ -174,3 +174,56 @@ def create_price_chart(
         ),
     )
     return fig
+
+
+def create_risk_return_scatter(
+    metrics: dict,
+    title: str = "Risk-Getiri Saçılım Grafiği",
+) -> go.Figure:
+    """Risk (volatilite) ve getiri ekseninde fon konumlarini goster.
+
+    Parameters
+    ----------
+    metrics : dict
+        {"FON_KODU": {metric_name: value, ...}, ...}
+        Her metrik dict'inde METRIC_VOLATILITY ve METRIC_ANNUALIZED_RETURN olmali.
+    """
+    from config.constants import METRIC_VOLATILITY, METRIC_ANNUALIZED_RETURN
+
+    fig = go.Figure()
+
+    for kod, m in metrics.items():
+        risk = m.get(METRIC_VOLATILITY, None)
+        getiri = m.get(METRIC_ANNUALIZED_RETURN, None)
+        if risk is None or getiri is None:
+            continue
+        fig.add_trace(
+            go.Scatter(
+                x=[risk],
+                y=[getiri],
+                mode="markers+text",
+                name=kod,
+                text=[kod],
+                textposition="top center",
+                marker=dict(size=12, line=dict(width=2, color="DarkSlateGrey")),
+                hovertemplate="%{text}<br>Risk: %{x:.2f}%<br>Getiri: %{y:.2f}%<extra></extra>",
+            )
+        )
+
+    # Referans cizgileri
+    fig.update_layout(
+        title=title,
+        xaxis_title="Risk (Volatilite, %)",
+        yaxis_title="Getiri (Yıllık, %)",
+        template="plotly_white",
+        hovermode="closest",
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+        ),
+    )
+    return fig

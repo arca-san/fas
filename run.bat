@@ -4,6 +4,9 @@ setlocal
 
 set "VENV_DIR=.venv"
 
+echo Guncellemeler kontrol ediliyor...
+powershell -ExecutionPolicy Bypass -File scripts\update_check.ps1
+
 echo ==========================================
 echo   Fon Analiz Sistemi - Baslatma Scripti
 echo ==========================================

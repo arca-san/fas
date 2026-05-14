@@ -115,10 +115,10 @@ Bu doküman, “fas” (Fon Analiz Sistemi) projesinin uçtan uca geliştirme pl
 
 ## Eksiklerin Tamamlanması İçin Kontrol Listesi
 
-- [ ] Veri kaynakları ve erişim yöntemleri netleşti
-- [ ] Tarih hizalama ve eksik veri politikası yazıldı
-- [ ] Risksiz oran dönüşüm formülü standardize edildi
-- [ ] Getiri tanımı (log/basit) proje genelinde tekleştirildi
-- [ ] Metriklerin formülleri ve birimleri dokümante edildi
-- [ ] Rapor formatı ve çıktı hedefi (PDF/HTML) belirlendi
+- [x] Veri kaynakları ve erişim yöntemleri netleşti
+- [x] Tarih hizalama ve eksik veri politikası yazıldı (`docs/veri_politikasi.md`)
+- [x] Risksiz oran dönüşüm formülü standardize edildi
+- [x] Getiri tanımı (log/basit) proje genelinde tekleştirildi
+- [x] Metriklerin formülleri ve birimleri dokümante edildi (`docs/metrik_formulleri.md`)
+- [x] Rapor formatı ve çıktı hedefi (PDF/HTML) belirlendi
 

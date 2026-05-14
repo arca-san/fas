@@ -16,9 +16,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.options import Options
+
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +106,10 @@ class KAPScraper:
 
         fund_code = fund_code.upper().strip()
         url = f"https://www.kap.org.tr/tr/fon-bilgileri/genel/{fund_code.lower()}"
+
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.edge.options import Options
 
         driver = None
         try:
