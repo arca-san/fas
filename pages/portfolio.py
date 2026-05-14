@@ -703,7 +703,6 @@ def _compute_fund_benchmark_series(
     Output("pf-period-detail-tabs", "children"),
     Output("pf-chart", "figure"),
     Output("pf-analiz-status", "children"),
-    Output("pf-summary-table", "children"),
     Input("pf-analiz-btn", "n_clicks"),
     State("pf-fund-select", "value"),
     State("pf-benchmark-select", "value"),
@@ -714,10 +713,10 @@ def _compute_fund_benchmark_series(
 def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_values, mix_data):
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     if not fon_kodlari:
-        return {"display": "none"}, dash.no_update, [], go.Figure(), "Lutfen en az bir fon secin.", html.Small("Henüz fon seçilmedi")
+        return {"display": "none"}, dash.no_update, [], go.Figure(), "Lutfen en az bir fon secin."
 
     if not period_values or len(period_values) < 1:
-        return {"display": "none"}, dash.no_update, [], go.Figure(), "En az bir dönem seçin.", html.Small("Dönem seçilmedi")
+        return {"display": "none"}, dash.no_update, [], go.Figure(), "En az bir dönem seçin."
 
     # En uzun donemi bul
     max_days = 0
@@ -766,8 +765,7 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
 
     if not fund_dict:
         return {"display": "none"}, dash.no_update, [], go.Figure(), \
-               " | ".join(hata_list) if hata_list else "Veri bulunamadi.", \
-               html.Small("Metrik hesaplanamadi")
+               " | ".join(hata_list) if hata_list else "Veri bulunamadi."
 
     status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
@@ -922,20 +920,20 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
         mix_benchmark=chart_mix,
     )
 
-    # Initial summary table
-    summary = _build_summary_table(results_data, METRIC_SHARPE)
-
-    return "block", results_data, detail_tabs, fig, " | ".join(status_parts), summary
+    return "block", results_data, detail_tabs, fig, " | ".join(status_parts)
 
 
-# ── Callback: metrik secici → ozet tablosu ───────────────────────────
+# ── Callback: ozet tablosu (store degisimi veya metrik secimi) ───────
 @callback(
     Output("pf-summary-table", "children"),
+    Input("pf-results-store", "data"),
     Input("pf-metric-selector", "value"),
-    State("pf-results-store", "data"),
     prevent_initial_call=True,
 )
-def update_summary_table(selected_metric, results_data):
+def update_summary_table(results_data, selected_metric):
     if not results_data:
         return html.Small("Veri bulunamadi. Lütfen analiz yapin.", className="text-muted")
+    ctx = dash.callback_context
+    if ctx.triggered_id == "pf-results-store":
+        selected_metric = selected_metric or METRIC_SHARPE
     return _build_summary_table(results_data, selected_metric)
