@@ -8,6 +8,9 @@ echo   Fon Analiz Sistemi - Baslatma Scripti
 echo ==========================================
 echo.
 
+echo Guncelleme kontrol ediliyor...
+python scripts\auto_update.py
+
 if not exist "%VENV_DIR%\Scripts\python.exe" (
     echo Sanal ortam bulunamadi. Olusturuluyor...
     python -m venv %VENV_DIR%

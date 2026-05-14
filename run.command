@@ -9,6 +9,9 @@ echo "  Fon Analiz Sistemi — Baslatma Scripti"
 echo "=========================================="
 echo ""
 
+echo "Guncelleme kontrol ediliyor..."
+python3 scripts/auto_update.py || true
+
 if [ ! -f "$VENV_DIR/bin/python" ]; then
     echo "Sanal ortam bulunamadi. Olusturuluyor..."
     python3 -m venv "$VENV_DIR"
