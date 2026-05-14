@@ -29,6 +29,7 @@ from config.constants import METRIC_DESCRIPTIONS
 from config.logger import get_logger
 from config.settings import PROJECT_ROOT
 from config.benchmarks import benchmark_options as kyd_benchmark_options
+from config.benchmarks import benchmark_koda_gore
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/report")
@@ -62,7 +63,8 @@ layout = dbc.Container(
         html.P("Fon analiz raporu oluşturun. HTML önizleme ve PDF indirme seçenekleri mevcuttur.",
                className="text-muted"),
         dbc.Row(
-            [
+            className="align-items-stretch",
+            children=[
                 dbc.Col([
                     dbc.Card(
                         dbc.CardBody([
@@ -79,8 +81,9 @@ layout = dbc.Container(
                                     for f in _ALL_FUNDS if f.get("fonKod")
                                 ],
                             ),
-                        ])
-                    , className="mb-3"),
+                        ]),
+                        className="h-100 mb-3",
+                    ),
                 ], xs=12, md=4),
                 dbc.Col([
                     dbc.Card(
@@ -92,8 +95,9 @@ layout = dbc.Container(
                                 end_date=_DEFAULT_END,
                                 display_format="YYYY-MM-DD",
                             ),
-                        ])
-                    , className="mb-3"),
+                        ]),
+                        className="h-100 mb-3",
+                    ),
                 ], xs=12, md=4),
                 dbc.Col([
                     dbc.Card(
@@ -102,8 +106,9 @@ layout = dbc.Container(
                             dbc.Button("Rapor Oluştur", id="report-olustur-btn",
                                        color="primary", className="w-100 mb-2"),
                             html.Div(id="report-status", className="text-info small"),
-                        ])
-                    , className="mb-3"),
+                        ]),
+                        className="h-100 mb-3",
+                    ),
                 ], xs=12, md=4),
             ]
         ),
@@ -160,11 +165,12 @@ def uppercase_search(val):
     Output("report-status", "children"),
     Input("report-olustur-btn", "n_clicks"),
     State("report-fon-select", "value"),
+    State("report-benchmark-select", "value"),
     State("report-tarih-araligi", "start_date"),
     State("report-tarih-araligi", "end_date"),
     prevent_initial_call=True,
 )
-def generate_report(n_clicks, fon_kodlari, start_date, end_date):
+def generate_report(n_clicks, fon_kodlari, benchmark, start_date, end_date):
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     if not fon_kodlari:
         return "", "", {"display": "none"}, "Lütfen en az bir fon seçin."
@@ -244,7 +250,14 @@ def generate_report(n_clicks, fon_kodlari, start_date, end_date):
         "Beta", "Treynor Oranı", "Alpha", "R²", "Information Ratio",
     ]
 
+    benchmark_list = benchmark if benchmark else []
     benchmarks = []
+    for bm in benchmark_list:
+        if bm == "TLREF":
+            benchmarks.append("TLREF (Risksiz Getiri)")
+        else:
+            bm_info = benchmark_koda_gore(bm)
+            benchmarks.append(bm_info["ad"] if bm_info else bm)
 
     template = env.get_template("report.html.j2")
     html_content = template.render(
