@@ -584,7 +584,16 @@ def _build_detail_tab_content(
             row.append(f"{val}" if val != "-" else "-")
         rows.append(html.Tr([html.Td(c) for c in row]))
 
-    # Mix benchmark varsa satir ekle
+    # Fon benchmark mix satirlari
+    bm_mix_metrics = period_data.get("benchmark_mix_metrics", {})
+    for fon_kodu, bm_m in bm_mix_metrics.items():
+        row = [html.Span(f"{fon_kodu} BM", style={"fontStyle": "italic", "color": "#555"})]
+        for k in metric_keys:
+            val = bm_m.get(k, "-")
+            row.append(f"{val}" if val != "-" else "-")
+        rows.append(html.Tr([html.Td(c) for c in row]))
+
+    # Kullanici mix benchmark varsa satir ekle
     if mix_metrics:
         mix_name = period_data.get("mix_name", "Mix Benchmark")
         row = [html.Strong(mix_name)]
@@ -870,12 +879,22 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
             mix_subset_values = user_mix_series.reindex(idx).ffill()
             mix_metrics = calculate_mix_metrics(mix_subset_values, rf_subset, market_prices, user_mix_name)
 
+        # Her fonun benchmark mix'i icin metrik hesapla
+        benchmark_mix_metrics = {}
+        for fon_kodu, bm_series in fon_benchmark_series.items():
+            bm_subset = bm_series.reindex(idx).ffill()
+            bm_mix_name = bm_series.name if hasattr(bm_series, 'name') else f"{fon_kodu} BM"
+            bm_m = calculate_mix_metrics(bm_subset, rf_subset, market_prices, bm_mix_name)
+            if bm_m:
+                benchmark_mix_metrics[fon_kodu] = bm_m
+
         periods_data.append({
             "value": p,
             "label": p_label,
             "metrics": metrics,
             "mix_metrics": mix_metrics,
             "mix_name": user_mix_name,
+            "benchmark_mix_metrics": benchmark_mix_metrics,
         })
 
     # sonuclari hazirla
