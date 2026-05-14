@@ -13,9 +13,17 @@ python scripts\auto_update.py
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
     echo Sanal ortam bulunamadi. Olusturuluyor...
-    python -m venv %VENV_DIR%
+    where py >nul 2>&1
+    if not errorlevel 1 (
+        py -3.12 -m venv %VENV_DIR% 2>nul
+        if errorlevel 1 py -3.11 -m venv %VENV_DIR% 2>nul
+        if errorlevel 1 py -3.10 -m venv %VENV_DIR% 2>nul
+        if errorlevel 1 python -m venv %VENV_DIR%
+    ) else (
+        python -m venv %VENV_DIR%
+    )
     if errorlevel 1 (
-        echo HATA: Sanal ortam olusturulamadi. Python kurulu mu?
+        echo HATA: Sanal ortam olusturulamadi. Python 3.10+ kurulu mu?
         pause
         exit /b 1
     )
@@ -29,41 +37,6 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-
-:: --- GTK / WeasyPrint ---
-echo WeasyPrint kontrol ediliyor...
-
-:: once dogrudan dene
-%VENV_DIR%\Scripts\python -c "from weasyprint import HTML" >nul 2>&1
-if not errorlevel 1 goto :wp_ok
-
-:: .gtk/bin PATH'te var mi?
-set "GTK_BIN=%~dp0.gtk\bin"
-if exist "%GTK_BIN%\libgobject-2.0-0.dll" (
-    set "PATH=%GTK_BIN%;%PATH%"
-    %VENV_DIR%\Scripts\python -c "from weasyprint import HTML" >nul 2>&1
-    if not errorlevel 1 goto :wp_ok
-)
-
-:: indir
-echo GTK runtime bulunamadi, indiriliyor (~300MB)...
-powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\install_gtk.ps1"
-if errorlevel 1 (
-    echo [!] GTK kurulamadi. PDF raporlari kullanilamaz.
-    goto :start_app
-)
-
-set "PATH=%GTK_BIN%;%PATH%"
-%VENV_DIR%\Scripts\python -c "from weasyprint import HTML" >nul 2>&1
-if errorlevel 1 (
-    echo [!] WeasyPrint hala calismadi. PDF raporlari kullanilamaz.
-) else (
-    echo WeasyPrint hazir.
-)
-goto :start_app
-
-:wp_ok
-echo WeasyPrint hazir.
 
 :start_app
 echo Uygulama baslatiliyor...

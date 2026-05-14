@@ -28,7 +28,7 @@ MASTER_BRANCH = "master"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MASTER_ZIP_URL = f"https://github.com/{REPO_OWNER}/{REPO_NAME}/archive/refs/heads/{MASTER_BRANCH}.zip"
 
-PRESERVED_DIRS = {".git", ".venv", ".gtk", "env", "venv", "logs", "__pycache__"}
+PRESERVED_DIRS = {".git", ".venv", "env", "venv", "logs", "__pycache__"}
 PRESERVED_FILE_SUFFIXES = {".pyc", ".pyo", ".parquet", ".log"}
 
 

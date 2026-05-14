@@ -16,8 +16,7 @@ venv/
 logs/
 data/cache/*.parquet
 
-# GTK runtime (auto-downloaded)
-.gtk/
+
 
 # IDE
 .vscode/

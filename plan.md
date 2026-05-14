@@ -35,30 +35,27 @@
 
 ## İş Paketleri
 
-### 1. PDF Rapor — GTK Bağımlılığını Kaldır / Alternatif Çözüm
-WeasyPrint Windows'ta GTK runtime gerektiriyor. Her makinede çalışan bir PDF çözümüne geçilmeli (pdfkit, reportlab, vs.) veya GTK kurulumu otomatikleştirilmeli.
-
-### 2. Veri Kaynağı Sağlamlığı
+### 1. Veri Kaynağı Sağlamlığı
 - TEFAS API değişikliklerine karşı izleme ve hata yönetimi
 - KYD verileri için fallback mekanizması
 - Önbellek stratejisinin iyileştirilmesi
 
-### 3. Hata Yönetimi ve Kullanıcı Geri Bildirimi
+### 2. Hata Yönetimi ve Kullanıcı Geri Bildirimi
 - Tüm callback'lerde try/except ve kullanıcıya anlamlı hata mesajı
 - Loading state'ler (Dash'te loading spinner vb.)
 - Uzun süren işlemler için progress feedback
 
-### 4. Test ve Kalite
+### 3. Test ve Kalite
 - Metrik hesaplarının birim testleri (pytest)
 - Edge case'ler: tek fon, boş veri, eksik tarih aralığı
 - CI pipeline (GitHub Actions)
 
-### 5. UI/UX İyileştirmeleri
+### 4. UI/UX İyileştirmeleri
 - Mobil uyum (responsive tablo/grafik)
 - Tema desteği (açık/koyu)
 - Favori fon listesi ve kalıcılık
 
-### 6. Performans
+### 5. Performans
 - Büyük portföylerde sayfa yüklenme süresinin iyileştirilmesi
 - Veri ön yükleme / lazy loading
 - Gereksiz callback tetiklemelerinin azaltılması
