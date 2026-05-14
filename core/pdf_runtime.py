@@ -27,6 +27,17 @@ _DLL_DIRECTORY_HANDLES = []
 _HTML_CLASS: Optional[Type] = None
 
 
+def _decode_process_output(value: Optional[bytes]) -> str:
+    if not value:
+        return ""
+    for encoding in ("utf-8-sig", "utf-8", "cp1254", "mbcs"):
+        try:
+            return value.decode(encoding)
+        except (LookupError, UnicodeDecodeError):
+            continue
+    return value.decode("utf-8", errors="replace")
+
+
 def _prepend_env_path(name: str, path: Path) -> None:
     value = str(path)
     current = os.environ.get(name, "")
@@ -59,15 +70,16 @@ def _run_gtk_installer() -> Path:
             str(INSTALL_GTK_SCRIPT),
         ],
         cwd=PROJECT_ROOT,
-        text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
+    stdout = _decode_process_output(result.stdout)
+    stderr = _decode_process_output(result.stderr)
     if result.returncode != 0:
-        output = (result.stdout + "\n" + result.stderr).strip()
+        output = (stdout + "\n" + stderr).strip()
         raise RuntimeError(f"GTK runtime kurulamadi. {output}")
 
-    for line in reversed(result.stdout.splitlines()):
+    for line in reversed(stdout.splitlines()):
         candidate = Path(line.strip())
         if candidate.exists() and (candidate / GTK_DLL_NAME).exists():
             return candidate
