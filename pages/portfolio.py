@@ -920,7 +920,7 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
         mix_benchmark=chart_mix,
     )
 
-    return "block", results_data, detail_tabs, fig, " | ".join(status_parts)
+    return {"display": "block"}, results_data, detail_tabs, fig, " | ".join(status_parts)
 
 
 # ── Callback: ozet tablosu (store degisimi veya metrik secimi) ───────
