@@ -1,11 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Ortak UI bileşenleri — navbar ve sidebar.
-"""
-
 import dash
-from dash import html
+from dash import html, dcc
 import dash_bootstrap_components as dbc
 
 
@@ -24,6 +18,18 @@ def create_navbar() -> dbc.Navbar:
                 className="text-white fw-semibold ms-2",
                 style={"fontSize": "1.1rem"},
             ),
+            html.Div(
+                dbc.Button(
+                    [html.I(className="bi bi-moon-fill me-1"), html.Span("Tema", id="theme-label")],
+                    id="theme-toggle",
+                    color="light",
+                    size="sm",
+                    outline=True,
+                    className="ms-auto text-white border-white",
+                    style={"--bs-btn-color": "white"},
+                ),
+                className="ms-auto d-flex align-items-center",
+            ),
         ],
         color="primary",
         dark=True,
@@ -33,7 +39,6 @@ def create_navbar() -> dbc.Navbar:
 
 
 def create_sidebar() -> html.Div:
-    """Sol yan menü — sayfalar arası gezinme."""
     return html.Div(
         [
             dbc.Nav(

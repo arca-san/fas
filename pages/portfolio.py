@@ -9,6 +9,7 @@ from dash import html, dcc, callback, Output, Input, State, ALL
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from datetime import date, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
 import numpy as np
 
@@ -233,7 +234,7 @@ layout = dbc.Container([
                             className="mb-3",
                             style={"maxWidth": "400px"},
                         ),
-                        html.Div(id="pf-summary-table"),
+                        dcc.Loading(id="loading-pf-summary", type="default", children=html.Div(id="pf-summary-table")),
                     ])
                 ],
             ),
@@ -241,7 +242,7 @@ layout = dbc.Container([
                 label="Dönem Detayları",
                 tab_id="pf-tab-detay",
                 children=[
-                    dbc.Tabs(id="pf-period-detail-tabs"),
+                    dcc.Loading(id="loading-pf-detail", type="default", children=dbc.Tabs(id="pf-period-detail-tabs")),
                 ],
             ),
             dbc.Tab(
@@ -751,232 +752,239 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
     if not period_values or len(period_values) < 1:
         return {"display": "none"}, dash.no_update, [], go.Figure(), "En az bir dönem seçin."
 
-    # En uzun donemi bul
-    max_days = 0
-    for p in period_values:
-        defn = PERIOD_DEFS[p]
-        if not defn["is_ytd"] and defn["days"] > max_days:
-            max_days = defn["days"]
+    try:
+        # En uzun donemi bul
+        max_days = 0
+        for p in period_values:
+            defn = PERIOD_DEFS[p]
+            if not defn["is_ytd"] and defn["days"] > max_days:
+                max_days = defn["days"]
 
-    end_date = date.today()
-    ytd_selected = any(PERIOD_DEFS[p]["is_ytd"] for p in period_values)
+        end_date = date.today()
+        ytd_selected = any(PERIOD_DEFS[p]["is_ytd"] for p in period_values)
 
-    if ytd_selected:
-        ytd_start = date(end_date.year, 1, 1)
-        overall_start = ytd_start
-        if max_days > 0:
-            from_max = end_date - timedelta(days=max_days)
-            overall_start = min(from_max, overall_start)
-    else:
-        overall_start = end_date - timedelta(days=max_days)
-
-    bas = overall_start
-    bit = end_date
-
-    # Fon verilerini cek
-    fetcher = TefasFetcher()
-    fund_dict = {}
-    fund_kategoriler = {}
-    hata_list = []
-
-    for fon_kodu in fon_kodlari:
-        try:
-            df = fetcher.get_historical_data(fon_kodu, bas, bit)
-            if not df.empty:
-                fund_dict[fon_kodu] = df
-                try:
-                    info = _tefas_api.fon_anlik_bilgi(fon_kodu)
-                    if info:
-                        fund_kategoriler[fon_kodu] = info.get("fonKategori", "")
-                except Exception:
-                    pass
-            else:
-                hata_list.append(f"{fon_kodu}: veri bulunamadi")
-        except Exception as exc:
-            logger.warning("Veri cekme hatasi %s: %s", fon_kodu, exc)
-            hata_list.append(f"{fon_kodu}: {exc}")
-
-    if not fund_dict:
-        return {"display": "none"}, dash.no_update, [], go.Figure(), \
-               " | ".join(hata_list) if hata_list else "Veri bulunamadi."
-
-    status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
-
-    # Benchmark verilerini yukle
-    benchmark_dict = {}
-    benchmark_list = benchmark_values or []
-
-    for bm in benchmark_list:
-        if bm == "TLREF":
-            try:
-                tlref_scraper = TLREFScraper()
-                try:
-                    tlref_all = tlref_scraper.from_zip()
-                except Exception:
-                    tlref_all = tlref_scraper.from_csv()
-                tlref_map = dict(zip(tlref_all["date"].dt.date, tlref_all["value"]))
-
-                first_df = list(fund_dict.values())[0]
-                if "tarih" in first_df.columns and not first_df["tarih"].empty:
-                    carpim = 1.0
-                    risk_free_cum = []
-                    onceki_tarih = None
-                    son_bilinen = None
-                    for tarih in first_df["tarih"]:
-                        t = tarih.date() if hasattr(tarih, "date") else tarih
-                        son_bilinen = tlref_map.get(t, son_bilinen)
-                        if son_bilinen is not None:
-                            daily_r = TLREFConverter.daily_compound(son_bilinen) / 100.0
-                            gap = 1 if onceki_tarih is None else (t - onceki_tarih).days
-                            carpim *= (1.0 + daily_r) ** gap
-                        risk_free_cum.append(carpim)
-                        onceki_tarih = t
-                    benchmark_dict["TLREF"] = pd.Series(
-                        risk_free_cum, index=first_df["tarih"], name="TLREF",
-                    ) * 100.0 - 100.0
-                toplam_getiri = (risk_free_cum[-1] - 1.0) * 100.0 if risk_free_cum else 0
-                status_parts.append(f"TLREF: Kum: %{toplam_getiri:.1f}")
-            except Exception as exc:
-                logger.warning("TLREF cekilemedi: %s", exc)
-                status_parts.append(f"TLREF alinamadi: {exc}")
+        if ytd_selected:
+            ytd_start = date(end_date.year, 1, 1)
+            overall_start = ytd_start
+            if max_days > 0:
+                from_max = end_date - timedelta(days=max_days)
+                overall_start = min(from_max, overall_start)
         else:
-            bm_series = _load_benchmark_series(bm, bas, bit, list(fund_dict.values())[0]["tarih"])
-            if bm_series is not None:
-                endeks_bilgi = benchmark_koda_gore(bm)
-                endeks_adi = endeks_bilgi["ad"] if endeks_bilgi else bm
-                bm_series.name = endeks_adi
-                benchmark_dict[bm] = bm_series
-                status_parts.append(f"{endeks_adi}: {bm_series.notna().sum()} ortak gun")
+            overall_start = end_date - timedelta(days=max_days)
 
-    # Fon benchmark mix serileri
-    fon_benchmark_series, fon_benchmark_sources, auto_bm_codes = _compute_fund_benchmark_series(
-        fund_dict, fund_kategoriler, bas, bit, benchmark_dict,
-    )
+        bas = overall_start
+        bit = end_date
 
-    # Kullanici mix benchmark
-    user_mix_series = None
-    user_mix_name = None
-    if mix_data and mix_data.get("benchmarks"):
-        mix_weights = mix_data["benchmarks"]
-        user_mix_name = mix_data.get("name", "Mix Benchmark")
+        # Fon verilerini paralel cek
+        fetcher = TefasFetcher()
+        fund_dict = {}
+        fund_kategoriler = {}
+        hata_list = []
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(fetcher.get_historical_data, f, bas, bit): f for f in fon_kodlari}
+            for future in as_completed(futures):
+                fon_kodu = futures[future]
+                try:
+                    df = future.result()
+                    if not df.empty:
+                        fund_dict[fon_kodu] = df
+                        try:
+                            info = _tefas_api.fon_anlik_bilgi(fon_kodu)
+                            if info:
+                                fund_kategoriler[fon_kodu] = info.get("fonKategori", "")
+                        except Exception:
+                            pass
+                    else:
+                        hata_list.append(f"{fon_kodu}: veri bulunamadi")
+                except Exception as exc:
+                    logger.warning("Veri cekme hatasi %s: %s", fon_kodu, exc)
+                    hata_list.append(f"{fon_kodu}: {exc}")
+
+        if not fund_dict:
+            return {"display": "none"}, dash.no_update, [], go.Figure(), \
+                   " | ".join(hata_list) if hata_list else "Veri bulunamadi."
+
+        status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
+
+        # Benchmark verilerini yukle
+        benchmark_dict = {}
+        benchmark_list = benchmark_values or []
+
+        for bm in benchmark_list:
+            if bm == "TLREF":
+                try:
+                    tlref_scraper = TLREFScraper()
+                    try:
+                        tlref_all = tlref_scraper.from_zip()
+                    except Exception:
+                        tlref_all = tlref_scraper.from_csv()
+                    tlref_map = dict(zip(tlref_all["date"].dt.date, tlref_all["value"]))
+
+                    first_df = list(fund_dict.values())[0]
+                    if "tarih" in first_df.columns and not first_df["tarih"].empty:
+                        carpim = 1.0
+                        risk_free_cum = []
+                        onceki_tarih = None
+                        son_bilinen = None
+                        for tarih in first_df["tarih"]:
+                            t = tarih.date() if hasattr(tarih, "date") else tarih
+                            son_bilinen = tlref_map.get(t, son_bilinen)
+                            if son_bilinen is not None:
+                                daily_r = TLREFConverter.daily_compound(son_bilinen) / 100.0
+                                gap = 1 if onceki_tarih is None else (t - onceki_tarih).days
+                                carpim *= (1.0 + daily_r) ** gap
+                            risk_free_cum.append(carpim)
+                            onceki_tarih = t
+                        benchmark_dict["TLREF"] = pd.Series(
+                            risk_free_cum, index=first_df["tarih"], name="TLREF",
+                        ) * 100.0 - 100.0
+                    toplam_getiri = (risk_free_cum[-1] - 1.0) * 100.0 if risk_free_cum else 0
+                    status_parts.append(f"TLREF: Kum: %{toplam_getiri:.1f}")
+                except Exception as exc:
+                    logger.warning("TLREF cekilemedi: %s", exc)
+                    status_parts.append(f"TLREF alinamadi: {exc}")
+            else:
+                bm_series = _load_benchmark_series(bm, bas, bit, list(fund_dict.values())[0]["tarih"])
+                if bm_series is not None:
+                    endeks_bilgi = benchmark_koda_gore(bm)
+                    endeks_adi = endeks_bilgi["ad"] if endeks_bilgi else bm
+                    bm_series.name = endeks_adi
+                    benchmark_dict[bm] = bm_series
+                    status_parts.append(f"{endeks_adi}: {bm_series.notna().sum()} ortak gun")
+
+        # Fon benchmark mix serileri
+        fon_benchmark_series, fon_benchmark_sources, auto_bm_codes = _compute_fund_benchmark_series(
+            fund_dict, fund_kategoriler, bas, bit, benchmark_dict,
+        )
+
+        # Kullanici mix benchmark
+        user_mix_series = None
+        user_mix_name = None
+        if mix_data and mix_data.get("benchmarks"):
+            mix_weights = mix_data["benchmarks"]
+            user_mix_name = mix_data.get("name", "Mix Benchmark")
+            first_df = list(fund_dict.values())[0]
+            tarihler = first_df["tarih"]
+            mix_cum = pd.Series(0.0, index=tarihler, dtype=float)
+            for bm_kod, weight in mix_weights.items():
+                if bm_kod in benchmark_dict:
+                    bm_series = benchmark_dict[bm_kod]
+                    bm_aligned = bm_series.reindex(tarihler).ffill()
+                    mix_cum += bm_aligned * weight
+            user_mix_series = mix_cum.rename(user_mix_name)
+
+        # TLREF + Market benchmark (metrik hesaplama icin)
         first_df = list(fund_dict.values())[0]
-        tarihler = first_df["tarih"]
-        mix_cum = pd.Series(0.0, index=tarihler, dtype=float)
-        for bm_kod, weight in mix_weights.items():
-            if bm_kod in benchmark_dict:
-                bm_series = benchmark_dict[bm_kod]
-                bm_aligned = bm_series.reindex(tarihler).ffill()
-                mix_cum += bm_aligned * weight
-        user_mix_series = mix_cum.rename(user_mix_name)
+        rf_daily_returns = _load_tlref_daily_returns(first_df["tarih"])
+        market_prices = _load_market_prices(first_df["tarih"], fon_kodlari)
 
-    # TLREF + Market benchmark (metrik hesaplama icin)
-    first_df = list(fund_dict.values())[0]
-    rf_daily_returns = _load_tlref_daily_returns(first_df["tarih"])
-    market_prices = _load_market_prices(first_df["tarih"], fon_kodlari)
+        # Her donem icin metrik hesapla
+        periods_data = []
+        for p in period_values:
+            p_start, p_end = _get_period_dates(p, end_date)
+            p_label = PERIOD_DEFS[p]["label"]
 
-    # Her donem icin metrik hesapla
-    periods_data = []
-    for p in period_values:
-        p_start, p_end = _get_period_dates(p, end_date)
-        p_label = PERIOD_DEFS[p]["label"]
+            period_fund_dict = {}
+            for kod, df in fund_dict.items():
+                mask = (pd.to_datetime(df["tarih"]) >= pd.Timestamp(p_start)) & \
+                       (pd.to_datetime(df["tarih"]) <= pd.Timestamp(p_end))
+                subset = df[mask].copy()
+                if len(subset) >= 3:
+                    period_fund_dict[kod] = subset
 
-        period_fund_dict = {}
-        for kod, df in fund_dict.items():
-            mask = (pd.to_datetime(df["tarih"]) >= pd.Timestamp(p_start)) & \
-                   (pd.to_datetime(df["tarih"]) <= pd.Timestamp(p_end))
-            subset = df[mask].copy()
-            if len(subset) >= 3:
-                period_fund_dict[kod] = subset
-
-        if not period_fund_dict:
-            continue
-
-        idx = pd.to_datetime(list(period_fund_dict.values())[0]["tarih"])
-        rf_subset = rf_daily_returns.reindex(idx).fillna(0) if not rf_daily_returns.empty else pd.Series(0, index=idx)
-
-        metrics = calculate_fund_metrics(period_fund_dict, rf_subset, market_prices)
-
-        mix_metrics = None
-        if user_mix_series is not None:
-            mix_subset_values = user_mix_series.reindex(idx).ffill()
-            mix_metrics = calculate_mix_metrics(mix_subset_values, rf_subset, market_prices, user_mix_name)
-
-        # Her fonun benchmark mix'i icin metrik hesapla
-        benchmark_mix_metrics = {}
-        for fon_kodu, bm_series in fon_benchmark_series.items():
-            bm_subset = bm_series.reindex(idx).ffill()
-            bm_mix_name = bm_series.name if hasattr(bm_series, 'name') else f"{fon_kodu} BM"
-            bm_m = calculate_mix_metrics(bm_subset, rf_subset, market_prices, bm_mix_name)
-            if bm_m:
-                benchmark_mix_metrics[fon_kodu] = bm_m
-
-        # Kullanici secimi benchmark metrikleri
-        user_benchmark_metrics = {}
-        for bm_kod, bm_series in benchmark_dict.items():
-            if bm_kod == "TLREF":
+            if not period_fund_dict:
                 continue
-            bm_subset = bm_series.reindex(idx).ffill()
-            if bm_subset.dropna().empty:
-                continue
-            endeks_bilgi = benchmark_koda_gore(bm_kod)
-            bm_ad = endeks_bilgi["ad"] if endeks_bilgi else bm_kod
-            bm_m = calculate_mix_metrics(bm_subset, rf_subset, market_prices, bm_ad)
-            if bm_m:
-                user_benchmark_metrics[bm_ad] = bm_m
 
-        periods_data.append({
-            "value": p,
-            "label": p_label,
-            "metrics": metrics,
-            "mix_metrics": mix_metrics,
+            idx = pd.to_datetime(list(period_fund_dict.values())[0]["tarih"])
+            rf_subset = rf_daily_returns.reindex(idx).fillna(0) if not rf_daily_returns.empty else pd.Series(0, index=idx)
+
+            metrics = calculate_fund_metrics(period_fund_dict, rf_subset, market_prices)
+
+            mix_metrics = None
+            if user_mix_series is not None:
+                mix_subset_values = user_mix_series.reindex(idx).ffill()
+                mix_metrics = calculate_mix_metrics(mix_subset_values, rf_subset, market_prices, user_mix_name)
+
+            # Her fonun benchmark mix'i icin metrik hesapla
+            benchmark_mix_metrics = {}
+            for fon_kodu, bm_series in fon_benchmark_series.items():
+                bm_subset = bm_series.reindex(idx).ffill()
+                bm_mix_name = bm_series.name if hasattr(bm_series, 'name') else f"{fon_kodu} BM"
+                bm_m = calculate_mix_metrics(bm_subset, rf_subset, market_prices, bm_mix_name)
+                if bm_m:
+                    benchmark_mix_metrics[fon_kodu] = bm_m
+
+            # Kullanici secimi benchmark metrikleri
+            user_benchmark_metrics = {}
+            for bm_kod, bm_series in benchmark_dict.items():
+                if bm_kod == "TLREF":
+                    continue
+                bm_subset = bm_series.reindex(idx).ffill()
+                if bm_subset.dropna().empty:
+                    continue
+                endeks_bilgi = benchmark_koda_gore(bm_kod)
+                bm_ad = endeks_bilgi["ad"] if endeks_bilgi else bm_kod
+                bm_m = calculate_mix_metrics(bm_subset, rf_subset, market_prices, bm_ad)
+                if bm_m:
+                    user_benchmark_metrics[bm_ad] = bm_m
+
+            periods_data.append({
+                "value": p,
+                "label": p_label,
+                "metrics": metrics,
+                "mix_metrics": mix_metrics,
+                "mix_name": user_mix_name,
+                "benchmark_mix_metrics": benchmark_mix_metrics,
+                "user_benchmark_metrics": user_benchmark_metrics,
+            })
+
+        # sonuclari hazirla
+        fon_unvan_map = {}
+        for f in _ALL_FUNDS:
+            fon_unvan_map[f.get("fonKod", "").upper()] = f.get("unvan", "")
+
+        results_data = {
+            "periods": periods_data,
+            "fund_codes": list(fund_dict.keys()),
             "mix_name": user_mix_name,
-            "benchmark_mix_metrics": benchmark_mix_metrics,
-            "user_benchmark_metrics": user_benchmark_metrics,
-        })
+            "fon_unvan_map": fon_unvan_map,
+        }
 
-    # sonuclari hazirla
-    fon_unvan_map = {}
-    for f in _ALL_FUNDS:
-        fon_unvan_map[f.get("fonKod", "").upper()] = f.get("unvan", "")
+        # Detail tabs
+        detail_tabs = []
+        for pd_data in periods_data:
+            tab_content = _build_detail_tab_content(
+                pd_data, fon_unvan_map, fon_benchmark_series, fon_benchmark_sources,
+            )
+            detail_tabs.append(
+                dbc.Tab(label=pd_data["label"], tab_id=f"pf-period-{pd_data['value']}", children=[tab_content])
+            )
 
-    results_data = {
-        "periods": periods_data,
-        "fund_codes": list(fund_dict.keys()),
-        "mix_name": user_mix_name,
-        "fon_unvan_map": fon_unvan_map,
-    }
+        # Chart (en uzun donemde tum fonlar + benchmark + mix)
+        chart_mix = None
+        if user_mix_series is not None:
+            chart_mix = {"name": user_mix_name, "series": user_mix_series}
+        elif fon_benchmark_series:
+            first_fon = list(fon_benchmark_series.keys())[0]
+            chart_mix = {"name": fon_benchmark_series[first_fon].name, "series": fon_benchmark_series[first_fon]}
 
-    # Detail tabs
-    detail_tabs = []
-    for pd_data in periods_data:
-        tab_content = _build_detail_tab_content(
-            pd_data, fon_unvan_map, fon_benchmark_series, fon_benchmark_sources,
+        tooltip_metrics = {}
+        for kod, m in (periods_data[0]["metrics"] if periods_data else {}).items():
+            tooltip_metrics[kod] = m
+
+        fig = create_price_chart(
+            fund_dict=fund_dict,
+            benchmark_dict=benchmark_dict,
+            title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi (En Uzun Donem)",
+            metrics=tooltip_metrics,
+            mix_benchmark=chart_mix,
         )
-        detail_tabs.append(
-            dbc.Tab(label=pd_data["label"], tab_id=f"pf-period-{pd_data['value']}", children=[tab_content])
-        )
 
-    # Chart (en uzun donemde tum fonlar + benchmark + mix)
-    chart_mix = None
-    if user_mix_series is not None:
-        chart_mix = {"name": user_mix_name, "series": user_mix_series}
-    elif fon_benchmark_series:
-        first_fon = list(fon_benchmark_series.keys())[0]
-        chart_mix = {"name": fon_benchmark_series[first_fon].name, "series": fon_benchmark_series[first_fon]}
-
-    tooltip_metrics = {}
-    for kod, m in (periods_data[0]["metrics"] if periods_data else {}).items():
-        tooltip_metrics[kod] = m
-
-    fig = create_price_chart(
-        fund_dict=fund_dict,
-        benchmark_dict=benchmark_dict,
-        title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi (En Uzun Donem)",
-        metrics=tooltip_metrics,
-        mix_benchmark=chart_mix,
-    )
-
-    return {"display": "block"}, results_data, detail_tabs, fig, " | ".join(status_parts)
+        return {"display": "block"}, results_data, detail_tabs, fig, " | ".join(status_parts)
+    except Exception as exc:
+        logger.exception("Portföy analizi hatasi")
+        return {"display": "none"}, dash.no_update, [], go.Figure(), f"Hata: {exc}"
 
 
 # ── Callback: ozet tablosu (store degisimi veya metrik secimi) ───────

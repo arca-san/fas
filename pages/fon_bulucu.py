@@ -6,11 +6,12 @@ gore karsilastirir.
 """
 
 import dash
-from dash import html, dcc, callback, Output, Input, State
+from dash import html, dcc, callback, Output, Input, State, ALL
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import date, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 
 from data.fetchers import _tefas_api
@@ -63,6 +64,23 @@ _DEFAULT_PERIOD = "1y"
 def _max_period_days(period_key: str) -> int:
     mapping = {"1a": 30, "3a": 90, "6a": 180, "yb": 0, "1y": 365, "3y": 1095, "5y": 1825}
     return mapping.get(period_key, 365)
+
+
+# ── Favoriler ────────────────────────────────────────────────────────
+def _is_fav(kod: str, fav_list: list) -> bool:
+    return kod in (fav_list or [])
+
+
+def _fmt_fav_btn(kod: str, fav_list: list) -> html.Span:
+    is_fav = _is_fav(kod, fav_list)
+    star = "⭐" if is_fav else "☆"
+    return html.Span(
+        star,
+        id={"type": "fb-fav", "index": kod},
+        className="fav-star",
+        style={"cursor": "pointer", "fontSize": "1.1em"},
+        n_clicks=0,
+    )
 
 
 # ── Info bar ────────────────────────────────────────────────────────
@@ -144,7 +162,27 @@ layout = dbc.Container([
         dbc.Card([
             dbc.CardBody([
                 html.Div(id="fb-tavsiye", className="mb-3"),
-                html.Div(id="fb-tablo"),
+                dbc.Row([
+                    dbc.Col(html.Small("Sıralama:", className="text-muted me-2"), xs="auto"),
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="fb-sort",
+                            options=[
+                                {"label": "Varsayılan (Getiri)", "value": "getiri"},
+                                {"label": "Sharpe Oranı", "value": "sharpe"},
+                                {"label": "Alpha", "value": "alpha"},
+                                {"label": "Sortino Oranı", "value": "sortino"},
+                                {"label": "Volatilite", "value": "vol"},
+                                {"label": "Max Drawdown", "value": "dd"},
+                            ],
+                            value="getiri",
+                            clearable=False,
+                            style={"maxWidth": "250px"},
+                        ),
+                        xs=4,
+                    ),
+                ], className="mb-2 align-items-center"),
+                dcc.Loading(id="loading-fb-tablo", type="default", children=html.Div(id="fb-tablo")),
             ])
         ], className="mb-3"),
         dbc.Card([
@@ -169,9 +207,11 @@ layout = dbc.Container([
     Input("fb-ara-btn", "n_clicks"),
     State("fb-kategori", "value"),
     State("fb-vade", "value"),
+    State("fb-sort", "value"),
+    State("fav-store", "data"),
     prevent_initial_call=True,
 )
-def fonlari_bul(n_clicks, kategori_kod, vade):
+def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, fav_data):
     if not kategori_kod:
         return {"display": "none"}, html.Div(), go.Figure(), "Lütfen bir kategori seçin.", html.Div()
 
@@ -204,71 +244,91 @@ def fonlari_bul(n_clicks, kategori_kod, vade):
     fon_kodlari = [f[0] for f in top_fonlar]
 
     # 3. Detayli metrikler icin veri cek
-    max_days = _max_period_days(vade)
-    end_date = date.today()
-    if vade == "yb":
-        start_date = date(end_date.year, 1, 1)
-    else:
-        start_date = end_date - timedelta(days=max_days)
+    try:
+        max_days = _max_period_days(vade)
+        end_date = date.today()
+        if vade == "yb":
+            start_date = date(end_date.year, 1, 1)
+        else:
+            start_date = end_date - timedelta(days=max_days)
 
-    fetcher = TefasFetcher()
-    fund_dict = {}
-    for kod in fon_kodlari:
-        try:
-            df = fetcher.get_historical_data(kod, start_date, end_date)
-            if not df.empty and len(df) >= 3:
-                fund_dict[kod] = df
-        except Exception as exc:
-            logger.warning("Veri cekme hatasi %s: %s", kod, exc)
+        fetcher = TefasFetcher()
+        fund_dict = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(fetcher.get_historical_data, kod, start_date, end_date): kod for kod in fon_kodlari}
+            for future in as_completed(futures):
+                kod = futures[future]
+                try:
+                    df = future.result()
+                    if not df.empty and len(df) >= 3:
+                        fund_dict[kod] = df
+                except Exception as exc:
+                    logger.warning("Veri cekme hatasi %s: %s", kod, exc)
 
-    if not fund_dict:
-        return {"display": "none"}, html.Div(), go.Figure(), "Fon verileri cekilemedi.", html.Div()
+        if not fund_dict:
+            return {"display": "none"}, html.Div(), go.Figure(), "Fon verileri cekilemedi.", html.Div()
 
-    # Risksiz getiri ve market benchmark
-    first_df = list(fund_dict.values())[0]
-    rf_daily = _load_rf_for_period(first_df["tarih"])
+        # Risksiz getiri ve market benchmark
+        first_df = list(fund_dict.values())[0]
+        rf_daily = _load_rf_for_period(first_df["tarih"])
 
-    # Market (kategoriye gore)
-    fon_unvan_map = {}
-    for f in fonlar:
-        fon_unvan_map[f["fonKodu"]] = f["fonUnvan"]
-    market_prices = _load_market_for_category(fon_kodlari, fon_unvan_map)
+        # Market (kategoriye gore)
+        fon_unvan_map = {}
+        for f in fonlar:
+            fon_unvan_map[f["fonKodu"]] = f["fonUnvan"]
+        market_prices = _load_market_for_category(fon_kodlari, fon_unvan_map)
 
-    # Metrik hesapla
-    metrics = calculate_fund_metrics(fund_dict, rf_daily, market_prices)
+        # Metrik hesapla
+        metrics = calculate_fund_metrics(fund_dict, rf_daily, market_prices)
 
-    if not metrics:
-        return {"display": "none"}, html.Div(), go.Figure(), "Metrikler hesaplanamadi.", html.Div()
+        if not metrics:
+            return {"display": "none"}, html.Div(), go.Figure(), "Metrikler hesaplanamadi.", html.Div()
 
-    # 5. Tabloyu olustur
-    table = _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_map)
+        # Sıralama
+        SORT_MAP = {
+            "getiri": (lambda x: x[2], True),
+            "sharpe": (lambda x: metrics.get(x[0], {}).get(METRIC_SHARPE, -9999), True),
+            "alpha":  (lambda x: metrics.get(x[0], {}).get(METRIC_ALPHA, -9999), True),
+            "sortino":(lambda x: metrics.get(x[0], {}).get(METRIC_SORTINO, -9999), True),
+            "vol":    (lambda x: metrics.get(x[0], {}).get(METRIC_VOLATILITY, 9999), False),
+            "dd":     (lambda x: metrics.get(x[0], {}).get(METRIC_MAX_DRAWDOWN, 9999), False),
+        }
+        if sort_key in SORT_MAP:
+            key_fn, reverse = SORT_MAP[sort_key]
+            top_fonlar = sorted(top_fonlar, key=key_fn, reverse=reverse)
 
-    # 6. Grafik
-    fig = _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari)
+        # 5. Tabloyu olustur
+        table = _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_map, fav_data)
 
-    # 7. Tavsiye (kullanici karar versin, sadece bilgi)
-    tavsiye = html.Div([
-        html.H5(f"📊 {len(top_fonlar)} Fon Karşılaştırması", className="mb-2"),
-        html.P(
-            f"Seçili dönemde ({period_label}) en yüksek getiriden en düşüğe sıralanmıştır. "
-            "Fon yöneticisi başarısını değerlendirmek için Alpha, Sharpe ve Information Ratio metriklerine "
-            "odaklanmanız önerilir.",
-            className="text-muted", style={"fontSize": "0.9em"},
-        ),
-    ])
-    durum = f"Seçilen zaman aralığına ({period_label}) göre en yüksek getiriyi sağlamış {len(top_fonlar)} fon getirildi"
+        # 6. Grafik
+        fig = _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari)
 
-    return {"display": "block"}, table, fig, durum, tavsiye
+        # 7. Tavsiye (kullanici karar versin, sadece bilgi)
+        tavsiye = html.Div([
+            html.H5(f"📊 {len(top_fonlar)} Fon Karşılaştırması", className="mb-2"),
+            html.P(
+                f"Seçili dönemde ({period_label}) en yüksek getiriden en düşüğe sıralanmıştır. "
+                "Fon yöneticisi başarısını değerlendirmek için Alpha, Sharpe ve Information Ratio metriklerine "
+                "odaklanmanız önerilir.",
+                className="text-muted", style={"fontSize": "0.9em"},
+            ),
+        ])
+        durum = f"Seçilen zaman aralığına ({period_label}) göre en yüksek getiriyi sağlamış {len(top_fonlar)} fon getirildi"
+
+        return {"display": "block"}, table, fig, durum, tavsiye
+    except Exception as exc:
+        logger.exception("Fon bulucu hatasi")
+        return {"display": "none"}, html.Div(), go.Figure(), f"Hata: {exc}", html.Div()
 
 
 # ── Helper: fon tablosu ─────────────────────────────────────────────
-def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_map):
+def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_map, fav_list=None):
     metric_keys = [
         METRIC_SHARPE, METRIC_ALPHA, METRIC_INFORMATION_RATIO,
         METRIC_SORTINO, METRIC_ANNUALIZED_RETURN,
         METRIC_VOLATILITY, METRIC_MAX_DRAWDOWN,
     ]
-    headers = [html.Th("Fon")]
+    headers = [html.Th(""), html.Th("Fon")]
     tooltip_components = []
     for idx, mk in enumerate(metric_keys):
         desc = METRIC_DESCRIPTIONS.get(mk, "")
@@ -283,14 +343,31 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
         else:
             headers.append(html.Th(mk))
 
+    # Her metrikte en iyi değeri bul
+    best_vals = {}
+    for mk in metric_keys:
+        vals = [(kod, m.get(mk)) for kod, m in metrics.items() if m.get(mk) is not None]
+        if vals:
+            higher_better = mk in (METRIC_SHARPE, METRIC_ALPHA, METRIC_INFORMATION_RATIO,
+                                   METRIC_SORTINO, METRIC_ANNUALIZED_RETURN)
+            best_vals[mk] = max(vals, key=lambda x: x[1]) if higher_better else min(vals, key=lambda x: x[1])
+
     rows = []
     for i, (kod, unvan, getiri) in enumerate(top_fonlar):
         m = metrics.get(kod, {})
-        row_style = {"backgroundColor": "#f0fff0"} if i == 0 else {}
-        cells = [html.Td(html.Strong(kod) if i == 0 else kod)]
+        is_first = i == 0
+        row_style = {"backgroundColor": "#f0fff0"} if is_first else {}
+        fav_btn = _fmt_fav_btn(kod, fav_list)
+        cells = [html.Td(fav_btn, style={"textAlign": "center", "width": "36px"})]
+        cells.append(html.Td(html.Strong(kod) if is_first else kod))
         for mk in metric_keys:
             val = m.get(mk, "-")
-            cells.append(html.Td(f"{val}", style={"textAlign": "center"}))
+            is_best = best_vals.get(mk) and best_vals[mk][0] == kod
+            style = {"textAlign": "center"}
+            if is_best:
+                style["color"] = "#1abc9c"
+                style["fontWeight"] = "bold"
+            cells.append(html.Td(f"{val}", style=style))
         rows.append(html.Tr(cells, style=row_style))
 
     return html.Div(
@@ -299,6 +376,8 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
                 [html.Thead(html.Tr(headers)), html.Tbody(rows)],
                 striped=True, bordered=True, hover=True, size="sm", responsive=True,
             ),
+            html.Small("⭐ yeşil renkli değerler o metrikte en iyi performansı gösterir.",
+                       className="text-muted d-block mt-1", style={"fontSize": "0.8em"}),
         ]
     )
 
@@ -384,6 +463,25 @@ def _load_market_for_category(fon_kodlari: list, fon_unvan_map: dict) -> pd.Seri
     except Exception as exc:
         logger.warning("Market (%s) yuklenemedi: %s", symbol, exc)
     return pd.Series(dtype=float)
+
+
+# ── Callback: favori toggle ──────────────────────────────────────────
+@callback(
+    Output("fav-store", "data"),
+    Input({"type": "fb-fav", "index": ALL}, "n_clicks"),
+    State("fav-store", "data"),
+    prevent_initial_call=True,
+)
+def toggle_fav(n_clicks_list, fav_data):
+    if not dash.callback_context.triggered_id:
+        return fav_data
+    kod = dash.callback_context.triggered_id["index"]
+    favs = list(fav_data or [])
+    if kod in favs:
+        favs.remove(kod)
+    else:
+        favs.append(kod)
+    return favs
 
 
 

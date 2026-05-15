@@ -20,3 +20,20 @@
 .bg-light.sidebar {
   background-color: #f0fdfa !important;
 }
+
+[data-bs-theme="dark"] .card {
+  background-color: #2d2d2d;
+  border-color: #444;
+}
+
+[data-bs-theme="dark"] .table {
+  --bs-table-bg: #2d2d2d;
+  --bs-table-striped-bg: #333;
+  --bs-table-hover-bg: #3a3a3a;
+  color: #ddd;
+}
+
+[data-bs-theme="dark"] .modal-content {
+  background-color: #2d2d2d;
+  color: #ddd;
+}
