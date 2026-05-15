@@ -38,17 +38,11 @@
   min-height: 100vh;
 }
 
-[data-bs-theme="dark"] .card {
-  background-color: #16213e !important;
-  border-color: #0f3460 !important;
-  color: #e0e0e0;
-}
-
-[data-bs-theme="dark"] .card-header,
-[data-bs-theme="dark"] .card-body,
-[data-bs-theme="dark"] .card-footer {
-  background-color: #16213e !important;
-  color: #e0e0e0;
+.card,
+.card-header,
+.card-body,
+.card-footer {
+  color: #000 !important;
 }
 
 [data-bs-theme="dark"] .table {
