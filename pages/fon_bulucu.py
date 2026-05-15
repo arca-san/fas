@@ -99,6 +99,7 @@ info_bar = dbc.Alert([
 
 # ── Layout ──────────────────────────────────────────────────────────
 layout = dbc.Container([
+    dcc.Store(id="fav-store", storage_type="local"),
     info_bar,
 
     dbc.Row([
