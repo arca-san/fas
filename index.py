@@ -42,6 +42,7 @@ clientside_callback(
     """
     function(n_clicks, current) {
         var newTheme = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
         var links = document.querySelectorAll('link');
         for (var i = 0; i < links.length; i++) {
             var h = links[i].href || '';
@@ -63,6 +64,9 @@ clientside_callback(
         var label = document.getElementById('theme-label');
         if (label) label.textContent = newTheme === 'dark' ? 'Acik' : 'Koyu';
 
+        var container = document.querySelector('.dbc');
+        if (container) container.style.backgroundColor = newTheme === 'dark' ? '#1a1a2e' : '';
+
         return newTheme;
     }
     """,
@@ -76,6 +80,7 @@ clientside_callback(
     """
     function(saved) {
         if (!saved) return 'light';
+        document.documentElement.setAttribute('data-bs-theme', saved);
         var links = document.querySelectorAll('link');
         for (var i = 0; i < links.length; i++) {
             var h = links[i].href || '';
@@ -92,6 +97,8 @@ clientside_callback(
         }
         var label = document.getElementById('theme-label');
         if (label) label.textContent = saved === 'dark' ? 'Acik' : 'Koyu';
+        var container = document.querySelector('.dbc');
+        if (container) container.style.backgroundColor = saved === 'dark' ? '#1a1a2e' : '';
         return saved;
     }
     """,

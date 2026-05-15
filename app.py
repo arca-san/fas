@@ -25,15 +25,26 @@ app = dash.Dash(
 
 app.index_string = """
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="light">
     <head>
         {%metas%}
+        <script>
+        (function() {
+            try {
+                var t = JSON.parse(localStorage.getItem('theme-store'));
+                if (t && (t === 'dark' || t.light)) {
+                    var theme = typeof t === 'string' ? t : 'light';
+                    document.documentElement.setAttribute('data-bs-theme', theme);
+                }
+            } catch(e) {}
+        })();
+        </script>
         <link rel="icon" type="image/png" href="/assets/logo.png">
         <title>{%title%}</title>
         {%favicon%}
         {%css%}
     </head>
-    <body>
+    <body class="dbc">
         {%app_entry%}
         <footer>
             {%config%}
