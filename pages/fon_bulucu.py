@@ -100,6 +100,7 @@ info_bar = dbc.Alert([
 # ── Layout ──────────────────────────────────────────────────────────
 layout = dbc.Container([
     dcc.Store(id="fav-store", storage_type="local"),
+    dcc.Store(id="fb-cache"),
     info_bar,
 
     dbc.Row([
@@ -201,20 +202,18 @@ layout = dbc.Container([
 # ── Callback: arama ─────────────────────────────────────────────────
 @callback(
     Output("fb-sonuclar", "style"),
-    Output("fb-tablo", "children"),
+    Output("fb-cache", "data"),
     Output("fb-grafik", "figure"),
     Output("fb-durum", "children"),
-    Output("fb-tavsiye", "children"),
     Input("fb-ara-btn", "n_clicks"),
     State("fb-kategori", "value"),
     State("fb-vade", "value"),
     State("fb-sort", "value"),
-    State("fav-store", "data"),
     prevent_initial_call=True,
 )
-def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, fav_data):
+def fonlari_bul(n_clicks, kategori_kod, vade, sort_key):
     if not kategori_kod:
-        return {"display": "none"}, html.Div(), go.Figure(), "Lütfen bir kategori seçin.", html.Div()
+        return {"display": "none"}, None, go.Figure(), "Lütfen bir kategori seçin."
 
     period_field = PERIOD_FIELD_MAP.get(vade, "getiri1y")
     period_label = PERIOD_LABELS.get(vade, vade)
@@ -224,10 +223,10 @@ def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, fav_data):
         fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi="YAT", fon_tur_kod=kategori_kod)
     except Exception as exc:
         logger.warning("Fon getirileri cekilemedi: %s", exc)
-        return {"display": "none"}, html.Div(), go.Figure(), f"Veri alinamadi: {exc}", html.Div()
+        return {"display": "none"}, None, go.Figure(), f"Veri alinamadi: {exc}"
 
     if not fonlar:
-        return {"display": "none"}, html.Div(), go.Figure(), "Bu kategoride fon bulunamadi.", html.Div()
+        return {"display": "none"}, None, go.Figure(), "Bu kategoride fon bulunamadi."
 
     # 2. Getirisi olan fonlari filtrele ve sirala
     fon_list = []
@@ -238,7 +237,7 @@ def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, fav_data):
     fon_list.sort(key=lambda x: x[2], reverse=True)
 
     if not fon_list:
-        return {"display": "none"}, html.Div(), go.Figure(), f"Bu vadede ({period_label}) getiri verisi olan fon bulunamadi.", html.Div()
+        return {"display": "none"}, None, go.Figure(), f"Bu vadede ({period_label}) getiri verisi olan fon bulunamadi."
 
     # En fazla 10 fon
     top_fonlar = fon_list[:10]
@@ -267,7 +266,7 @@ def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, fav_data):
                     logger.warning("Veri cekme hatasi %s: %s", kod, exc)
 
         if not fund_dict:
-            return {"display": "none"}, html.Div(), go.Figure(), "Fon verileri cekilemedi.", html.Div()
+            return {"display": "none"}, None, go.Figure(), "Fon verileri cekilemedi."
 
         # Risksiz getiri ve market benchmark
         first_df = list(fund_dict.values())[0]
@@ -283,7 +282,7 @@ def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, fav_data):
         metrics = calculate_fund_metrics(fund_dict, rf_daily, market_prices)
 
         if not metrics:
-            return {"display": "none"}, html.Div(), go.Figure(), "Metrikler hesaplanamadi.", html.Div()
+            return {"display": "none"}, None, go.Figure(), "Metrikler hesaplanamadi."
 
         # Sıralama
         SORT_MAP = {
@@ -298,28 +297,56 @@ def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, fav_data):
             key_fn, reverse = SORT_MAP[sort_key]
             top_fonlar = sorted(top_fonlar, key=key_fn, reverse=reverse)
 
-        # 5. Tabloyu olustur
-        table = _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_map, fav_data)
-
-        # 6. Grafik
+        # 4. Grafik
         fig = _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari)
 
-        # 7. Tavsiye (kullanici karar versin, sadece bilgi)
-        tavsiye = html.Div([
-            html.H5(f"📊 {len(top_fonlar)} Fon Karşılaştırması", className="mb-2"),
-            html.P(
-                f"Seçili dönemde ({period_label}) en yüksek getiriden en düşüğe sıralanmıştır. "
-                "Fon yöneticisi başarısını değerlendirmek için Alpha, Sharpe ve Information Ratio metriklerine "
-                "odaklanmanız önerilir.",
-                className="text-muted", style={"fontSize": "0.9em"},
-            ),
-        ])
+        # 5. Cache verisini hazirla (JSON uyumlu)
+        cached = {
+            "top_fonlar": [[k, u, g] for k, u, g in top_fonlar],
+            "metrics": {k: {mk: float(v) if not isinstance(v, str) else v for mk, v in m.items()} for k, m in metrics.items()},
+            "fon_unvan_map": fon_unvan_map,
+            "fon_kodlari": fon_kodlari,
+            "period_field": period_field,
+            "period_label": period_label,
+        }
         durum = f"Seçilen zaman aralığına ({period_label}) göre en yüksek getiriyi sağlamış {len(top_fonlar)} fon getirildi"
 
-        return {"display": "block"}, table, fig, durum, tavsiye
+        return {"display": "block"}, cached, fig, durum
     except Exception as exc:
         logger.exception("Fon bulucu hatasi")
-        return {"display": "none"}, html.Div(), go.Figure(), f"Hata: {exc}", html.Div()
+        return {"display": "none"}, None, go.Figure(), f"Hata: {exc}"
+
+
+# ── Callback: tablo render (cache + favoriler) ──────────────────────
+@callback(
+    Output("fb-tablo", "children"),
+    Output("fb-tavsiye", "children"),
+    Input("fb-cache", "data"),
+    Input("fav-store", "data"),
+    prevent_initial_call=True,
+)
+def render_table(cached, fav_data):
+    if not cached:
+        return html.Div(), html.Div()
+
+    top_fonlar = [tuple(t) for t in cached["top_fonlar"]]
+    metrics = cached["metrics"]
+    fon_unvan_map = cached["fon_unvan_map"]
+    period_label = cached["period_label"]
+    fon_kodlari = cached["fon_kodlari"]
+
+    table = _build_fon_table(top_fonlar, metrics, cached["period_field"], period_label, fon_unvan_map, fav_data)
+
+    tavsiye = html.Div([
+        html.H5(f"📊 {len(top_fonlar)} Fon Karşılaştırması", className="mb-2"),
+        html.P(
+            f"Seçili dönemde ({period_label}) en yüksek getiriden en düşüğe sıralanmıştır. "
+            "Fon yöneticisi başarısını değerlendirmek için Alpha, Sharpe ve Information Ratio metriklerine "
+            "odaklanmanız önerilir.",
+            className="text-muted", style={"fontSize": "0.9em"},
+        ),
+    ])
+    return table, tavsiye
 
 
 # ── Helper: fon tablosu ─────────────────────────────────────────────
