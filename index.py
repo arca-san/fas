@@ -46,12 +46,10 @@ clientside_callback(
         var newTheme = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-bs-theme', newTheme);
         var links = document.getElementsByTagName('link');
-        var newHref = newTheme === 'dark' ? '""" + DARKLY_URL + """' : '""" + FLATLY_URL + """';
         for (var i = 0; i < links.length; i++) {
             var h = links[i].href || '';
-            if (h.indexOf('flatly') > -1 || h.indexOf('darkly') > -1) {
-                links[i].href = newHref;
-            }
+            if (h.indexOf('flatly') > -1) links[i].disabled = (newTheme !== 'light');
+            if (h.indexOf('darkly') > -1) links[i].disabled = (newTheme !== 'dark');
         }
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.content = newTheme === 'dark' ? '#222' : '#1abc9c';

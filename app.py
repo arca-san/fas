@@ -21,7 +21,7 @@ DARKLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstra
 app = dash.Dash(
     __name__,
     use_pages=True,
-    external_stylesheets=[dmc.styles.ALL],
+    external_stylesheets=[FLATLY_URL, DARKLY_URL, dmc.styles.ALL],
     suppress_callback_exceptions=True,
     title="Fon Analiz Sistemi",
 )
@@ -31,6 +31,9 @@ app.index_string = """
 <html data-bs-theme="light">
     <head>
         {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
         <script>
         (function() {
             var theme = 'light';
@@ -42,13 +45,14 @@ app.index_string = """
                 }
             } catch(e) {}
             document.documentElement.setAttribute('data-bs-theme', theme);
-            var cssUrl = theme === 'dark' ? '""" + DARKLY_URL + """' : '""" + FLATLY_URL + """';
-            document.write('<link rel="stylesheet" href="' + cssUrl + '">');
+            var links = document.getElementsByTagName('link');
+            for (var i = 0; i < links.length; i++) {
+                var h = links[i].href || '';
+                if (h.indexOf('flatly') > -1) links[i].disabled = (theme !== 'light');
+                if (h.indexOf('darkly') > -1) links[i].disabled = (theme !== 'dark');
+            }
         })();
         </script>
-        <title>{%title%}</title>
-        {%favicon%}
-        {%css%}
     </head>
     <body class="dbc">
         {%app_entry%}
