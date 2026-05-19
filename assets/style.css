@@ -46,3 +46,20 @@
 [data-bs-theme="dark"] .sidebar-col {
   background-color: #303030 !important;
 }
+
+[data-bs-theme="dark"] .card,
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-body,
+[data-bs-theme="dark"] .card-footer,
+[data-bs-theme="dark"] .modal-content,
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-body,
+[data-bs-theme="dark"] .modal-footer,
+[data-bs-theme="dark"] .list-group-item {
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+  border-color: #444 !important;
+}
