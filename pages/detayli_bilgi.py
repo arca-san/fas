@@ -45,13 +45,13 @@ layout = dbc.Container([
                         html.Td("Yüksek iyi"),
                     ]),
                     html.Tr([
-                        html.Td(html.Strong("Alpha")),
+                        html.Td(html.Strong("Alfa")),
                         html.Td("Fon yöneticisinin benchmark'a kıyasla yarattığı ek getiri. "
-                                "Pozitif Alpha = yönetici piyasanın üzerinde getiri sağlamış."),
+                                "Pozitif Alfa = yönetici piyasanın üzerinde getiri sağlamış."),
                         html.Td("Yüksek iyi"),
                     ]),
                     html.Tr([
-                        html.Td(html.Strong("Information Ratio")),
+                        html.Td(html.Strong("Enformasyon Oranı")),
                         html.Td("Aktif getirinin (fon - benchmark) tutarlılığını ölçer. "
                                 "Yüksek IR = yönetici istikrarlı şekilde fazla getiri üretmiş."),
                         html.Td("Yüksek iyi"),
@@ -69,7 +69,7 @@ layout = dbc.Container([
                         html.Td("Düşük iyi"),
                     ]),
                     html.Tr([
-                        html.Td(html.Strong("Maksimum Düşüş (Max Drawdown)")),
+                        html.Td(html.Strong("Maksimum Düşüş")),
                         html.Td("Belirli dönemdeki en yüksek değerden en düşük değere "
                                 "olan düşüş. Fonun tarihindeki en büyük kaybı gösterir."),
                         html.Td("Düşük iyi"),
@@ -85,11 +85,11 @@ layout = dbc.Container([
             html.H5("Fon Yöneticisi Başarısını Değerlendirme", className="card-title"),
             html.P(
                 "Fon yöneticisinin doğrudan başarısını değerlendirmek için öncelikle "
-                "Alpha ve Information Ratio metriklerine odaklanmanız önerilir:"
+                "Alfa ve Enformasyon Oranı metriklerine odaklanmanız önerilir:"
             ),
             html.Ul([
-                html.Li(html.B("Alpha:"), " Yönetici benchmark'ı geçebilmiş mi?"),
-                html.Li(html.B("Information Ratio:"), " Bu başarı tutarlı mı?"),
+                html.Li(html.B("Alfa:"), " Yönetici benchmark'ı geçebilmiş mi?"),
+                html.Li(html.B("Enformasyon Oranı:"), " Bu başarı tutarlı mı?"),
                 html.Li(html.B("Sharpe:"), " Risk birimi başına getiri ne kadar?"),
                 html.Li(html.B("Sortino:"), " Düşüş riskine karşı koruma ne düzeyde?"),
             ]),
