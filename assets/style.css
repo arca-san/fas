@@ -378,3 +378,33 @@
 [data-bs-theme="dark"] [role="dialog"] button:hover {
   background-color: #2a2a2a !important;
 }
+
+[data-bs-theme="dark"] [role="dialog"] button[data-selected],
+[data-bs-theme="dark"] [role="dialog"] [data-state="selected"],
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_selected,
+[data-bs-theme="dark"] [role="dialog"] .selected {
+  background-color: #b666d2 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] button[data-range-start],
+[data-bs-theme="dark"] [role="dialog"] button[data-range-end],
+[data-bs-theme="dark"] [role="dialog"] [data-state="range-start"],
+[data-bs-theme="dark"] [role="dialog"] [data-state="range-end"] {
+  background-color: #b666d2 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] [data-state="range-middle"] {
+  background-color: rgba(182, 102, 210, 0.3) !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] button[data-today],
+[data-bs-theme="dark"] [role="dialog"] [data-state="today"] {
+  border-color: #b666d2 !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] button:hover:not([data-selected]) {
+  background-color: #2a2a2a !important;
+}
