@@ -42,7 +42,7 @@ clientside_callback(
     function(n_clicks, current) {
         var newTheme = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-bs-theme', newTheme);
-        var links = document.querySelectorAll('link');
+        var links = document.getElementsByTagName('link');
         for (var i = 0; i < links.length; i++) {
             var h = links[i].href || '';
             if (h.indexOf('flatly') > -1) links[i].disabled = (newTheme !== 'light');
