@@ -335,3 +335,46 @@
 [data-bs-theme="dark"] [class*="m_"][class*="option"]:hover {
   background-color: #2a2a2a !important;
 }
+
+[data-bs-theme="dark"] .dash-datepicker-input {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] .dash-datepicker-input::placeholder {
+  color: #888 !important;
+}
+
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper {
+  background-color: #1a1a1a !important;
+  border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] .dash-datepicker-range-arrow,
+[data-bs-theme="dark"] .dash-datepicker-caret-icon {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"],
+[data-bs-theme="dark"] [data-radix-popper-content-wrapper] {
+  background-color: #1a1a1a !important;
+  border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] table,
+[data-bs-theme="dark"] [role="dialog"] td,
+[data-bs-theme="dark"] [role="dialog"] th {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] button {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] button:hover {
+  background-color: #2a2a2a !important;
+}
