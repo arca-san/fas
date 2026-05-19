@@ -32,17 +32,10 @@ app.index_string = """
         (function() {
             try {
                 var t = localStorage.getItem('theme-store');
-                var theme = 'light';
                 if (t) {
                     var parsed = JSON.parse(t);
-                    theme = typeof parsed === 'string' ? parsed : 'light';
-                }
-                document.documentElement.setAttribute('data-bs-theme', theme);
-                var links = document.querySelectorAll('link');
-                for (var i = 0; i < links.length; i++) {
-                    var h = links[i].href || '';
-                    if (h.indexOf('flatly') > -1) links[i].disabled = (theme !== 'light');
-                    if (h.indexOf('darkly') > -1) links[i].disabled = (theme !== 'dark');
+                    var theme = typeof parsed === 'string' ? parsed : 'light';
+                    document.documentElement.setAttribute('data-bs-theme', theme);
                 }
             } catch(e) {}
         })();
