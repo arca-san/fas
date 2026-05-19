@@ -20,13 +20,13 @@ def create_navbar() -> dbc.Navbar:
             ),
             html.Div(
                 dbc.Button(
-                    [html.I(className="bi bi-sun-fill me-1", id="theme-icon")],
+                    "☀️",
                     id="theme-toggle",
                     color="light",
                     size="sm",
                     outline=True,
-                    className="ms-auto text-white border-white",
-                    style={"--bs-btn-color": "white"},
+                    className="ms-auto border-white",
+                    style={"--bs-btn-color": "white", "fontSize": "1.2rem", "padding": "0.2rem 0.5rem"},
                 ),
                 className="ms-auto d-flex align-items-center",
             ),

@@ -60,10 +60,8 @@ clientside_callback(
             }
         }
 
-        var icon = document.getElementById('theme-icon');
-        if (icon) {
-            icon.className = newTheme === 'dark' ? 'bi bi-sun-fill me-1' : 'bi bi-moon-fill me-1';
-        }
+        var btn = document.getElementById('theme-toggle');
+        if (btn) btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
 
         var container = document.querySelector('.dbc');
         if (container) container.style.backgroundColor = newTheme === 'dark' ? '#1a1a2e' : '';
