@@ -60,8 +60,10 @@ clientside_callback(
             }
         }
 
-        var label = document.getElementById('theme-label');
-        if (label) label.textContent = newTheme === 'dark' ? 'Açık' : 'Koyu';
+        var icon = document.getElementById('theme-icon');
+        if (icon) {
+            icon.className = newTheme === 'dark' ? 'bi bi-sun-fill me-1' : 'bi bi-moon-fill me-1';
+        }
 
         var container = document.querySelector('.dbc');
         if (container) container.style.backgroundColor = newTheme === 'dark' ? '#1a1a2e' : '';
@@ -72,37 +74,6 @@ clientside_callback(
     Output("theme-store", "data"),
     Input("theme-toggle", "n_clicks"),
     State("theme-store", "data"),
-    prevent_initial_call=True,
-)
-
-clientside_callback(
-    """
-    function(saved) {
-        if (!saved) return 'light';
-        document.documentElement.setAttribute('data-bs-theme', saved);
-        var links = document.querySelectorAll('link');
-        for (var i = 0; i < links.length; i++) {
-            var h = links[i].href || '';
-            if (h.indexOf('flatly') > -1) links[i].disabled = (saved !== 'light');
-            if (h.indexOf('darkly') > -1) links[i].disabled = (saved !== 'dark');
-        }
-        var sidebar = document.getElementById('sidebar-col');
-        if (sidebar) {
-            if (saved === 'dark') {
-                sidebar.classList.remove('bg-light');
-            } else {
-                sidebar.classList.add('bg-light');
-            }
-        }
-        var label = document.getElementById('theme-label');
-        if (label) label.textContent = saved === 'dark' ? 'Açık' : 'Koyu';
-        var container = document.querySelector('.dbc');
-        if (container) container.style.backgroundColor = saved === 'dark' ? '#1a1a2e' : '';
-        return saved;
-    }
-    """,
-    Output("theme-store", "data", allow_duplicate=True),
-    Input("theme-store", "data"),
     prevent_initial_call=True,
 )
 
