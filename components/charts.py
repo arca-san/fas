@@ -7,7 +7,7 @@ Plotly grafik fabrikasi — fiyat ve getiri grafikleri.
 import plotly.graph_objects as go
 import pandas as pd
 
-from config.constants import DEFAULT_COLOR_PALETTE
+from config.constants import DEFAULT_COLOR_PALETTE, METRIC_SHARPE, METRIC_VOLATILITY
 
 
 def create_price_chart(
@@ -80,8 +80,8 @@ def create_price_chart(
         color = palet[i % len(palet)]
 
         m = metrics.get(kod, {}) if metrics else {}
-        sharpe_str = f"{m.get('Sharpe Orani', 0):.3f}" if m else "N/A"
-        vol_str = f"{m.get('Volatilite (Yillik)', 0):.2f}" if m else "N/A"
+        sharpe_str = f"{m.get(METRIC_SHARPE, 0):.3f}" if m else "N/A"
+        vol_str = f"{m.get(METRIC_VOLATILITY, 0):.2f}" if m else "N/A"
         corr_val = correlations.get(kod) if correlations else None
         corr_str = f"{corr_val:.4f}" if corr_val is not None else "N/A"
 
