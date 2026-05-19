@@ -87,7 +87,7 @@ def _fmt_fav_btn(kod: str, fav_list: list) -> html.Span:
 info_bar = dbc.Alert([
     html.I(className="bi bi-info-circle me-2"),
     "Seçtiğiniz kategoride belirlediğiniz vadede en yüksek getirili fonları, "
-    "fon yöneticisi başarı metriklerine (Alpha, Sharpe, Information Ratio) göre karşılaştırın.",
+    "fon yöneticisi başarı metriklerine (Alfa, Sharpe, Enformasyon Oranı) göre karşılaştırın.",
     html.A(
         " Detaylı Bilgi",
         href="/detayli-bilgi",
@@ -172,10 +172,10 @@ layout = dbc.Container([
                             options=[
                                 {"label": "Varsayılan (Getiri)", "value": "getiri"},
                                 {"label": "Sharpe Oranı", "value": "sharpe"},
-                                {"label": "Alpha", "value": "alpha"},
+                                {"label": "Alfa", "value": "alpha"},
                                 {"label": "Sortino Oranı", "value": "sortino"},
                                 {"label": "Volatilite", "value": "vol"},
-                                {"label": "Max Drawdown", "value": "dd"},
+                                {"label": "Maksimum Düşüş", "value": "dd"},
                             ],
                             value="getiri",
                             clearable=False,
@@ -341,7 +341,7 @@ def render_table(cached, fav_data):
         html.H5(f"📊 {len(top_fonlar)} Fon Karşılaştırması", className="mb-2"),
         html.P(
             f"Seçili dönemde ({period_label}) en yüksek getiriden en düşüğe sıralanmıştır. "
-            "Fon yöneticisi başarısını değerlendirmek için Alpha, Sharpe ve Information Ratio metriklerine "
+            "Fon yöneticisi başarısını değerlendirmek için Alfa, Sharpe ve Enformasyon Oranı metriklerine "
             "odaklanmanız önerilir.",
             className="text-muted", style={"fontSize": "0.9em"},
         ),
