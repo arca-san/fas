@@ -17,16 +17,16 @@ COL_CUM_RETURN = "kumulatif_getiri"
 # Metrik isimleri (rapor & UI için)
 METRIC_VOLATILITY = "Volatilite (Yıllık)"
 METRIC_DOWNSIDE_VOL = "Aşağı Yönlü Volatilite"
-METRIC_MAX_DRAWDOWN = "Maksimum Düşüş (Max Drawdown)"
+METRIC_MAX_DRAWDOWN = "Maksimum Düşüş"
 METRIC_VAR = f"VaR (%{int(0.95*100)})"
 METRIC_CVAR = f"CVaR (%{int(0.95*100)})"
 METRIC_SHARPE = "Sharpe Oranı"
 METRIC_SORTINO = "Sortino Oranı"
 METRIC_TREYNOR = "Treynor Oranı"
 METRIC_BETA = "Beta"
-METRIC_ALPHA = "Alpha"
+METRIC_ALPHA = "Alfa"
 METRIC_R_SQUARED = "R²"
-METRIC_INFORMATION_RATIO = "Information Ratio"
+METRIC_INFORMATION_RATIO = "Enformasyon Oranı"
 METRIC_TOTAL_RETURN = "Toplam Getiri"
 METRIC_ANNUALIZED_RETURN = "Yıllıklandırılmış Getiri"
 
@@ -36,10 +36,10 @@ METRIC_DESCRIPTIONS = {
     METRIC_DOWNSIDE_VOL: "Sadece negatif getirilerin volatilitesi.",
     METRIC_MAX_DRAWDOWN: "Pikten dibeye maksimum düşüş yüzdesi.",
     METRIC_VAR: "Belirli güven düzeyinde beklenen maksimum kayıp.",
-    METRIC_CVAR: "VaR'ı aşan kayıpların ortalaması (Expected Shortfall).",
+    METRIC_CVAR: "VaR'ı aşan kayıpların ortalaması.",
     METRIC_SHARPE: "Risksiz getiri üzerinden birim risk başına fazla getiri.",
     METRIC_SORTINO: "Sharpe'ın sadece negatif volatilite kullanan versiyonu.",
-    METRIC_TREYNOR: "Sistematik risk (Beta) başına fazla getiri.",
+    METRIC_TREYNOR: "Sistematik risk (Beta katsayısı) başına fazla getiri.",
     METRIC_BETA: "Fonun benchmarka göre sistematik risk duyarlılığı.",
     METRIC_ALPHA: "Benchmarka göre ayarlanmış fazla getiri (yetenek göstergesi).",
     METRIC_R_SQUARED: "Fon getirisinin benchmark tarafından açıklanan varyans oranı.",
