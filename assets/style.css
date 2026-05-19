@@ -39,29 +39,126 @@
   border-color: #dee2e6 !important;
 }
 
+[data-bs-theme="dark"] body,
 [data-bs-theme="dark"] .dbc {
   background-color: #222 !important;
+  color: #e0e0e0 !important;
 }
 
-[data-bs-theme="dark"] .sidebar-col {
+[data-bs-theme="dark"] .navbar {
   background-color: #303030 !important;
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .sidebar,
+[data-bs-theme="dark"] .sidebar-col {
+  background-color: #2a2a2a !important;
 }
 
 [data-bs-theme="dark"] .card,
 [data-bs-theme="dark"] .card-header,
 [data-bs-theme="dark"] .card-body,
-[data-bs-theme="dark"] .card-footer,
+[data-bs-theme="dark"] .card-footer {
+  background-color: #303030 !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
 [data-bs-theme="dark"] .modal-content,
 [data-bs-theme="dark"] .modal-header,
 [data-bs-theme="dark"] .modal-body,
-[data-bs-theme="dark"] .modal-footer,
+[data-bs-theme="dark"] .modal-footer {
+  background-color: #303030 !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
 [data-bs-theme="dark"] .list-group-item {
+  background-color: #303030 !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .table {
   color: #e0e0e0 !important;
 }
 
-[data-bs-theme="dark"] .modal-header,
-[data-bs-theme="dark"] .modal-footer {
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
+  background-color: #3a3a3a !important;
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .table-bordered,
+[data-bs-theme="dark"] .table-bordered th,
+[data-bs-theme="dark"] .table-bordered td {
   border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .alert {
+  background-color: #303030 !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+  background-color: #303030 !important;
+  border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover,
+[data-bs-theme="dark"] .dropdown-item:focus {
+  background-color: #3a3a3a !important;
+  color: #fff !important;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #303030 !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  background-color: #303030 !important;
+  color: #e0e0e0 !important;
+  border-color: #1abc9c !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-light {
+  color: #e0e0e0 !important;
+  border-color: #555 !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+  color: #999 !important;
+}
+
+[data-bs-theme="dark"] .border,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-start,
+[data-bs-theme="dark"] .border-end {
+  border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] .nav-link {
+  color: #ccc !important;
+}
+
+[data-bs-theme="dark"] .nav-link:hover,
+[data-bs-theme="dark"] .nav-link.active {
+  color: #fff !important;
+  background-color: #3a3a3a !important;
 }
 
 [data-bs-theme="dark"] .Select-control,
@@ -72,18 +169,26 @@
 [data-bs-theme="dark"] .Select-value-label,
 [data-bs-theme="dark"] .Select-input input,
 [data-bs-theme="dark"] .Select-menu,
-[data-bs-theme="dark"] .Select-option,
 [data-bs-theme="dark"] div[class*="css"][class*="control"],
 [data-bs-theme="dark"] div[class*="css"][class*="menu"],
 [data-bs-theme="dark"] div[class*="css"][class*="option"],
 [data-bs-theme="dark"] div[class*="css"][class*="singleValue"],
 [data-bs-theme="dark"] input[class*="css"] {
-  color: #000 !important;
-  background-color: #fff !important;
+  color: #e0e0e0 !important;
+  background-color: #303030 !important;
 }
 
 [data-bs-theme="dark"] .Select-option:hover,
 [data-bs-theme="dark"] .VirtualizedSelectFocusedOption,
 [data-bs-theme="dark"] div[class*="css"][class*="option"]:hover {
-  background-color: #e9ecef !important;
+  background-color: #3a3a3a !important;
+}
+
+[data-bs-theme="dark"] .radio > input[type="radio"]:first-child + label,
+[data-bs-theme="dark"] .checkbox > input[type="checkbox"]:first-child + label {
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] ::placeholder {
+  color: #888 !important;
 }

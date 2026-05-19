@@ -37,37 +37,14 @@ app.layout = dmc.MantineProvider(
     id="mantine-provider",
 )
 
-FLATLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/flatly/bootstrap.min.css"
-DARKLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css"
-
 clientside_callback(
     """
     function(n_clicks, current) {
         var newTheme = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-bs-theme', newTheme);
-        var links = document.getElementsByTagName('link');
-        for (var i = 0; i < links.length; i++) {
-            var h = links[i].href || '';
-            if (h.indexOf('flatly') > -1) links[i].disabled = (newTheme !== 'light');
-            if (h.indexOf('darkly') > -1) links[i].disabled = (newTheme !== 'dark');
-        }
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.content = newTheme === 'dark' ? '#222' : '#1abc9c';
-
-        var sidebar = document.getElementById('sidebar-col');
-        if (sidebar) {
-            if (newTheme === 'dark') {
-                sidebar.classList.remove('bg-light');
-            } else {
-                sidebar.classList.add('bg-light');
-            }
-        }
 
         var btn = document.getElementById('theme-toggle');
         if (btn) btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-
-        var container = document.querySelector('.dbc');
-        if (container) container.style.backgroundColor = newTheme === 'dark' ? '#1a1a2e' : '';
 
         return newTheme;
     }

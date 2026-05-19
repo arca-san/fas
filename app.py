@@ -16,12 +16,11 @@ except Exception:
     pass
 
 FLATLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/flatly/bootstrap.min.css"
-DARKLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css"
 
 app = dash.Dash(
     __name__,
     use_pages=True,
-    external_stylesheets=[FLATLY_URL, DARKLY_URL, dmc.styles.ALL],
+    external_stylesheets=[FLATLY_URL, dmc.styles.ALL],
     suppress_callback_exceptions=True,
     title="Fon Analiz Sistemi",
 )
@@ -36,21 +35,14 @@ app.index_string = """
         {%css%}
         <script>
         (function() {
-            var theme = 'light';
             try {
                 var t = localStorage.getItem('theme-store');
                 if (t) {
-                    var parsed = JSON.parse(t);
-                    theme = typeof parsed === 'string' ? parsed : 'light';
+                    var theme = JSON.parse(t);
+                    theme = typeof theme === 'string' ? theme : 'light';
+                    document.documentElement.setAttribute('data-bs-theme', theme);
                 }
             } catch(e) {}
-            document.documentElement.setAttribute('data-bs-theme', theme);
-            var links = document.getElementsByTagName('link');
-            for (var i = 0; i < links.length; i++) {
-                var h = links[i].href || '';
-                if (h.indexOf('flatly') > -1) links[i].disabled = (theme !== 'light');
-                if (h.indexOf('darkly') > -1) links[i].disabled = (theme !== 'dark');
-            }
         })();
         </script>
     </head>
