@@ -295,9 +295,9 @@
 }
 
 [data-bs-theme="dark"] [class*="mantine-Pill"] {
-  background-color: #b666d2 !important;
+  background-color: #555 !important;
   color: #ffffff !important;
-  border-color: #b666d2 !important;
+  border-color: #555 !important;
 }
 
 [data-bs-theme="dark"] [class*="mantine-Pill"][data-disabled] {
@@ -315,4 +315,23 @@
 
 [data-bs-theme="dark"] [class*="mantine-ScrollArea"] {
   background-color: #1a1a1a !important;
+}
+
+[data-bs-theme="dark"] div[class*="m_"],
+[data-bs-theme="dark"] span[class*="m_"],
+[data-bs-theme="dark"] button[class*="m_"],
+[data-bs-theme="dark"] input[class*="m_"],
+[data-bs-theme="dark"] table[class*="m_"],
+[data-bs-theme="dark"] thead[class*="m_"],
+[data-bs-theme="dark"] tbody[class*="m_"],
+[data-bs-theme="dark"] tr[class*="m_"],
+[data-bs-theme="dark"] td[class*="m_"],
+[data-bs-theme="dark"] th[class*="m_"] {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [class*="m_"][class*="day"]:hover,
+[data-bs-theme="dark"] [class*="m_"][class*="option"]:hover {
+  background-color: #2a2a2a !important;
 }
