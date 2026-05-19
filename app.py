@@ -15,10 +15,13 @@ try:
 except Exception:
     pass
 
+FLATLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/flatly/bootstrap.min.css"
+DARKLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css"
+
 app = dash.Dash(
     __name__,
     use_pages=True,
-    external_stylesheets=[dbc.themes.FLATLY, dbc.themes.DARKLY, dmc.styles.ALL],
+    external_stylesheets=[FLATLY_URL, dmc.styles.ALL],
     suppress_callback_exceptions=True,
     title="Fon Analiz Sistemi",
 )
@@ -35,7 +38,15 @@ app.index_string = """
                 if (t) {
                     var parsed = JSON.parse(t);
                     var theme = typeof parsed === 'string' ? parsed : 'light';
-                    document.documentElement.setAttribute('data-bs-theme', theme);
+                    if (theme === 'dark') {
+                        document.documentElement.setAttribute('data-bs-theme', 'dark');
+                        var links = document.getElementsByTagName('link');
+                        for (var i = 0; i < links.length; i++) {
+                            if (links[i].href.indexOf('flatly') > -1) {
+                                links[i].href = '""" + DARKLY_URL + """';
+                            }
+                        }
+                    }
                 }
             } catch(e) {}
         })();
