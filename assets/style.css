@@ -41,7 +41,13 @@
 
 [data-bs-theme="light"] [role="dialog"] button[data-selected],
 [data-bs-theme="light"] [role="dialog"] [data-state="selected"],
-[data-bs-theme="light"] [role="dialog"] .rdp-day_selected {
+[data-bs-theme="light"] [role="dialog"] .rdp-day_selected,
+[data-bs-theme="light"] [role="dialog"] button[aria-selected="true"],
+[data-bs-theme="light"] [role="dialog"] button.selected,
+[data-bs-theme="light"] [role="dialog"] .CalendarDay_selected,
+[data-bs-theme="light"] [role="dialog"] [data-highlighted],
+[data-bs-theme="light"] [role="dialog"] .rdp-day_selectedStart,
+[data-bs-theme="light"] [role="dialog"] .rdp-day_selectedEnd {
   background-color: #1abc9c !important;
   color: #ffffff !important;
 }
@@ -49,17 +55,24 @@
 [data-bs-theme="light"] [role="dialog"] button[data-range-start],
 [data-bs-theme="light"] [role="dialog"] button[data-range-end],
 [data-bs-theme="light"] [role="dialog"] [data-state="range-start"],
-[data-bs-theme="light"] [role="dialog"] [data-state="range-end"] {
+[data-bs-theme="light"] [role="dialog"] [data-state="range-end"],
+[data-bs-theme="light"] [role="dialog"] [data-start-date],
+[data-bs-theme="light"] [role="dialog"] [data-end-date],
+[data-bs-theme="light"] [role="dialog"] .rdp-day_rangeStart,
+[data-bs-theme="light"] [role="dialog"] .rdp-day_rangeEnd {
   background-color: #1abc9c !important;
   color: #ffffff !important;
 }
 
-[data-bs-theme="light"] [role="dialog"] [data-state="range-middle"] {
+[data-bs-theme="light"] [role="dialog"] [data-state="range-middle"],
+[data-bs-theme="light"] [role="dialog"] [data-state="range-middle"],
+[data-bs-theme="light"] [role="dialog"] .rdp-day_rangeMiddle {
   background-color: rgba(26, 188, 156, 0.3) !important;
 }
 
 [data-bs-theme="light"] [role="dialog"] button[data-today],
-[data-bs-theme="light"] [role="dialog"] [data-state="today"] {
+[data-bs-theme="light"] [role="dialog"] [data-state="today"],
+[data-bs-theme="light"] [role="dialog"] .rdp-day_today {
   border-color: #1abc9c !important;
 }
 
@@ -406,7 +419,12 @@
 [data-bs-theme="dark"] [role="dialog"] button[data-selected],
 [data-bs-theme="dark"] [role="dialog"] [data-state="selected"],
 [data-bs-theme="dark"] [role="dialog"] .rdp-day_selected,
-[data-bs-theme="dark"] [role="dialog"] .selected {
+[data-bs-theme="dark"] [role="dialog"] button[aria-selected="true"],
+[data-bs-theme="dark"] [role="dialog"] button.selected,
+[data-bs-theme="dark"] [role="dialog"] .CalendarDay_selected,
+[data-bs-theme="dark"] [role="dialog"] [data-highlighted],
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_selectedStart,
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_selectedEnd {
   background-color: #b666d2 !important;
   color: #ffffff !important;
 }
@@ -414,21 +432,27 @@
 [data-bs-theme="dark"] [role="dialog"] button[data-range-start],
 [data-bs-theme="dark"] [role="dialog"] button[data-range-end],
 [data-bs-theme="dark"] [role="dialog"] [data-state="range-start"],
-[data-bs-theme="dark"] [role="dialog"] [data-state="range-end"] {
+[data-bs-theme="dark"] [role="dialog"] [data-state="range-end"],
+[data-bs-theme="dark"] [role="dialog"] [data-start-date],
+[data-bs-theme="dark"] [role="dialog"] [data-end-date],
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_rangeStart,
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_rangeEnd {
   background-color: #b666d2 !important;
   color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] [role="dialog"] [data-state="range-middle"] {
+[data-bs-theme="dark"] [role="dialog"] [data-state="range-middle"],
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_rangeMiddle {
   background-color: rgba(182, 102, 210, 0.3) !important;
   color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] [role="dialog"] button[data-today],
-[data-bs-theme="dark"] [role="dialog"] [data-state="today"] {
+[data-bs-theme="dark"] [role="dialog"] [data-state="today"],
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_today {
   border-color: #b666d2 !important;
 }
 
-[data-bs-theme="dark"] [role="dialog"] button:hover:not([data-selected]) {
+[data-bs-theme="dark"] [role="dialog"] button:hover:not([data-selected]):not([data-state="selected"]):not([aria-selected="true"]):not(.selected):not(.rdp-day_selected) {
   background-color: #2a2a2a !important;
 }
