@@ -38,3 +38,11 @@
 [data-bs-theme="light"] .modal-footer {
   border-color: #dee2e6 !important;
 }
+
+[data-bs-theme="dark"] .dbc {
+  background-color: #222 !important;
+}
+
+[data-bs-theme="dark"] .sidebar-col {
+  background-color: #303030 !important;
+}
