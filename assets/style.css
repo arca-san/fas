@@ -42,12 +42,19 @@
 [data-bs-theme="dark"] body,
 [data-bs-theme="dark"] .dbc {
   background-color: #0d0d0d !important;
+}
+
+[data-bs-theme="dark"] * {
   color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [class*="css-"],
+[data-bs-theme="dark"] [class^="css-"] {
+  background-color: #1a1a1a !important;
 }
 
 [data-bs-theme="dark"] .navbar {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .sidebar,
@@ -60,7 +67,6 @@
 [data-bs-theme="dark"] .card-body,
 [data-bs-theme="dark"] .card-footer {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
   border-color: #333 !important;
 }
 
@@ -69,28 +75,20 @@
 [data-bs-theme="dark"] .modal-body,
 [data-bs-theme="dark"] .modal-footer {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
   border-color: #333 !important;
 }
 
 [data-bs-theme="dark"] .list-group-item {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
   border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .table {
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
   background-color: #141414 !important;
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
   background-color: #222 !important;
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .table-bordered,
@@ -101,7 +99,6 @@
 
 [data-bs-theme="dark"] .alert {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
   border-color: #333 !important;
 }
 
@@ -110,32 +107,24 @@
   border-color: #333 !important;
 }
 
-[data-bs-theme="dark"] .dropdown-item {
-  color: #ffffff !important;
-}
-
 [data-bs-theme="dark"] .dropdown-item:hover,
 [data-bs-theme="dark"] .dropdown-item:focus {
   background-color: #2a2a2a !important;
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .form-control,
 [data-bs-theme="dark"] .form-select {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
   border-color: #333 !important;
 }
 
 [data-bs-theme="dark"] .form-control:focus,
 [data-bs-theme="dark"] .form-select:focus {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
   border-color: #1abc9c !important;
 }
 
 [data-bs-theme="dark"] .btn-outline-light {
-  color: #ffffff !important;
   border-color: #555 !important;
 }
 
@@ -157,7 +146,6 @@
 
 [data-bs-theme="dark"] .nav-link:hover,
 [data-bs-theme="dark"] .nav-link.active {
-  color: #ffffff !important;
   background-color: #2a2a2a !important;
 }
 
@@ -166,32 +154,13 @@
 [data-bs-theme="dark"] .Select-option,
 [data-bs-theme="dark"] .VirtualizedSelectOption,
 [data-bs-theme="dark"] .VirtualizedSelectFocusedOption,
-[data-bs-theme="dark"] .Select-value-label,
-[data-bs-theme="dark"] .Select-input input,
-[data-bs-theme="dark"] .Select-menu,
-[data-bs-theme="dark"] div[class*="css"][class*="control"],
-[data-bs-theme="dark"] div[class*="css"][class*="menu"],
-[data-bs-theme="dark"] div[class*="css"][class*="option"],
-[data-bs-theme="dark"] div[class*="css"][class*="singleValue"],
-[data-bs-theme="dark"] input[class*="css"],
-[data-bs-theme="dark"] .css-*,
-[data-bs-theme="dark"] div[class^="css-"],
-[data-bs-theme="dark"] .Select,
-[data-bs-theme="dark"] .Select-control > *,
-[data-bs-theme="dark"] .Select-menu > * {
+[data-bs-theme="dark"] .Select-menu {
   background-color: #1a1a1a !important;
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .Select-option:hover,
-[data-bs-theme="dark"] .VirtualizedSelectFocusedOption,
-[data-bs-theme="dark"] div[class*="css"][class*="option"]:hover {
+[data-bs-theme="dark"] .VirtualizedSelectFocusedOption {
   background-color: #2a2a2a !important;
-}
-
-[data-bs-theme="dark"] .radio > input[type="radio"]:first-child + label,
-[data-bs-theme="dark"] .checkbox > input[type="checkbox"]:first-child + label {
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] ::placeholder {
@@ -235,14 +204,4 @@
 
 [data-bs-theme="dark"] a:not(.btn):not(.dropdown-item):not(.nav-link) {
   color: #b666d2 !important;
-}
-
-[data-bs-theme="dark"] .Select-value-label,
-[data-bs-theme="dark"] .Select-input input,
-[data-bs-theme="dark"] .Select-placeholder,
-[data-bs-theme="dark"] .Select-input > input,
-[data-bs-theme="dark"] div[class*="css"][class*="singleValue"],
-[data-bs-theme="dark"] div[class*="css"][class*="placeholder"],
-[data-bs-theme="dark"] div[class*="css"][class*="input"] {
-  color: #ffffff !important;
 }
