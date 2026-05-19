@@ -17,24 +17,24 @@
   border-color: #16a085 !important;
 }
 
-.bg-light.sidebar {
+[data-bs-theme="light"] .bg-light.sidebar {
   background-color: #f0fdfa !important;
 }
 
-.card,
-.card-header,
-.card-body,
-.card-footer,
-.modal-content,
-.modal-header,
-.modal-body,
-.modal-footer,
-.list-group-item {
+[data-bs-theme="light"] .card,
+[data-bs-theme="light"] .card-header,
+[data-bs-theme="light"] .card-body,
+[data-bs-theme="light"] .card-footer,
+[data-bs-theme="light"] .modal-content,
+[data-bs-theme="light"] .modal-header,
+[data-bs-theme="light"] .modal-body,
+[data-bs-theme="light"] .modal-footer,
+[data-bs-theme="light"] .list-group-item {
   background-color: #fff !important;
   color: #000 !important;
 }
 
-.modal-header,
-.modal-footer {
+[data-bs-theme="light"] .modal-header,
+[data-bs-theme="light"] .modal-footer {
   border-color: #dee2e6 !important;
 }
