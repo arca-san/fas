@@ -37,16 +37,21 @@ app.layout = dmc.MantineProvider(
     id="mantine-provider",
 )
 
+FLATLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/flatly/bootstrap.min.css"
+DARKLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css"
+
 clientside_callback(
     """
     function(n_clicks, current) {
         var newTheme = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-bs-theme', newTheme);
         var links = document.getElementsByTagName('link');
+        var newHref = newTheme === 'dark' ? '""" + DARKLY_URL + """' : '""" + FLATLY_URL + """';
         for (var i = 0; i < links.length; i++) {
             var h = links[i].href || '';
-            if (h.indexOf('flatly') > -1) links[i].disabled = (newTheme !== 'light');
-            if (h.indexOf('darkly') > -1) links[i].disabled = (newTheme !== 'dark');
+            if (h.indexOf('flatly') > -1 || h.indexOf('darkly') > -1) {
+                links[i].href = newHref;
+            }
         }
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.content = newTheme === 'dark' ? '#222' : '#1abc9c';
