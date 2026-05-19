@@ -208,3 +208,41 @@
 [data-bs-theme="dark"] .bg-light {
   background-color: #141414 !important;
 }
+
+[data-bs-theme="dark"] .btn-primary {
+  background-color: #b666d2 !important;
+  border-color: #b666d2 !important;
+}
+
+[data-bs-theme="dark"] .btn-primary:hover {
+  background-color: #9f55b8 !important;
+  border-color: #9f55b8 !important;
+}
+
+[data-bs-theme="dark"] .navbar.bg-primary {
+  background-color: #b666d2 !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  border-color: #b666d2 !important;
+  box-shadow: 0 0 0 0.25rem rgba(182, 102, 210, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .nav-pills .nav-link.active {
+  background-color: #b666d2 !important;
+}
+
+[data-bs-theme="dark"] a:not(.btn):not(.dropdown-item):not(.nav-link) {
+  color: #b666d2 !important;
+}
+
+[data-bs-theme="dark"] .Select-value-label,
+[data-bs-theme="dark"] .Select-input input,
+[data-bs-theme="dark"] .Select-placeholder,
+[data-bs-theme="dark"] .Select-input > input,
+[data-bs-theme="dark"] div[class*="css"][class*="singleValue"],
+[data-bs-theme="dark"] div[class*="css"][class*="placeholder"],
+[data-bs-theme="dark"] div[class*="css"][class*="input"] {
+  color: #ffffff !important;
+}
