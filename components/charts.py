@@ -163,7 +163,7 @@ def create_price_chart(
         xaxis_title="Tarih",
         yaxis_title="Getiri (%)",
         hovermode="x unified",
-        template="plotly_white",
+        template="plotly",
         margin=dict(l=40, r=40, t=60, b=40),
         legend=dict(
             orientation="h",
@@ -215,7 +215,7 @@ def create_risk_return_scatter(
         title=title,
         xaxis_title="Risk (Volatilite, %)",
         yaxis_title="Getiri (Yıllık, %)",
-        template="plotly_white",
+        template="plotly",
         hovermode="closest",
         margin=dict(l=40, r=40, t=60, b=40),
         legend=dict(
