@@ -39,6 +39,30 @@
   border-color: #dee2e6 !important;
 }
 
+[data-bs-theme="light"] [role="dialog"] button[data-selected],
+[data-bs-theme="light"] [role="dialog"] [data-state="selected"],
+[data-bs-theme="light"] [role="dialog"] .rdp-day_selected {
+  background-color: #1abc9c !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="light"] [role="dialog"] button[data-range-start],
+[data-bs-theme="light"] [role="dialog"] button[data-range-end],
+[data-bs-theme="light"] [role="dialog"] [data-state="range-start"],
+[data-bs-theme="light"] [role="dialog"] [data-state="range-end"] {
+  background-color: #1abc9c !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="light"] [role="dialog"] [data-state="range-middle"] {
+  background-color: rgba(26, 188, 156, 0.3) !important;
+}
+
+[data-bs-theme="light"] [role="dialog"] button[data-today],
+[data-bs-theme="light"] [role="dialog"] [data-state="today"] {
+  border-color: #1abc9c !important;
+}
+
 [data-bs-theme="dark"] body,
 [data-bs-theme="dark"] .dbc {
   background-color: #0d0d0d !important;
