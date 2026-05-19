@@ -36,8 +36,6 @@
 ## İş Paketleri
 
 ### 1. Veri Kaynağı Sağlamlığı
-- TEFAS API değişikliklerine karşı izleme ve hata yönetimi
-- KYD verileri için fallback mekanizması
 - Önbellek stratejisinin iyileştirilmesi
 
 ### 2. Hata Yönetimi ve Kullanıcı Geri Bildirimi
