@@ -244,3 +244,75 @@
   border-color: #b666d2 !important;
   box-shadow: 0 0 0 0.25rem rgba(182, 102, 210, 0.25) !important;
 }
+
+[data-bs-theme="dark"] [class*="mantine-Input"],
+[data-bs-theme="dark"] [class*="mantine-MultiSelect"],
+[data-bs-theme="dark"] [class*="mantine-Combobox"],
+[data-bs-theme="dark"] [class*="mantine-Pill"],
+[data-bs-theme="dark"] [class*="mantine-PillsInput"],
+[data-bs-theme="dark"] [class*="mantine-Select"],
+[data-bs-theme="dark"] [class*="mantine-Date"],
+[data-bs-theme="dark"] [class*="mantine-Calendar"],
+[data-bs-theme="dark"] [class*="mantine-Popover"] {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="dropdown"],
+[data-bs-theme="dark"] [class*="mantine-Popover"][class*="dropdown"] {
+  background-color: #1a1a1a !important;
+  border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"] {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"]:hover,
+[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"][data-hovered] {
+  background-color: #2a2a2a !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="day"],
+[data-bs-theme="dark"] [class*="mantine-Date"][class*="day"],
+[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="weekday"],
+[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="month"] {
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="day"]:hover {
+  background-color: #2a2a2a !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-ComboboxChevron"] {
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-PillsInputField"]::placeholder {
+  color: #888 !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Pill"] {
+  background-color: #b666d2 !important;
+  color: #ffffff !important;
+  border-color: #b666d2 !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Pill"][data-disabled] {
+  background-color: #333 !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-InputWrapper"],
+[data-bs-theme="dark"] [class*="mantine-Input-label"] {
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Input-section"] {
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-ScrollArea"] {
+  background-color: #1a1a1a !important;
+}
