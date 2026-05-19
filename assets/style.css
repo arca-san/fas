@@ -63,3 +63,19 @@
 [data-bs-theme="dark"] .modal-footer {
   border-color: #444 !important;
 }
+
+[data-bs-theme="dark"] .Select-control,
+[data-bs-theme="dark"] .Select-menu-outer,
+[data-bs-theme="dark"] .Select-option,
+[data-bs-theme="dark"] .VirtualizedSelectOption,
+[data-bs-theme="dark"] .VirtualizedSelectFocusedOption,
+[data-bs-theme="dark"] .Select-value-label,
+[data-bs-theme="dark"] .Select-input input {
+  background-color: #2a2a2a !important;
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .Select-option:hover,
+[data-bs-theme="dark"] .VirtualizedSelectFocusedOption {
+  background-color: #3a3a3a !important;
+}
