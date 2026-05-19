@@ -11,7 +11,7 @@ app.layout = dmc.MantineProvider(
         [
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="analysis-store", storage_type="session"),
-            dcc.Store(id="theme-store", storage_type="local"),
+            dcc.Store(id="theme-store", data="light", storage_type="local"),
             create_navbar(),
             dbc.Row(
                 [
@@ -61,7 +61,7 @@ clientside_callback(
         }
 
         var label = document.getElementById('theme-label');
-        if (label) label.textContent = newTheme === 'dark' ? 'Acik' : 'Koyu';
+        if (label) label.textContent = newTheme === 'dark' ? 'Açık' : 'Koyu';
 
         var container = document.querySelector('.dbc');
         if (container) container.style.backgroundColor = newTheme === 'dark' ? '#1a1a2e' : '';
@@ -95,7 +95,7 @@ clientside_callback(
             }
         }
         var label = document.getElementById('theme-label');
-        if (label) label.textContent = saved === 'dark' ? 'Acik' : 'Koyu';
+        if (label) label.textContent = saved === 'dark' ? 'Açık' : 'Koyu';
         var container = document.querySelector('.dbc');
         if (container) container.style.backgroundColor = saved === 'dark' ? '#1a1a2e' : '';
         return saved;
