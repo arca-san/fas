@@ -71,8 +71,7 @@
 [data-bs-theme="dark"] .VirtualizedSelectFocusedOption,
 [data-bs-theme="dark"] .Select-value-label,
 [data-bs-theme="dark"] .Select-input input {
-  background-color: #2a2a2a !important;
-  color: #e0e0e0 !important;
+  color: #000 !important;
 }
 
 [data-bs-theme="dark"] .Select-option:hover,
