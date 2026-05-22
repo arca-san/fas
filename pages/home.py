@@ -140,19 +140,39 @@ layout = dbc.Container(
                                 html.H5("Fon & Benchmark Seçimi", className="card-title mb-3"),
                                 html.Div(
                                     [
-                                        dmc.MultiSelect(
-                                            id="fon-select",
-                                            label="Fon kodu veya ünvanı yazın",
-                                            placeholder="Fon seçin...",
-                                            searchable=True,
-                                            clearable=True,
-                                            data=[
-                                                {
-                                                    "value": f.get("fonKod", ""),
-                                                    "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}",
-                                                }
-                                                for f in _ALL_FUNDS if f.get("fonKod")
+                                        dbc.Row(
+                                            [
+                                                dbc.Col(
+                                                    dmc.MultiSelect(
+                                                        id="fon-select",
+                                                        label="Fon kodu veya ünvanı yazın",
+                                                        placeholder="Fon seçin...",
+                                                        searchable=True,
+                                                        clearable=True,
+                                                        data=[
+                                                            {
+                                                                "value": f.get("fonKod", ""),
+                                                                "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}",
+                                                            }
+                                                            for f in _ALL_FUNDS if f.get("fonKod")
+                                                        ],
+                                                    ),
+                                                    xs=9,
+                                                ),
+                                                dbc.Col(
+                                                    dbc.Button(
+                                                        "⭐",
+                                                        id="toggle-fav-btn",
+                                                        color="warning",
+                                                        outline=True,
+                                                        className="w-100 d-flex align-items-center justify-content-center p-0",
+                                                        style={"height": "36px", "fontSize": "15px"},
+                                                        title="Seçili fonları favorilere ekle veya çıkar",
+                                                    ),
+                                                    xs=3,
+                                                ),
                                             ],
+                                            className="g-2 align-items-end",
                                         ),
                                     ],
                                     className="mb-3"
@@ -932,10 +952,14 @@ def show_favorites(fav_data):
     for kod in favs:
         badges.append(
             html.Span(
-                kod,
+                [
+                    html.Span(kod, className="me-1"),
+                    html.Span("×", style={"fontWeight": "bold", "opacity": "0.7", "fontSize": "14px"})
+                ],
                 id={"type": "fav-badge", "index": kod},
-                className="badge bg-primary me-1 mb-1",
-                style={"cursor": "pointer"},
+                className="badge bg-primary me-1 mb-1 px-2 py-1 align-items-center justify-content-center",
+                style={"cursor": "pointer", "fontSize": "13px", "userSelect": "none", "display": "inline-flex"},
+                title="Favorilerden silmek için tıklayın",
                 n_clicks=0,
             )
         )
@@ -946,16 +970,58 @@ def show_favorites(fav_data):
 
 
 @callback(
-    Output("fon-select", "value"),
+    Output("fav-store", "data"),
     Input({"type": "fav-badge", "index": ALL}, "n_clicks"),
+    Input("toggle-fav-btn", "n_clicks"),
     State("fon-select", "value"),
+    State("fav-store", "data"),
     prevent_initial_call=True,
 )
-def add_fav_to_selector(n_clicks_list, current_value):
-    if not dash.callback_context.triggered_id:
+def manage_favorites(badge_clicks, toggle_clicks, selected_funds, fav_data):
+    ctx = dash.callback_context
+    if not ctx.triggered:
         return dash.no_update
-    kod = dash.callback_context.triggered_id["index"]
-    current = list(current_value or [])
-    if kod not in current:
-        current.append(kod)
-    return current
+
+    trigger_id = ctx.triggered_id
+    favs = list(fav_data or [])
+
+    # Case 1: Clicked a favorite badge to delete it
+    if isinstance(trigger_id, dict) and trigger_id.get("type") == "fav-badge":
+        kod = trigger_id.get("index")
+        if kod in favs:
+            favs.remove(kod)
+        return favs
+
+    # Case 2: Clicked the star button to add/remove selections
+    elif trigger_id == "toggle-fav-btn":
+        if not selected_funds:
+            return dash.no_update
+
+        # Check if all selected funds are already in favorites
+        all_in_favs = all(kod in favs for kod in selected_funds)
+        if all_in_favs:
+            # Remove all selected from favorites
+            for kod in selected_funds:
+                if kod in favs:
+                    favs.remove(kod)
+        else:
+            # Add missing ones
+            for kod in selected_funds:
+                if kod not in favs:
+                    favs.append(kod)
+        return favs
+
+    return dash.no_update
+
+
+@callback(
+    Output("toggle-fav-btn", "outline"),
+    Input("fon-select", "value"),
+    Input("fav-store", "data"),
+)
+def update_fav_btn_outline(selected_value, fav_data):
+    if not selected_value:
+        return True
+    favs = fav_data or []
+    all_in_favs = all(kod in favs for kod in selected_value)
+    return not all_in_favs
