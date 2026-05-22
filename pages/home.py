@@ -271,6 +271,7 @@ def uppercase_search(val):
     State("tarih-araligi", "start_date"),
     State("tarih-araligi", "end_date"),
     State("mix-benchmark-store", "data"),
+    State("theme-store", "data"),
     prevent_initial_call=True,
 )
 def run_analysis(
@@ -280,6 +281,7 @@ def run_analysis(
     start_date,
     end_date,
     mix_data,
+    theme,
 ):
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
@@ -484,6 +486,23 @@ def run_analysis(
                 mix_name = f"{fon_kodu} Benchmark Mix"
                 fon_benchmark_series[fon_kodu] = mix_cum.rename(mix_name)
 
+        # Kullanıcı benchmark'ı, herhangi bir fonun benchmark mix'i ile birebir aynıysa (değer bazında)
+        # onu benchmark_dict'ten çıkaralım ki grafikte ve scatter'da tekrar çizilmesin.
+        filtered_benchmark_dict = {}
+        for bm_kod, bm_series in benchmark_dict.items():
+            is_duplicate = False
+            for fon_kodu, mix_series in fon_benchmark_series.items():
+                common_idx = bm_series.index.intersection(mix_series.index)
+                if len(common_idx) > 0:
+                    diff = (bm_series.loc[common_idx] - mix_series.loc[common_idx]).abs().max()
+                    if diff < 0.05:  # Yüzde bazında 0.05% fark (birebir aynı)
+                        is_duplicate = True
+                        logger.info("Benchmark %s, %s fonunun benchmark mix'i ile birebir ayni oldugu icin filtrelendi.", bm_kod, fon_kodu)
+                        break
+            if not is_duplicate:
+                filtered_benchmark_dict[bm_kod] = bm_series
+        benchmark_dict = filtered_benchmark_dict
+
         # Kullanıcı mix benchmark hesaplama
         user_mix_series = None
         user_mix_name = None
@@ -548,6 +567,7 @@ def run_analysis(
             metrics=tooltip_metrics,
             mix_benchmark=chart_mix,
             correlations=fon_benchmark_correlations,
+            theme=theme,
         )
         auto_bm_codes = list(auto_bm_codes_set)
 
@@ -581,7 +601,7 @@ def run_analysis(
                     except Exception as exc:
                         logger.warning("Fon benchmark %s metrikleri scatter plot icin hesaplanamadi: %s", fon_kodu, exc)
 
-        scatter_fig = create_risk_return_scatter(scatter_metrics)
+        scatter_fig = create_risk_return_scatter(scatter_metrics, theme=theme)
 
         return fig, scatter_fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
     except Exception as exc:
@@ -1112,3 +1132,77 @@ def update_favorites(del_clicks, star_clicks, fav_data):
             return favs
 
     return dash.no_update
+
+
+dash.clientside_callback(
+    """
+    function(theme, fiyatFig, scatterFig) {
+        if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+        
+        var isDark = theme === 'dark';
+        
+        function updateFig(fig) {
+            if (!fig || !fig.layout) return fig;
+            
+            fig.layout.template = isDark ? 'plotly_dark' : 'plotly';
+            fig.layout.paper_bgcolor = isDark ? '#1e1e1e' : '#ffffff';
+            fig.layout.plot_bgcolor = isDark ? '#1e1e1e' : '#ffffff';
+            
+            fig.layout.font = fig.layout.font || {};
+            fig.layout.font.color = isDark ? '#ffffff' : '#212529';
+            
+            if (fig.layout.title) {
+                if (typeof fig.layout.title === 'string') {
+                    fig.layout.title = { text: fig.layout.title };
+                }
+                fig.layout.title.font = fig.layout.title.font || {};
+                fig.layout.title.font.color = isDark ? '#ffffff' : '#212529';
+            }
+            
+            ['xaxis', 'yaxis'].forEach(function(axisKey) {
+                if (fig.layout[axisKey]) {
+                    var axis = fig.layout[axisKey];
+                    axis.gridcolor = isDark ? '#333333' : '#e9ecef';
+                    axis.linecolor = isDark ? '#555555' : '#dee2e6';
+                    axis.tickfont = axis.tickfont || {};
+                    axis.tickfont.color = isDark ? '#cccccc' : '#495057';
+                    if (axis.title) {
+                        axis.title.font = axis.title.font || {};
+                        axis.title.font.color = isDark ? '#ffffff' : '#212529';
+                    }
+                }
+            });
+            
+            if (fig.layout.legend) {
+                fig.layout.legend.font = fig.layout.legend.font || {};
+                fig.layout.legend.font.color = isDark ? '#ffffff' : '#212529';
+            }
+            
+            if (fig.data) {
+                fig.data.forEach(function(trace) {
+                    if (trace.line && (trace.name.indexOf('Benchmark Mix') !== -1 || trace.line.color === '#000000' || trace.line.color === '#ffffff')) {
+                        trace.line.color = isDark ? '#ffffff' : '#000000';
+                    }
+                    if (trace.mode && trace.mode.indexOf('text') !== -1) {
+                        trace.textfont = trace.textfont || {};
+                        trace.textfont.color = isDark ? '#ffffff' : '#000000';
+                    }
+                });
+            }
+            
+            return fig;
+        }
+        
+        var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
+        var newScatter = scatterFig ? JSON.parse(JSON.stringify(scatterFig)) : scatterFig;
+        
+        return [updateFig(newFiyat), updateFig(newScatter)];
+    }
+    """,
+    Output("fiyat-grafigi", "figure", allow_duplicate=True),
+    Output("risk-getiri-scatter", "figure", allow_duplicate=True),
+    Input("theme-store", "data"),
+    State("fiyat-grafigi", "figure"),
+    State("risk-getiri-scatter", "figure"),
+    prevent_initial_call=True,
+)
