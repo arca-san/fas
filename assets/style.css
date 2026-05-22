@@ -905,5 +905,101 @@ button.dash-dropdown .dash-dropdown-trigger-icon {
   color: #ffffff !important;
 }
 
+/* --- Style Dash Dropdown Search Component --- */
+.dash-dropdown-search-container {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 6px 8px !important;
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+[data-bs-theme="dark"] .dash-dropdown-search-container {
+  border-bottom: 1px solid #333333 !important;
+}
+
+input.dash-dropdown-search {
+  flex: 1 !important;
+  height: 32px !important;
+  padding: 0 32px 0 28px !important; /* spacing for search icon (left) and clear button (right) */
+  border-radius: 4px !important;
+  font-size: 15px !important;
+  border: 1px solid #ced4da !important;
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 100ms ease, box-shadow 100ms ease !important;
+}
+
+[data-bs-theme="dark"] input.dash-dropdown-search {
+  background-color: #141414 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+}
+
+input.dash-dropdown-search:focus {
+  border-color: #1abc9c !important;
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2) !important;
+}
+
+[data-bs-theme="dark"] input.dash-dropdown-search:focus {
+  border-color: #b666d2 !important;
+  box-shadow: 0 0 0 2px rgba(182, 102, 210, 0.25) !important;
+}
+
+input.dash-dropdown-search::placeholder {
+  color: #adb5bd !important;
+}
+
+[data-bs-theme="dark"] input.dash-dropdown-search::placeholder {
+  color: #5c5f66 !important;
+}
+
+.dash-dropdown-search-icon {
+  position: absolute !important;
+  left: 16px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: #868e96 !important;
+  pointer-events: none !important;
+}
+
+[data-bs-theme="dark"] .dash-dropdown-search-icon {
+  color: #ced4da !important;
+}
+
+button.dash-dropdown-clear {
+  position: absolute !important;
+  right: 16px !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  color: #868e96 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  transition: background-color 80ms ease, color 80ms ease !important;
+}
+
+[data-bs-theme="dark"] button.dash-dropdown-clear {
+  color: #ced4da !important;
+}
+
+button.dash-dropdown-clear:hover {
+  color: #495057 !important;
+  background-color: #f1f3f5 !important;
+}
+
+[data-bs-theme="dark"] button.dash-dropdown-clear:hover {
+  color: #ffffff !important;
+  background-color: #2a2a2a !important;
+}
+
+
 
 
