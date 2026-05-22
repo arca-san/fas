@@ -525,7 +525,7 @@ def run_analysis(
                 corr = fund_returns.loc[common_idx].corr(mix_returns.loc[common_idx])
                 fon_benchmark_correlations[fon_kodu] = round(corr, 4) if not pd.isna(corr) else None
 
-        metrik_html, tooltip_metrics = _build_metrics_table(
+        metrik_html, tooltip_metrics, rf_daily, market_pr = _build_metrics_table(
             fund_dict,
             mix_series=all_mix_series.get("user_mix"),
             mix_name=all_mix_names.get("user_mix"),
@@ -551,7 +551,37 @@ def run_analysis(
         )
         auto_bm_codes = list(auto_bm_codes_set)
 
-        scatter_fig = create_risk_return_scatter(tooltip_metrics)
+        scatter_metrics = tooltip_metrics.copy()
+        
+        # Secilen benchmarklari da sacilim grafigine ekle
+        if benchmark_dict:
+            for bm_kod, bm_series in benchmark_dict.items():
+                if bm_series is not None and not bm_series.empty:
+                    try:
+                        bm_name = bm_kod
+                        bm_info = benchmark_koda_gore(bm_kod)
+                        if bm_info and bm_info.get("ad"):
+                            bm_name = bm_info["ad"]
+                        
+                        bm_m = calculate_mix_metrics(bm_series, rf_daily, market_pr, bm_name)
+                        if bm_m:
+                            scatter_metrics[bm_name] = bm_m
+                    except Exception as exc:
+                        logger.warning("Benchmark %s metrikleri scatter plot icin hesaplanamadi: %s", bm_kod, exc)
+                        
+        # Fonlarin kendi benchmark mix'lerini de sacilim grafigine ekle
+        if fon_benchmark_series:
+            for fon_kodu, bm_series in fon_benchmark_series.items():
+                if bm_series is not None and not bm_series.empty:
+                    try:
+                        mix_name = f"{fon_kodu} Benchmark Mix"
+                        bm_m = calculate_mix_metrics(bm_series, rf_daily, market_pr, mix_name)
+                        if bm_m:
+                            scatter_metrics[mix_name] = bm_m
+                    except Exception as exc:
+                        logger.warning("Fon benchmark %s metrikleri scatter plot icin hesaplanamadi: %s", fon_kodu, exc)
+
+        scatter_fig = create_risk_return_scatter(scatter_metrics)
 
         return fig, scatter_fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
     except Exception as exc:
@@ -804,7 +834,7 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
             ),
         ] + tooltip_components
     )
-    return table_container, metrics
+    return table_container, metrics, rf_daily_returns, market_prices
 
 
 @callback(
