@@ -17,6 +17,7 @@ def create_price_chart(
     metrics: dict = None,
     mix_benchmark: dict = None,
     correlations: dict = None,
+    theme: str = "light",
 ) -> go.Figure:
     """Fon ve benchmark(lar) kumulatif getiri grafigi.
 
@@ -137,7 +138,7 @@ def create_price_chart(
                 )
             )
 
-    # Mix benchmark: kalın siyah çizgi
+    # Mix benchmark: kalın siyah (gece modunda beyaz) çizgi
     if mix_benchmark and mix_benchmark.get("series") is not None:
         mix_series = mix_benchmark["series"]
         mix_name = mix_benchmark.get("name", "Mix Benchmark")
@@ -147,13 +148,14 @@ def create_price_chart(
             tarihler = list(ortak_tarihler)
             mix_values = mix_filled.reindex(pd.DatetimeIndex(tarihler)).ffill().values
             
+            mix_color = "#ffffff" if theme == "dark" else "#000000"
             fig.add_trace(
                 go.Scatter(
                     x=tarihler,
                     y=mix_values,
                     mode="lines",
                     name=mix_name,
-                    line=dict(color="#000000", width=3, dash="dot"),
+                    line=dict(color=mix_color, width=3, dash="dot"),
                     hovertemplate="%{x|%Y-%m-%d}<br>%{y:.2f}%<extra></extra>",
                 )
             )
@@ -163,7 +165,7 @@ def create_price_chart(
         xaxis_title="Tarih",
         yaxis_title="Getiri (%)",
         hovermode="x unified",
-        template="plotly",
+        template="plotly_dark" if theme == "dark" else "plotly",
         margin=dict(l=40, r=40, t=60, b=40),
         legend=dict(
             orientation="h",
@@ -179,6 +181,7 @@ def create_price_chart(
 def create_risk_return_scatter(
     metrics: dict,
     title: str = "Risk-Getiri Saçılım Grafiği",
+    theme: str = "light",
 ) -> go.Figure:
     """Risk (volatilite) ve getiri ekseninde fon konumlarini goster.
 
@@ -190,23 +193,12 @@ def create_risk_return_scatter(
     """
     from config.constants import METRIC_VOLATILITY, METRIC_ANNUALIZED_RETURN
 
-    import math
-
     fig = go.Figure()
 
-    # Çakışan koordinatları grupla
-    coords_count = {}
-    for kod, m in metrics.items():
-        risk = m.get(METRIC_VOLATILITY, None)
-        getiri = m.get(METRIC_ANNUALIZED_RETURN, None)
-        if risk is None or getiri is None:
-            continue
-        # 2 ondalık basamağa yuvarlayarak çakışmaları belirle
-        key = (round(risk, 2), round(getiri, 2))
-        coords_count[key] = coords_count.get(key, 0) + 1
-
-    coords_seen = {}
     text_positions = ["top center", "bottom center", "middle right", "middle left", "top left", "top right", "bottom left", "bottom right"]
+    is_dark = theme == "dark"
+    text_color = "#ffffff" if is_dark else "#212529"
+    border_color = "#ffffff" if is_dark else "#212529"
 
     for idx, (kod, m) in enumerate(metrics.items()):
         risk = m.get(METRIC_VOLATILITY, None)
@@ -214,42 +206,22 @@ def create_risk_return_scatter(
         if risk is None or getiri is None:
             continue
         
-        key = (round(risk, 2), round(getiri, 2))
-        total_at_coord = coords_count[key]
-        
-        # Çakışma varsa küçük dairesel sapma (jitter) uygula
-        if total_at_coord > 1:
-            seen_index = coords_seen.get(key, 0)
-            coords_seen[key] = seen_index + 1
-            
-            # Açıları eşit dağıtarak çember oluştur
-            angle = seen_index * (2 * math.pi / total_at_coord)
-            # Grafik üzerinde görsel olarak ayrışacak kadar küçük sapma (0.20%)
-            radius = 0.20
-            
-            risk_plot = risk + radius * math.cos(angle)
-            getiri_plot = getiri + radius * math.sin(angle)
-        else:
-            risk_plot = risk
-            getiri_plot = getiri
-
         pos = text_positions[idx % len(text_positions)]
         
         fig.add_trace(
             go.Scatter(
-                x=[risk_plot],
-                y=[getiri_plot],
+                x=[risk],
+                y=[getiri],
                 mode="markers+text",
                 name=kod,
                 text=[kod],
                 textposition=pos,
-                textfont=dict(size=10, family="sans-serif"),
+                textfont=dict(size=10, family="sans-serif", color=text_color),
                 marker=dict(
                     size=14,
-                    line=dict(width=1.5, color="white"),
+                    line=dict(width=1.5, color=border_color),
                     opacity=0.85
                 ),
-                # Hover tooltipinde orijinal, milimetrik gerçek değerleri göster
                 hovertemplate=f"<b>{kod}</b><br>Risk (Volatilite): {risk:.2f}%<br>Getiri (Yıllık): {getiri:.2f}%<extra></extra>",
             )
         )
@@ -259,7 +231,7 @@ def create_risk_return_scatter(
         title=title,
         xaxis_title="Risk (Volatilite, %)",
         yaxis_title="Getiri (Yıllık, %)",
-        template="plotly",
+        template="plotly_dark" if is_dark else "plotly",
         hovermode="closest",
         margin=dict(l=40, r=40, t=60, b=40),
         legend=dict(
