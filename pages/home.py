@@ -935,12 +935,12 @@ def show_favorites(fav_data):
                 kod,
                 id={"type": "fav-badge", "index": kod},
                 className="badge bg-primary me-1 mb-1",
-                style={"cursor": "pointer", "fontSize": "0.85em"},
+                style={"cursor": "pointer"},
                 n_clicks=0,
             )
         )
     return html.Div([
-        html.Small("⭐ Favoriler: ", className="text-muted me-1"),
+        html.Span("⭐ Favoriler: ", className="text-muted me-1"),
         *badges,
     ], className="mb-2")
 
