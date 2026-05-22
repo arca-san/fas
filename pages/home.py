@@ -124,15 +124,22 @@ layout = dbc.Container(
             ),
         ]),
         dbc.Row(
+            dbc.Col(
+                html.Div(id="fav-section", className="mb-2"),
+                xs=12,
+            ),
+            className="mb-2",
+        ),
+
+        dbc.Row(
             [
                 dbc.Col(
-                    [
-                        html.Div(id="fav-section", className="mb-2"),
-                        dbc.Card(
+                    dbc.Card(
+                        dbc.CardBody(
                             [
-                                dbc.CardBody(
+                                html.H5("Fon & Benchmark Seçimi", className="card-title mb-3"),
+                                html.Div(
                                     [
-                                        html.H5("Fon", className="card-title"),
                                         dmc.MultiSelect(
                                             id="fon-select",
                                             label="Fon kodu veya ünvanı yazın",
@@ -147,83 +154,83 @@ layout = dbc.Container(
                                                 for f in _ALL_FUNDS if f.get("fonKod")
                                             ],
                                         ),
-                                    ]
-                                )
-                            ],
-                            className="mb-3",
-                        ),
-                        dbc.Card(
-                            [
-                                dbc.CardBody(
+                                    ],
+                                    className="mb-3"
+                                ),
+                                html.Div(
                                     [
-                                        html.H5("Benchmark(lar)", className="card-title"),
-                    dmc.MultiSelect(
-                        id="benchmark-dropdown",
-                        data=_BENCHMARK_OPTIONS,
-                        placeholder="Benchmark seçin...",
-                        searchable=True,
-                        clearable=True,
-                    ),
-                                        html.Div(
-                                            dbc.Button(
-                                                "Mix Benchmark Oluştur",
-                                                id="open-mix-modal-btn",
-                                                color="secondary",
-                                                size="sm",
-                                                className="mt-2 w-100",
-                                            ),
+                                        dmc.MultiSelect(
+                                            id="benchmark-dropdown",
+                                            label="Karşılaştırma ölçütü (Benchmark) seçin",
+                                            data=_BENCHMARK_OPTIONS,
+                                            placeholder="Benchmark seçin...",
+                                            searchable=True,
+                                            clearable=True,
+                                        ),
+                                        dbc.Button(
+                                            "Mix Benchmark Oluştur",
+                                            id="open-mix-modal-btn",
+                                            color="secondary",
+                                            className="mt-2 w-100",
                                         ),
                                     ]
-                                )
+                                ),
                             ],
-                            className="mb-3",
+                            className="d-flex flex-column justify-content-between h-100"
                         ),
-                    ],
+                        className="h-100 w-100 control-card",
+                    ),
                     xs=12, md=6,
+                    className="d-flex mb-3 mb-md-0",
                 ),
                 dbc.Col(
-                    [
-                        dbc.Card(
+                    dbc.Card(
+                        dbc.CardBody(
                             [
-                                dbc.CardBody(
+                                html.H5("Tarih & Analiz", className="card-title mb-3"),
+                                html.Div(
                                     [
-                                        html.H5("Tarih", className="card-title"),
-                                        dcc.DatePickerRange(
-                                            id="tarih-araligi",
-                                            start_date=_DEFAULT_START,
-                                            end_date=_DEFAULT_END,
-                                            display_format="YYYY-MM-DD",
+                                        html.Label("Tarih Aralığı", className="fw-semibold mb-1 text-muted"),
+                                        html.Div(
+                                            dcc.DatePickerRange(
+                                                id="tarih-araligi",
+                                                start_date=_DEFAULT_START,
+                                                end_date=_DEFAULT_END,
+                                                display_format="YYYY-MM-DD",
+                                            ),
                                         ),
-                                    ]
-                                )
-                            ],
-                            className="mb-3",
-                        ),
-                        dbc.Card(
-                            [
-                                dbc.CardBody(
+                                    ],
+                                    className="mb-4"
+                                ),
+                                html.Div(
                                     [
                                         dbc.Button(
                                             "Analiz Et",
                                             id="analiz-btn",
                                             color="primary",
-                                            className="w-100",
+                                            className="w-100 py-2 fw-bold",
                                         ),
                                         html.Div(id="analiz-status", className="mt-2 text-info"),
-                                        html.Small(
+                                        html.Div(
                                             "TEFAS'tan veri aliniyor, bu islem 10-30 saniye surebilir.",
-                                            className="text-muted d-block mt-1",
+                                            className="text-muted d-block mt-2",
                                             id="tefas-uyari",
                                         ),
-                                    ]
-                                )
-                            ]
+                                    ],
+                                    className="mt-auto"
+                                ),
+                            ],
+                            className="d-flex flex-column justify-content-between h-100"
                         ),
-                    ],
+                        className="h-100 w-100 control-card",
+                    ),
                     xs=12, md=6,
+                    className="d-flex mb-3 mb-md-0",
                 ),
-            ]
+            ],
+            className="g-3 align-items-stretch"
         ),
+
         mix_modal,
     ],
     fluid=True,
