@@ -99,7 +99,7 @@ info_bar = dbc.Alert([
 
 # ── Layout ──────────────────────────────────────────────────────────
 layout = dbc.Container([
-    dcc.Store(id="fav-store", storage_type="local"),
+    dcc.Store(id="fav-store", storage_type="session", data=["NJR"]),
     dcc.Store(id="fb-cache"),
     info_bar,
 

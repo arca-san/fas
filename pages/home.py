@@ -79,7 +79,7 @@ layout = dbc.Container(
     [
         dcc.Store(id="mix-benchmark-store"),
         dcc.Store(id="auto-benchmarks-store"),
-        dcc.Store(id="fav-store", storage_type="local"),
+        dcc.Store(id="fav-store", storage_type="session", data=["NJR"]),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
                 [
@@ -953,6 +953,7 @@ def show_favorites(fav_data):
         badges.append(
             html.Span(
                 [
+                    html.Span("⭐", className="me-1"),
                     html.Span(kod, className="me-1"),
                     html.Span("×", style={"fontWeight": "bold", "opacity": "0.7", "fontSize": "14px"})
                 ],
@@ -964,7 +965,7 @@ def show_favorites(fav_data):
             )
         )
     return html.Div([
-        html.Span("⭐ Favoriler: ", className="text-muted me-1"),
+        html.Span("Favoriler: ", className="text-muted me-1"),
         *badges,
     ], className="mb-2")
 
