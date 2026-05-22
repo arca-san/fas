@@ -157,23 +157,12 @@ layout = dbc.Container(
                                                             for f in _ALL_FUNDS if f.get("fonKod")
                                                         ],
                                                     ),
-                                                    xs=9,
-                                                ),
-                                                dbc.Col(
-                                                    dbc.Button(
-                                                        "⭐",
-                                                        id="toggle-fav-btn",
-                                                        color="warning",
-                                                        outline=True,
-                                                        className="w-100 d-flex align-items-center justify-content-center p-0",
-                                                        style={"height": "36px", "fontSize": "15px"},
-                                                        title="Seçili fonları favorilere ekle veya çıkar",
-                                                    ),
-                                                    xs=3,
+                                                    xs=12,
                                                 ),
                                             ],
                                             className="g-2 align-items-end",
                                         ),
+                                        html.Div(id="selected-funds-badges", className="mt-2 d-flex flex-wrap"),
                                     ],
                                     className="mb-3"
                                 ),
@@ -953,15 +942,27 @@ def show_favorites(fav_data):
         badges.append(
             html.Span(
                 [
-                    html.Span("⭐", className="me-1"),
-                    html.Span(kod, className="me-1"),
-                    html.Span("×", style={"fontWeight": "bold", "opacity": "0.7", "fontSize": "14px"})
+                    html.Span(
+                        [
+                            html.Span("⭐", className="me-1"),
+                            html.Span(kod, className="fw-semibold"),
+                        ],
+                        id={"type": "fav-badge-select", "index": kod},
+                        style={"cursor": "pointer"},
+                        title="Seçmek için tıklayın",
+                        n_clicks=0,
+                    ),
+                    html.Span(
+                        "×",
+                        id={"type": "fav-badge-del", "index": kod},
+                        className="ms-2",
+                        style={"cursor": "pointer", "fontWeight": "bold", "fontSize": "14px", "opacity": "0.7"},
+                        title="Favorilerden silmek için tıklayın",
+                        n_clicks=0,
+                    )
                 ],
-                id={"type": "fav-badge", "index": kod},
-                className="badge bg-primary me-1 mb-1 px-2 py-1 align-items-center justify-content-center",
-                style={"cursor": "pointer", "fontSize": "13px", "userSelect": "none", "display": "inline-flex"},
-                title="Favorilerden silmek için tıklayın",
-                n_clicks=0,
+                className="badge bg-primary me-1 mb-1 px-2 py-1 align-items-center justify-content-center d-inline-flex",
+                style={"userSelect": "none"},
             )
         )
     return html.Div([
@@ -971,58 +972,113 @@ def show_favorites(fav_data):
 
 
 @callback(
-    Output("fav-store", "data", allow_duplicate=True),
-    Input({"type": "fav-badge", "index": ALL}, "n_clicks"),
-    Input("toggle-fav-btn", "n_clicks"),
+    Output("selected-funds-badges", "children"),
+    Input("fon-select", "value"),
+    Input("fav-store", "data"),
+)
+def render_selected_funds_badges(selected_funds, fav_data):
+    if not selected_funds:
+        return []
+    favs = fav_data or []
+    badges = []
+    for kod in selected_funds:
+        is_fav = kod in favs
+        star_style = {"cursor": "pointer", "marginRight": "4px"}
+        badges.append(
+            html.Span(
+                [
+                    html.Span(
+                        "★" if is_fav else "☆",
+                        id={"type": "sel-fav-star", "index": kod},
+                        style=star_style,
+                        title="Favorilere ekle/çıkar",
+                        n_clicks=0,
+                    ),
+                    html.Span(kod, className="me-2 fw-semibold"),
+                    html.Span(
+                        "×",
+                        id={"type": "sel-del-cross", "index": kod},
+                        style={"cursor": "pointer", "fontWeight": "bold", "fontSize": "14px"},
+                        title="Seçimi kaldır",
+                        n_clicks=0,
+                    ),
+                ],
+                className="badge bg-light text-dark border me-1 mb-1 px-2 py-1 align-items-center justify-content-center d-inline-flex",
+                style={"fontSize": "13px", "userSelect": "none"},
+            )
+        )
+    return badges
+
+
+@callback(
+    Output("fon-select", "value"),
+    Input({"type": "fav-badge-select", "index": ALL}, "n_clicks"),
+    Input({"type": "sel-del-cross", "index": ALL}, "n_clicks"),
     State("fon-select", "value"),
-    State("fav-store", "data"),
     prevent_initial_call=True,
 )
-def manage_favorites(badge_clicks, toggle_clicks, selected_funds, fav_data):
+def update_selected_funds(fav_clicks, del_clicks, current_value):
     ctx = dash.callback_context
     if not ctx.triggered:
         return dash.no_update
 
+    trigger = ctx.triggered[0]
+    if not trigger or not trigger.get("value"):
+        return dash.no_update
+
     trigger_id = ctx.triggered_id
-    favs = list(fav_data or [])
+    current = list(current_value or [])
 
-    # Case 1: Clicked a favorite badge to delete it
-    if isinstance(trigger_id, dict) and trigger_id.get("type") == "fav-badge":
+    if isinstance(trigger_id, dict):
+        trig_type = trigger_id.get("type")
         kod = trigger_id.get("index")
-        if kod in favs:
-            favs.remove(kod)
-        return favs
 
-    # Case 2: Clicked the star button to add/remove selections
-    elif trigger_id == "toggle-fav-btn":
-        if not selected_funds:
-            return dash.no_update
+        if trig_type == "fav-badge-select":
+            if kod not in current:
+                current.append(kod)
+            return current
 
-        # Check if all selected funds are already in favorites
-        all_in_favs = all(kod in favs for kod in selected_funds)
-        if all_in_favs:
-            # Remove all selected from favorites
-            for kod in selected_funds:
-                if kod in favs:
-                    favs.remove(kod)
-        else:
-            # Add missing ones
-            for kod in selected_funds:
-                if kod not in favs:
-                    favs.append(kod)
-        return favs
+        elif trig_type == "sel-del-cross":
+            if kod in current:
+                current.remove(kod)
+            return current
 
     return dash.no_update
 
 
 @callback(
-    Output("toggle-fav-btn", "outline"),
-    Input("fon-select", "value"),
-    Input("fav-store", "data"),
+    Output("fav-store", "data", allow_duplicate=True),
+    Input({"type": "fav-badge-del", "index": ALL}, "n_clicks"),
+    Input({"type": "sel-fav-star", "index": ALL}, "n_clicks"),
+    State("fav-store", "data"),
+    prevent_initial_call=True,
 )
-def update_fav_btn_outline(selected_value, fav_data):
-    if not selected_value:
-        return True
-    favs = fav_data or []
-    all_in_favs = all(kod in favs for kod in selected_value)
-    return not all_in_favs
+def update_favorites(del_clicks, star_clicks, fav_data):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update
+
+    trigger = ctx.triggered[0]
+    if not trigger or not trigger.get("value"):
+        return dash.no_update
+
+    trigger_id = ctx.triggered_id
+    favs = list(fav_data or [])
+
+    if isinstance(trigger_id, dict):
+        trig_type = trigger_id.get("type")
+        kod = trigger_id.get("index")
+
+        if trig_type == "fav-badge-del":
+            if kod in favs:
+                favs.remove(kod)
+            return favs
+
+        elif trig_type == "sel-fav-star":
+            if kod in favs:
+                favs.remove(kod)
+            else:
+                favs.append(kod)
+            return favs
+
+    return dash.no_update
