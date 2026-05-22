@@ -190,8 +190,22 @@ def create_risk_return_scatter(
     """
     from config.constants import METRIC_VOLATILITY, METRIC_ANNUALIZED_RETURN
 
+    import math
+
     fig = go.Figure()
 
+    # Çakışan koordinatları grupla
+    coords_count = {}
+    for kod, m in metrics.items():
+        risk = m.get(METRIC_VOLATILITY, None)
+        getiri = m.get(METRIC_ANNUALIZED_RETURN, None)
+        if risk is None or getiri is None:
+            continue
+        # 2 ondalık basamağa yuvarlayarak çakışmaları belirle
+        key = (round(risk, 2), round(getiri, 2))
+        coords_count[key] = coords_count.get(key, 0) + 1
+
+    coords_seen = {}
     text_positions = ["top center", "bottom center", "middle right", "middle left", "top left", "top right", "bottom left", "bottom right"]
 
     for idx, (kod, m) in enumerate(metrics.items()):
@@ -200,12 +214,31 @@ def create_risk_return_scatter(
         if risk is None or getiri is None:
             continue
         
+        key = (round(risk, 2), round(getiri, 2))
+        total_at_coord = coords_count[key]
+        
+        # Çakışma varsa küçük dairesel sapma (jitter) uygula
+        if total_at_coord > 1:
+            seen_index = coords_seen.get(key, 0)
+            coords_seen[key] = seen_index + 1
+            
+            # Açıları eşit dağıtarak çember oluştur
+            angle = seen_index * (2 * math.pi / total_at_coord)
+            # Grafik üzerinde görsel olarak ayrışacak kadar küçük sapma (0.20%)
+            radius = 0.20
+            
+            risk_plot = risk + radius * math.cos(angle)
+            getiri_plot = getiri + radius * math.sin(angle)
+        else:
+            risk_plot = risk
+            getiri_plot = getiri
+
         pos = text_positions[idx % len(text_positions)]
         
         fig.add_trace(
             go.Scatter(
-                x=[risk],
-                y=[getiri],
+                x=[risk_plot],
+                y=[getiri_plot],
                 mode="markers+text",
                 name=kod,
                 text=[kod],
@@ -216,7 +249,8 @@ def create_risk_return_scatter(
                     line=dict(width=1.5, color="white"),
                     opacity=0.85
                 ),
-                hovertemplate=f"<b>{kod}</b><br>Risk (Volatilite): %{{x:.2f}}%<br>Getiri (Yıllık): %{{y:.2f}}%<extra></extra>",
+                # Hover tooltipinde orijinal, milimetrik gerçek değerleri göster
+                hovertemplate=f"<b>{kod}</b><br>Risk (Volatilite): {risk:.2f}%<br>Getiri (Yıllık): {getiri:.2f}%<extra></extra>",
             )
         )
 
