@@ -970,7 +970,7 @@ def show_favorites(fav_data):
 
 
 @callback(
-    Output("fav-store", "data"),
+    Output("fav-store", "data", allow_duplicate=True),
     Input({"type": "fav-badge", "index": ALL}, "n_clicks"),
     Input("toggle-fav-btn", "n_clicks"),
     State("fon-select", "value"),

@@ -495,7 +495,7 @@ def _load_market_for_category(fon_kodlari: list, fon_unvan_map: dict) -> pd.Seri
 
 # ── Callback: favori toggle ──────────────────────────────────────────
 @callback(
-    Output("fav-store", "data"),
+    Output("fav-store", "data", allow_duplicate=True),
     Input({"type": "fb-fav", "index": ALL}, "n_clicks"),
     State("fav-store", "data"),
     prevent_initial_call=True,
