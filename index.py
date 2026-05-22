@@ -11,7 +11,7 @@ app.layout = dmc.MantineProvider(
         [
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="analysis-store", storage_type="session"),
-            dcc.Store(id="theme-store", data="light", storage_type="local"),
+            dcc.Store(id="theme-store", data="light", storage_type="session"),
             create_navbar(),
             dbc.Row(
                 [

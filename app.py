@@ -36,7 +36,7 @@ app.index_string = """
         <script>
         (function() {
             try {
-                var t = localStorage.getItem('theme-store');
+                var t = sessionStorage.getItem('theme-store');
                 if (t) {
                     var theme = JSON.parse(t);
                     theme = typeof theme === 'string' ? theme : 'light';

@@ -20,7 +20,7 @@ def create_navbar() -> dbc.Navbar:
             ),
             html.Div(
                 dbc.Button(
-                    "☀️",
+                    "🌙",
                     id="theme-toggle",
                     color="light",
                     size="sm",
