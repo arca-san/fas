@@ -739,8 +739,171 @@ input#tarih-araligi-end-date,
 .dash-datepicker-calendar-wrapper,
 .dash-datepicker-calendar-wrapper *,
 .dash-datepicker-controls,
-.dash-datepicker-controls * {
+.dash-datepicker-controls *,
+.dash-dropdown-wrapper,
+.dash-dropdown-wrapper *,
+[role="listbox"],
+[role="listbox"] *,
+[role="option"],
+[role="option"] * {
   font-size: 15px !important;
 }
+
+/* --- Style Dash Dropdown to look exactly like Mantine Select/MultiSelect --- */
+.dash-dropdown-wrapper {
+  width: 100% !important;
+  display: block;
+}
+
+button.dash-dropdown {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: border-color 100ms ease, box-shadow 100ms ease !important;
+  box-sizing: border-box !important;
+}
+
+/* Light mode styles */
+button.dash-dropdown {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid #ced4da !important;
+}
+
+button.dash-dropdown:focus,
+button.dash-dropdown[data-state="open"] {
+  border-color: #1abc9c !important;
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2) !important;
+  outline: none !important;
+}
+
+/* Dark mode styles */
+[data-bs-theme="dark"] button.dash-dropdown {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+}
+
+[data-bs-theme="dark"] button.dash-dropdown:focus,
+[data-bs-theme="dark"] button.dash-dropdown[data-state="open"] {
+  border-color: #b666d2 !important;
+  box-shadow: 0 0 0 2px rgba(182, 102, 210, 0.25) !important;
+  outline: none !important;
+}
+
+/* Trigger content layout alignment */
+button.dash-dropdown .dash-dropdown-grid-container,
+button.dash-dropdown .dash-dropdown-trigger {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+button.dash-dropdown .dash-dropdown-value {
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: inherit !important;
+  background: transparent !important;
+}
+
+button.dash-dropdown .dash-dropdown-value-item {
+  color: inherit !important;
+  font-size: 15px !important;
+}
+
+/* Chevron Styling to match Mantine chevron exactly */
+button.dash-dropdown .dash-dropdown-trigger-icon {
+  width: 16px !important;
+  height: 16px !important;
+  color: #868e96 !important;
+  margin-left: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+[data-bs-theme="dark"] button.dash-dropdown .dash-dropdown-trigger-icon {
+  color: #ced4da !important;
+}
+
+/* Styling for the dropdown options list popover */
+[data-radix-popper-content-wrapper] [role="listbox"],
+.dash-dropdown-popover,
+.dash-dropdown-menu {
+  border-radius: 6px !important;
+  padding: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  font-size: 15px !important;
+}
+
+/* Light mode popover */
+[role="listbox"],
+.dash-dropdown-popover,
+.dash-dropdown-menu {
+  background-color: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+/* Dark mode popover */
+[data-bs-theme="dark"] [role="listbox"],
+[data-bs-theme="dark"] .dash-dropdown-popover,
+[data-bs-theme="dark"] .dash-dropdown-menu {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333333 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dropdown list items styling */
+[role="option"],
+.dash-dropdown-option {
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 15px !important;
+  transition: background-color 80ms ease !important;
+}
+
+/* Hover and active states for list items */
+[role="option"]:hover,
+[role="option"][data-highlighted],
+.dash-dropdown-option:hover,
+.dash-dropdown-option[data-highlighted] {
+  background-color: #f1f3f5 !important;
+  color: #212529 !important;
+}
+
+[data-bs-theme="dark"] [role="option"]:hover,
+[data-bs-theme="dark"] [role="option"][data-highlighted],
+[data-bs-theme="dark"] .dash-dropdown-option:hover,
+[data-bs-theme="dark"] .dash-dropdown-option[data-highlighted] {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+/* Selected item styling */
+[role="option"][aria-selected="true"],
+.dash-dropdown-option[aria-selected="true"] {
+  background-color: #1abc9c !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] [role="option"][aria-selected="true"],
+[data-bs-theme="dark"] .dash-dropdown-option[aria-selected="true"] {
+  background-color: #b666d2 !important;
+  color: #ffffff !important;
+}
+
 
 
