@@ -8,12 +8,6 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 
-from scripts.auto_update import main as auto_update
-
-try:
-    auto_update()
-except Exception:
-    pass
 
 FLATLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/flatly/bootstrap.min.css"
 
