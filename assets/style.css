@@ -81,12 +81,12 @@
   background-color: #0d0d0d !important;
 }
 
-[data-bs-theme="dark"] *:not([id^="_dash-"]):not([id^="_dash-"] *):not([class^="dash-debug"]):not([class^="dash-debug"] *) {
+[data-bs-theme="dark"] * {
   color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] [class*="css-"]:not([id^="_dash-"]):not([id^="_dash-"] *):not([class^="dash-debug"]):not([class^="dash-debug"] *),
-[data-bs-theme="dark"] [class^="css-"]:not([id^="_dash-"]):not([id^="_dash-"] *):not([class^="dash-debug"]):not([class^="dash-debug"] *) {
+[data-bs-theme="dark"] [class*="css-"],
+[data-bs-theme="dark"] [class^="css-"] {
   background-color: #1a1a1a !important;
 }
 
@@ -1033,19 +1033,6 @@ button.dash-dropdown-clear:active {
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
-}
-
-
-/* ── Dash DevTools Isolation ────────────────────────────────────────── */
-#_dash-devtools,
-#_dash-devtools *,
-[id^="_dash-"],
-[id^="_dash-"] *,
-.dash-debug-menu,
-.dash-debug-menu *,
-.dash-error-popup,
-.dash-error-popup * {
-  all: revert !important;
 }
 
 
