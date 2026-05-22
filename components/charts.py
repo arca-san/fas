@@ -192,17 +192,25 @@ def create_risk_return_scatter(
 
     fig = go.Figure()
 
-    for kod, m in metrics.items():
+    text_positions = ["top center", "bottom center", "middle right", "middle left", "top left", "top right", "bottom left", "bottom right"]
+
+    for idx, (kod, m) in enumerate(metrics.items()):
         risk = m.get(METRIC_VOLATILITY, None)
         getiri = m.get(METRIC_ANNUALIZED_RETURN, None)
         if risk is None or getiri is None:
             continue
+        
+        pos = text_positions[idx % len(text_positions)]
+        
         fig.add_trace(
             go.Scatter(
                 x=[risk],
                 y=[getiri],
-                mode="markers",
+                mode="markers+text",
                 name=kod,
+                text=[kod],
+                textposition=pos,
+                textfont=dict(size=10, family="sans-serif"),
                 marker=dict(
                     size=14,
                     line=dict(width=1.5, color="white"),
