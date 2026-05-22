@@ -225,9 +225,12 @@
   border-color: #9f55b8 !important;
 }
 
-[data-bs-theme="dark"] .navbar.bg-primary {
+[data-bs-theme="dark"] .navbar.bg-primary,
+[data-bs-theme="dark"] .bg-primary,
+[data-bs-theme="dark"] .badge.bg-primary {
   background-color: #b666d2 !important;
 }
+
 
 [data-bs-theme="dark"] .form-control:focus,
 [data-bs-theme="dark"] .form-select:focus {
@@ -456,3 +459,288 @@
 [data-bs-theme="dark"] [role="dialog"] button:hover:not([data-selected]):not([data-state="selected"]):not([aria-selected="true"]):not(.selected):not(.rdp-day_selected) {
   background-color: #2a2a2a !important;
 }
+
+/* Dash Input Elements & Steppers styling */
+.dash-input-element {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.dash-input-element:focus {
+  border-color: #1abc9c !important;
+  box-shadow: 0 0 0 0.25rem rgba(26, 188, 156, 0.25) !important;
+  outline: 0;
+}
+
+.dash-input-stepper {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+  border: 1px solid #ced4da !important;
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.dash-input-stepper:hover {
+  background-color: #e9ecef !important;
+  color: #1abc9c !important;
+}
+
+/* Dark theme overrides for Dash inputs and steppers */
+[data-bs-theme="dark"] .dash-input-element {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #333333 !important;
+}
+
+[data-bs-theme="dark"] .dash-input-element:focus {
+  border-color: #b666d2 !important;
+  box-shadow: 0 0 0 0.25rem rgba(182, 102, 210, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .dash-input-stepper {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border-color: #333333 !important;
+}
+
+[data-bs-theme="dark"] .dash-input-stepper:hover {
+  background-color: #3a3a3a !important;
+  color: #b666d2 !important;
+}
+
+/* General fallback for unstyled inputs in dark mode */
+[data-bs-theme="dark"] input:not([class*="m_"]):not(.form-control) {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+}
+
+/* --- DatePicker Overrides (Dash Custom DatePicker) --- */
+
+/* --- Light Mode (Turquoise / Turkuaz) --- */
+/* Highlighted range in light mode (days in between start and end) */
+.dash-datepicker-calendar-date-highlighted {
+  background-color: rgba(26, 188, 156, 0.2) !important;
+  color: #1abc9c !important;
+}
+
+.dash-datepicker-calendar-date-highlighted span {
+  color: #16a085 !important;
+}
+
+/* Selected start/end days in light mode */
+.dash-datepicker-calendar-date-selected {
+  background-color: #1abc9c !important;
+  color: #ffffff !important;
+}
+
+.dash-datepicker-calendar-date-selected span {
+  color: #ffffff !important;
+}
+
+
+/* --- Dark Mode (Purple / Mor) --- */
+/* Highlighted range in dark mode (days in between start and end) */
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-highlighted {
+  background-color: rgba(182, 102, 210, 0.25) !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-highlighted span {
+  color: #ffffff !important;
+}
+
+/* Selected start/end days in dark mode */
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected {
+  background-color: #b666d2 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected span {
+  color: #ffffff !important;
+}
+
+/* Hover effect for dates in dark mode */
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-inside:hover {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+/* Widen the year input in datepicker controls slightly so the year fits */
+.dash-datepicker-calendar-wrapper .dash-input-container,
+.dash-datepicker-controls .dash-input-container {
+  width: 115px !important;
+}
+
+.dash-datepicker-calendar-wrapper .dash-input-container .dash-input-element,
+.dash-datepicker-controls .dash-input-container .dash-input-element {
+  width: 100% !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+/* --- DatePicker Hover & Selection Colors --- */
+
+/* Light Mode: Hover and selected ranges in Turquoise */
+.CalendarDay__hovered_span,
+.CalendarDay__hovered_span:hover,
+.CalendarDay__selected_span,
+.CalendarDay__selected_span:hover,
+.CalendarDay_hovered_span,
+.CalendarDay_hovered_span:hover,
+.CalendarDay_selected_span,
+.CalendarDay_selected_span:hover,
+.CalendarDay:hover,
+.dash-datepicker-calendar-date:hover,
+.dash-datepicker-calendar-date-inside:hover {
+  background-color: rgba(26, 188, 156, 0.2) !important;
+  color: #1abc9c !important;
+}
+
+.CalendarDay__selected,
+.CalendarDay__selected:hover,
+.CalendarDay_selected,
+.CalendarDay_selected:hover,
+.dash-datepicker-calendar-date-selected,
+.dash-datepicker-calendar-date-selected:hover {
+  background-color: #1abc9c !important;
+  color: #ffffff !important;
+}
+
+/* Dark Mode: Hover and selected ranges in Purple */
+[data-bs-theme="dark"] .CalendarDay__hovered_span,
+[data-bs-theme="dark"] .CalendarDay__hovered_span:hover,
+[data-bs-theme="dark"] .CalendarDay__selected_span,
+[data-bs-theme="dark"] .CalendarDay__selected_span:hover,
+[data-bs-theme="dark"] .CalendarDay_hovered_span,
+[data-bs-theme="dark"] .CalendarDay_hovered_span:hover,
+[data-bs-theme="dark"] .CalendarDay_selected_span,
+[data-bs-theme="dark"] .CalendarDay_selected_span:hover,
+[data-bs-theme="dark"] .CalendarDay:hover,
+[data-bs-theme="dark"] .dash-datepicker-calendar-date:hover,
+[data-bs-theme="dark"] .dash-datepicker-calendar-date-inside:hover,
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-inside:hover {
+  background-color: rgba(182, 102, 210, 0.25) !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .CalendarDay__selected,
+[data-bs-theme="dark"] .CalendarDay__selected:hover,
+[data-bs-theme="dark"] .CalendarDay_selected,
+[data-bs-theme="dark"] .CalendarDay_selected:hover,
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected,
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected:hover {
+  background-color: #b666d2 !important;
+  color: #ffffff !important;
+}
+
+/* --- DatePicker Inner Inputs Styling (Border & Background Removal) --- */
+#tarih-araligi,
+#tarih-araligi-end-date,
+input#tarih-araligi,
+input#tarih-araligi-end-date,
+.dash-datepicker-input,
+.dash-datepicker-input:focus,
+.dash-datepicker-input:focus-visible,
+.dash-datepicker-input:active,
+.dash-datepicker-input-wrapper input,
+.dash-datepicker-input-wrapper input:focus,
+.dash-datepicker-input-wrapper input:focus-visible,
+.dash-datepicker-input-wrapper input:active,
+.dash-datepicker-input-wrapper div,
+.dash-datepicker-input-wrapper div:focus,
+.dash-datepicker-input-wrapper div:focus-within,
+.DateInput input,
+.DateInput_input,
+.DateInput {
+  border: none !important;
+  border-style: none !important;
+  border-width: 0 !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  outline-width: 0 !important;
+}
+
+
+
+
+/* --- DatePicker Input Wrapper Turquoise/Purple Styling --- */
+
+/* Light Mode: Turquoise for active/open/focused/hovered state */
+.dash-datepicker-input-wrapper:hover,
+.dash-datepicker-input-wrapper[data-state="open"],
+.dash-datepicker-input-wrapper:focus-within {
+  border-color: #1abc9c !important;
+  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2) !important;
+}
+
+.dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-range-arrow,
+.dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-caret-icon,
+.dash-datepicker-input-wrapper:focus-within .dash-datepicker-range-arrow,
+.dash-datepicker-input-wrapper:focus-within .dash-datepicker-caret-icon,
+.dash-datepicker-input-wrapper:hover .dash-datepicker-range-arrow,
+.dash-datepicker-input-wrapper:hover .dash-datepicker-caret-icon {
+  color: #1abc9c !important;
+  fill: #1abc9c !important;
+}
+
+.dash-datepicker-input:focus,
+.dash-datepicker-input-wrapper input:focus {
+  outline: none !important;
+  border-color: #1abc9c !important;
+  caret-color: #1abc9c !important;
+}
+
+/* Dark Mode: Purple for active/open/focused/hovered state */
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper:hover,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper[data-state="open"],
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper:focus-within {
+  border-color: #b666d2 !important;
+  box-shadow: 0 0 0 2px rgba(182, 102, 210, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-range-arrow,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-caret-icon,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper:focus-within .dash-datepicker-range-arrow,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper:focus-within .dash-datepicker-caret-icon,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper:hover .dash-datepicker-range-arrow,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper:hover .dash-datepicker-caret-icon {
+  color: #b666d2 !important;
+  fill: #b666d2 !important;
+}
+
+[data-bs-theme="dark"] .dash-datepicker-input:focus,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper input:focus {
+  outline: none !important;
+  border-color: #b666d2 !important;
+  caret-color: #b666d2 !important;
+}
+
+/* --- Uniform Font Size for Control Panel Elements --- */
+.control-card,
+.control-card *,
+#fav-section,
+#fav-section *,
+.mantine-Combobox-dropdown,
+.mantine-Combobox-dropdown *,
+.mantine-Select-dropdown,
+.mantine-Select-dropdown *,
+.mantine-MultiSelect-dropdown,
+.mantine-MultiSelect-dropdown *,
+[class*="mantine-Combobox-option"],
+[class*="mantine-Combobox-option"] *,
+[role="dialog"],
+[role="dialog"] *,
+.dash-datepicker-calendar-wrapper,
+.dash-datepicker-calendar-wrapper *,
+.dash-datepicker-controls,
+.dash-datepicker-controls * {
+  font-size: 15px !important;
+}
+
+
