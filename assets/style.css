@@ -909,16 +909,28 @@ button.dash-dropdown .dash-dropdown-trigger-icon {
 .dash-dropdown-search-container {
   position: relative !important;
   display: flex !important;
+  flex-direction: row !important;
   align-items: center !important;
-  padding: 6px 8px !important;
+  justify-content: flex-start !important;
+  padding: 8px 12px !important;
+  margin: -4px -4px 4px -4px !important; /* flush to the top/sides of parent popover */
+  border-top-left-radius: 6px !important;
+  border-top-right-radius: 6px !important;
   border-bottom: 1px solid #dee2e6 !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+  grid-template-columns: none !important;
+  grid-gap: 0 !important;
+  gap: 0 !important;
 }
 
 [data-bs-theme="dark"] .dash-dropdown-search-container {
   border-bottom: 1px solid #333333 !important;
+  background-color: #1a1a1a !important;
 }
 
 input.dash-dropdown-search {
+  width: 100% !important;
   flex: 1 !important;
   height: 32px !important;
   padding: 0 32px 0 28px !important; /* spacing for search icon (left) and clear button (right) */
@@ -948,6 +960,16 @@ input.dash-dropdown-search:focus {
   box-shadow: 0 0 0 2px rgba(182, 102, 210, 0.25) !important;
 }
 
+/* Hide native browser search clear icons */
+input.dash-dropdown-search::-webkit-search-cancel-button,
+input.dash-dropdown-search::-webkit-search-decoration,
+input.dash-dropdown-search::-webkit-search-results-button,
+input.dash-dropdown-search::-webkit-search-results-decoration {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  display: none !important;
+}
+
 input.dash-dropdown-search::placeholder {
   color: #adb5bd !important;
 }
@@ -958,11 +980,14 @@ input.dash-dropdown-search::placeholder {
 
 .dash-dropdown-search-icon {
   position: absolute !important;
-  left: 16px !important;
+  left: 20px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
   width: 14px !important;
   height: 14px !important;
   color: #868e96 !important;
   pointer-events: none !important;
+  z-index: 2 !important;
 }
 
 [data-bs-theme="dark"] .dash-dropdown-search-icon {
@@ -971,7 +996,9 @@ input.dash-dropdown-search::placeholder {
 
 button.dash-dropdown-clear {
   position: absolute !important;
-  right: 16px !important;
+  right: 20px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
   background: transparent !important;
   border: none !important;
   cursor: pointer !important;
@@ -984,6 +1011,7 @@ button.dash-dropdown-clear {
   height: 20px !important;
   border-radius: 50% !important;
   transition: background-color 80ms ease, color 80ms ease !important;
+  z-index: 2 !important;
 }
 
 [data-bs-theme="dark"] button.dash-dropdown-clear {
@@ -999,6 +1027,14 @@ button.dash-dropdown-clear:hover {
   color: #ffffff !important;
   background-color: #2a2a2a !important;
 }
+
+button.dash-dropdown-clear:focus,
+button.dash-dropdown-clear:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 
 
 
