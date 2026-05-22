@@ -68,7 +68,8 @@ def _max_period_days(period_key: str) -> int:
 
 # ── Favoriler ────────────────────────────────────────────────────────
 def _is_fav(kod: str, fav_list: list) -> bool:
-    return kod in (fav_list or [])
+    favs = fav_list if fav_list is not None else ["NJR"]
+    return kod in favs
 
 
 def _fmt_fav_btn(kod: str, fav_list: list) -> html.Span:
@@ -99,7 +100,7 @@ info_bar = dbc.Alert([
 
 # ── Layout ──────────────────────────────────────────────────────────
 layout = dbc.Container([
-    dcc.Store(id="fav-store", storage_type="session", data=["NJR"]),
+    dcc.Store(id="fav-store", storage_type="local"),
     dcc.Store(id="fb-cache"),
     info_bar,
 
@@ -504,7 +505,7 @@ def toggle_fav(n_clicks_list, fav_data):
     if not dash.callback_context.triggered_id:
         return fav_data
     kod = dash.callback_context.triggered_id["index"]
-    favs = list(fav_data or [])
+    favs = list(fav_data if fav_data is not None else ["NJR"])
     if kod in favs:
         favs.remove(kod)
     else:

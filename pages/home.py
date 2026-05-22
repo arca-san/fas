@@ -79,7 +79,7 @@ layout = dbc.Container(
     [
         dcc.Store(id="mix-benchmark-store"),
         dcc.Store(id="auto-benchmarks-store"),
-        dcc.Store(id="fav-store", storage_type="session", data=["NJR"]),
+        dcc.Store(id="fav-store", storage_type="local"),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
                 [
@@ -934,7 +934,7 @@ def update_benchmark_with_auto(auto_bm_codes, current_value):
     Input("fav-store", "data"),
 )
 def show_favorites(fav_data):
-    favs = fav_data or []
+    favs = fav_data if fav_data is not None else ["NJR"]
     if not favs:
         return html.Div()
     badges = []
@@ -979,7 +979,7 @@ def show_favorites(fav_data):
 def render_selected_funds_badges(selected_funds, fav_data):
     if not selected_funds:
         return []
-    favs = fav_data or []
+    favs = fav_data if fav_data is not None else ["NJR"]
     badges = []
     for kod in selected_funds:
         is_fav = kod in favs
@@ -1063,7 +1063,7 @@ def update_favorites(del_clicks, star_clicks, fav_data):
         return dash.no_update
 
     trigger_id = ctx.triggered_id
-    favs = list(fav_data or [])
+    favs = list(fav_data if fav_data is not None else ["NJR"])
 
     if isinstance(trigger_id, dict):
         trig_type = trigger_id.get("type")
