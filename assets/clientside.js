@@ -1,5 +1,5 @@
-window.dash_clientside = Object.assign(window.dash_clientside || {}, {
-    clientside: {
+(function() {
+    var clientsideFuncs = {
         update_home_charts: function(theme, fiyatFig, scatterFig) {
             if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update];
             
@@ -118,5 +118,33 @@ window.dash_clientside = Object.assign(window.dash_clientside || {}, {
             var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
             return updateFig(newFiyat);
         }
+    };
+
+    if (window.dash_clientside) {
+        window.dash_clientside.clientside = window.dash_clientside.clientside || {};
+        for (var fName in clientsideFuncs) {
+            if (clientsideFuncs.hasOwnProperty(fName)) {
+                window.dash_clientside.clientside[fName] = clientsideFuncs[fName];
+            }
+        }
+    } else {
+        var internalDashClientside = {
+            clientside: clientsideFuncs
+        };
+        Object.defineProperty(window, 'dash_clientside', {
+            get: function() {
+                return internalDashClientside;
+            },
+            set: function(val) {
+                if (val) {
+                    for (var key in val) {
+                        if (val.hasOwnProperty(key)) {
+                            internalDashClientside[key] = val[key];
+                        }
+                    }
+                }
+            },
+            configurable: true
+        });
     }
-});
+})();
