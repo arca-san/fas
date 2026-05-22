@@ -201,12 +201,14 @@ def create_risk_return_scatter(
             go.Scatter(
                 x=[risk],
                 y=[getiri],
-                mode="markers+text",
+                mode="markers",
                 name=kod,
-                text=[kod],
-                textposition="top center",
-                marker=dict(size=12, line=dict(width=2, color="DarkSlateGrey")),
-                hovertemplate="%{text}<br>Risk: %{x:.2f}%<br>Getiri: %{y:.2f}%<extra></extra>",
+                marker=dict(
+                    size=14,
+                    line=dict(width=1.5, color="white"),
+                    opacity=0.85
+                ),
+                hovertemplate="<b>%{name}</b><br>Risk (Volatilite): %{x:.2f}%<br>Getiri (Yıllık): %{y:.2f}%<extra></extra>",
             )
         )
 
