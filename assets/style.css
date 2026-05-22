@@ -1036,6 +1036,18 @@ button.dash-dropdown-clear:active {
 }
 
 
+/* ── Dash DevTools Isolation ────────────────────────────────────────── */
+#_dash-devtools,
+#_dash-devtools *,
+.dash-debug-menu,
+.dash-debug-menu *,
+.dash-error-popup,
+.dash-error-popup * {
+  color: revert !important;
+  background-color: revert !important;
+}
+
+
 
 
 
