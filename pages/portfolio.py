@@ -742,9 +742,10 @@ def _compute_fund_benchmark_series(
     State("pf-benchmark-select", "value"),
     State("pf-periods", "value"),
     State("pf-mix-store", "data"),
+    State("theme-store", "data"),
     prevent_initial_call=True,
 )
-def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_values, mix_data):
+def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_values, mix_data, theme=None):
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     if not fon_kodlari:
         return {"display": "none"}, dash.no_update, [], go.Figure(), "Lutfen en az bir fon secin."
@@ -857,6 +858,23 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
         fon_benchmark_series, fon_benchmark_sources, auto_bm_codes = _compute_fund_benchmark_series(
             fund_dict, fund_kategoriler, bas, bit, benchmark_dict,
         )
+
+        # Eger bir kullanıcı benchmark'ı, herhangi bir fonun benchmark mix'i ile birebir aynıysa (değer bazında)
+        # onu benchmark_dict'ten çıkaralım ki grafikte tekrar çizilmesin.
+        filtered_benchmark_dict = {}
+        for bm_kod, bm_series in benchmark_dict.items():
+            is_duplicate = False
+            for fon_kodu, mix_series in fon_benchmark_series.items():
+                common_idx = bm_series.index.intersection(mix_series.index)
+                if len(common_idx) > 0:
+                    diff = (bm_series.loc[common_idx] - mix_series.loc[common_idx]).abs().max()
+                    if diff < 0.05:  # Yüzde bazında 0.05% fark (birebir aynı)
+                        is_duplicate = True
+                        logger.info("Benchmark %s, %s fonunun benchmark mix'i ile birebir ayni oldugu icin filtrelendi.", bm_kod, fon_kodu)
+                        break
+            if not is_duplicate:
+                filtered_benchmark_dict[bm_kod] = bm_series
+        benchmark_dict = filtered_benchmark_dict
 
         # Kullanici mix benchmark
         user_mix_series = None
@@ -979,6 +997,7 @@ def run_portfolio_analysis(n_clicks, fon_kodlari, benchmark_values, period_value
             title=f"{', '.join(fund_dict.keys())} - Getiri Grafigi (En Uzun Donem)",
             metrics=tooltip_metrics,
             mix_benchmark=chart_mix,
+            theme=theme,
         )
 
         return {"display": "block"}, results_data, detail_tabs, fig, " | ".join(status_parts)
@@ -1001,3 +1020,69 @@ def update_summary_table(results_data, selected_metric):
     if ctx.triggered_id == "pf-results-store":
         selected_metric = selected_metric or METRIC_SHARPE
     return _build_summary_table(results_data, selected_metric)
+
+
+dash.clientside_callback(
+    """
+    function(theme, fiyatFig) {
+        if (!theme) return window.dash_clientside.no_update;
+        
+        var isDark = theme === 'dark';
+        
+        function updateFig(fig) {
+            if (!fig || !fig.layout) return fig;
+            
+            fig.layout.template = isDark ? 'plotly_dark' : 'plotly';
+            fig.layout.paper_bgcolor = isDark ? '#1e1e1e' : '#ffffff';
+            fig.layout.plot_bgcolor = isDark ? '#1e1e1e' : '#ffffff';
+            
+            fig.layout.font = fig.layout.font || {};
+            fig.layout.font.color = isDark ? '#ffffff' : '#212529';
+            
+            if (fig.layout.title) {
+                if (typeof fig.layout.title === 'string') {
+                    fig.layout.title = { text: fig.layout.title };
+                }
+                fig.layout.title.font = fig.layout.title.font || {};
+                fig.layout.title.font.color = isDark ? '#ffffff' : '#212529';
+            }
+            
+            ['xaxis', 'yaxis'].forEach(function(axisKey) {
+                if (fig.layout[axisKey]) {
+                    var axis = fig.layout[axisKey];
+                    axis.gridcolor = isDark ? '#333333' : '#e9ecef';
+                    axis.linecolor = isDark ? '#555555' : '#dee2e6';
+                    axis.tickfont = axis.tickfont || {};
+                    axis.tickfont.color = isDark ? '#cccccc' : '#495057';
+                    if (axis.title) {
+                        axis.title.font = axis.title.font || {};
+                        axis.title.font.color = isDark ? '#ffffff' : '#212529';
+                    }
+                }
+            });
+            
+            if (fig.layout.legend) {
+                fig.layout.legend.font = fig.layout.legend.font || {};
+                fig.layout.legend.font.color = isDark ? '#ffffff' : '#212529';
+            }
+            
+            if (fig.data) {
+                fig.data.forEach(function(trace) {
+                    if (trace.line && (trace.name.indexOf('Benchmark Mix') !== -1 || trace.line.color === '#000000' || trace.line.color === '#ffffff')) {
+                        trace.line.color = isDark ? '#ffffff' : '#000000';
+                    }
+                });
+            }
+            
+            return fig;
+        }
+        
+        var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
+        return updateFig(newFiyat);
+    }
+    """,
+    Output("pf-chart", "figure", allow_duplicate=True),
+    Input("theme-store", "data"),
+    State("pf-chart", "figure"),
+    prevent_initial_call=True,
+)
