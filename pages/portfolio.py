@@ -5,7 +5,7 @@ Portföy Analizi — birden çok dönemde fon metriklerini karşılaştırma.
 """
 
 import dash
-from dash import html, dcc, callback, Output, Input, State, ALL
+from dash import html, dcc, callback, Output, Input, State, ALL, ClientsideFunction
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 from datetime import date, timedelta
@@ -1023,64 +1023,10 @@ def update_summary_table(results_data, selected_metric):
 
 
 dash.clientside_callback(
-    """
-    function(theme, fiyatFig) {
-        if (!theme) return window.dash_clientside.no_update;
-        
-        var isDark = theme === 'dark';
-        
-        function updateFig(fig) {
-            if (!fig || !fig.layout) return fig;
-            
-            fig.layout.template = isDark ? 'plotly_dark' : 'plotly';
-            fig.layout.paper_bgcolor = isDark ? '#1e1e1e' : '#ffffff';
-            fig.layout.plot_bgcolor = isDark ? '#1e1e1e' : '#ffffff';
-            
-            fig.layout.font = fig.layout.font || {};
-            fig.layout.font.color = isDark ? '#ffffff' : '#212529';
-            
-            if (fig.layout.title) {
-                if (typeof fig.layout.title === 'string') {
-                    fig.layout.title = { text: fig.layout.title };
-                }
-                fig.layout.title.font = fig.layout.title.font || {};
-                fig.layout.title.font.color = isDark ? '#ffffff' : '#212529';
-            }
-            
-            ['xaxis', 'yaxis'].forEach(function(axisKey) {
-                if (fig.layout[axisKey]) {
-                    var axis = fig.layout[axisKey];
-                    axis.gridcolor = isDark ? '#333333' : '#e9ecef';
-                    axis.linecolor = isDark ? '#555555' : '#dee2e6';
-                    axis.tickfont = axis.tickfont || {};
-                    axis.tickfont.color = isDark ? '#cccccc' : '#495057';
-                    if (axis.title) {
-                        axis.title.font = axis.title.font || {};
-                        axis.title.font.color = isDark ? '#ffffff' : '#212529';
-                    }
-                }
-            });
-            
-            if (fig.layout.legend) {
-                fig.layout.legend.font = fig.layout.legend.font || {};
-                fig.layout.legend.font.color = isDark ? '#ffffff' : '#212529';
-            }
-            
-            if (fig.data) {
-                fig.data.forEach(function(trace) {
-                    if (trace.line && (trace.name.indexOf('Benchmark Mix') !== -1 || trace.line.color === '#000000' || trace.line.color === '#ffffff')) {
-                        trace.line.color = isDark ? '#ffffff' : '#000000';
-                    }
-                });
-            }
-            
-            return fig;
-        }
-        
-        var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
-        return updateFig(newFiyat);
-    }
-    """,
+    ClientsideFunction(
+        namespace='clientside',
+        function_name='update_portfolio_charts'
+    ),
     Output("pf-chart", "figure", allow_duplicate=True),
     Input("theme-store", "data"),
     State("pf-chart", "figure"),
