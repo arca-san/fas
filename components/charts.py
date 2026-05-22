@@ -216,7 +216,7 @@ def create_risk_return_scatter(
                     line=dict(width=1.5, color="white"),
                     opacity=0.85
                 ),
-                hovertemplate="<b>%{name}</b><br>Risk (Volatilite): %{x:.2f}%<br>Getiri (Yıllık): %{y:.2f}%<extra></extra>",
+                hovertemplate=f"<b>{kod}</b><br>Risk (Volatilite): %{{x:.2f}}%<br>Getiri (Yıllık): %{{y:.2f}}%<extra></extra>",
             )
         )
 
