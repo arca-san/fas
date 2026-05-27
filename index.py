@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, page_container, clientside_callback, Output, Input, State
+from dash import html, dcc, page_container, clientside_callback, Output, Input, State, callback
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 
