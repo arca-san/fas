@@ -1244,9 +1244,10 @@ def create_mix_benchmark(create_click, selected_benchmarks, weight_values, weigh
     Output("benchmark-dropdown", "value"),
     Input("auto-benchmarks-store", "data"),
     State("benchmark-dropdown", "value"),
+    State("auto-benchmarks-store", "data"),
     prevent_initial_call=True,
 )
-def update_benchmark_with_auto(auto_bm_codes, current_value):
+def update_benchmark_with_auto(auto_bm_codes, current_value, prev_auto):
     """Auto-benchmark kodlarini dropdown'a ekle (sadece ilk yuklemede)."""
     if not auto_bm_codes:
         return dash.no_update
@@ -1256,6 +1257,7 @@ def update_benchmark_with_auto(auto_bm_codes, current_value):
     if has_auto:
         return dash.no_update
 
+    # Sadece yeni analizde (auto-benchmarks-store yenilendiğinde) ekle
     merged = list(current) + list(auto_bm_codes)
     return merged
 
