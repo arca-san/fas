@@ -17,8 +17,8 @@ run.bat
 ```bash
 git clone <repo-url>
 cd fas
-chmod +x run.sh
-./run.sh
+chmod +x run.command
+./run.command
 ```
 
 İlk çalıştırmada `.venv` sanal ortamı otomatik oluşturulur ve bağımlılıklar yüklenir.
@@ -48,14 +48,13 @@ Uygulama başlatıldığında tarayıcınızda `http://127.0.0.1:8050` adresinde
 fas/
 ├── app.py              # Dash uygulaması
 ├── index.py            # Çok sayfalı layout
-├── run.bat / run.sh    # Başlatma scriptleri
+├── run.bat / run.command  # Başlatma scriptleri
 ├── config/             # Ayarlar, sabitler, logger
 ├── data/               # Veri çekme, temizleme, cache
 │   └── fetchers/       # TEFAS API wrapper
 ├── core/               # Metrik hesaplamaları, modeller
 ├── components/         # Dash UI bileşenleri
-├── pages/              # Sayfalar (Home, Analiz, Karşılaştırma, Rapor)
-└── reports/            # Rapor şablonları
+└── pages/              # Sayfalar (Home, Fon Bulucu, Portföy, Detaylı Bilgi)
 ```
 
 ## Gereksinimler

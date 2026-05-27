@@ -19,7 +19,6 @@ from components.metrics import calculate_fund_metrics, select_fund_benchmark, ca
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
 from config.benchmarks import benchmark_koda_gore, all_benchmark_options, get_benchmark_data
-from config.settings import CALENDAR_ALIGN_METHOD
 from tlref_scraper import TLREFScraper, TLREFConverter
 import plotly.graph_objects as go
 

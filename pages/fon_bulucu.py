@@ -16,7 +16,7 @@ import numpy as np
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
-from components.metrics import calculate_fund_metrics, _max_drawdown
+from components.metrics import calculate_fund_metrics
 from config.logger import get_logger
 from config.constants import (
     METRIC_SHARPE, METRIC_SORTINO, METRIC_ALPHA,
