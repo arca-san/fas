@@ -574,3 +574,66 @@ def create_backtest_chart(
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
     return fig
+
+
+def create_rebalancing_chart(
+    rebal_df: pd.DataFrame,
+    theme: str = "light",
+) -> go.Figure:
+    """Rebalancing simülasyonu: portföy değeri ve drift çift eksenli."""
+    if rebal_df.empty:
+        return go.Figure()
+    is_dark = theme == "dark"
+    from plotly.subplots import make_subplots
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Scatter(
+        x=rebal_df["tarih"], y=rebal_df["portfoy_deger"], mode="lines",
+        name="Portföy Değeri",
+        line=dict(color="#1abc9c" if not is_dark else "#b666d2", width=2),
+    ), secondary_y=False)
+    fig.add_trace(go.Scatter(
+        x=rebal_df["tarih"], y=rebal_df["drift_pct"] * 100, mode="lines",
+        name="Drift (%)", line=dict(color="#e74c3c", width=1, dash="dot"),
+    ), secondary_y=True)
+    fig.update_layout(
+        title="Rebalancing — Portföy Değeri & Drift",
+        template="plotly_dark" if is_dark else "plotly",
+        hovermode="x unified", margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    fig.update_yaxes(title_text="Değer (x)", secondary_y=False)
+    fig.update_yaxes(title_text="Drift (%)", secondary_y=True)
+    return fig
+
+
+def create_goal_projection_chart(
+    projection: list,
+    nominal_son: float,
+    reel_son: float,
+    theme: str = "light",
+) -> go.Figure:
+    """Hedef bazlı birikim projeksiyonu."""
+    if not projection:
+        return go.Figure()
+    is_dark = theme == "dark"
+    years = [p["yil"] for p in projection]
+    nominal = [p["nominal"] for p in projection]
+    reel = [p["reel"] for p in projection]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=years, y=nominal, name="Nominal Değer",
+        marker_color="#1abc9c" if not is_dark else "#b666d2",
+    ))
+    fig.add_trace(go.Scatter(
+        x=years, y=reel, mode="lines+markers",
+        name="Reel Değer (Enflasyon Düzeltmeli)",
+        line=dict(color="#e74c3c", width=2, dash="dot"),
+    ))
+    fig.update_layout(
+        title=f"Birikim Projeksiyonu — Nominal: {nominal_son:,.0f} TL | Reel: {reel_son:,.0f} TL",
+        xaxis_title="Yıl", yaxis_title="Değer (TL)",
+        template="plotly_dark" if is_dark else "plotly",
+        hovermode="x unified", margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig

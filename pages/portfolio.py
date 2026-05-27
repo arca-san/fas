@@ -20,7 +20,7 @@ from components.metrics import (
     calculate_mix_metrics,
     get_fund_benchmarks,
 )
-from components.charts import create_price_chart, create_efficient_frontier_chart, create_portfolio_distribution_chart, create_monte_carlo_chart, create_backtest_chart
+from components.charts import create_price_chart, create_efficient_frontier_chart, create_portfolio_distribution_chart, create_monte_carlo_chart, create_backtest_chart, create_rebalancing_chart, create_goal_projection_chart
 from components.optimizer import (
     compute_covariance_matrix, compute_expected_returns,
     max_sharpe_portfolio, min_variance_portfolio, risk_parity_portfolio,
@@ -1082,6 +1082,7 @@ def update_summary_table(results_data, selected_metric):
     Output("pf-mc-stats", "children"),
     Input("pf-optim-btn", "n_clicks"),
     State("pf-fund-select", "value"),
+    State("pf-fund-select", "value"),
     State("pf-optim-method", "value"),
     State("pf-optim-maxw", "value"),
     State("pf-optim-minw", "value"),
@@ -1213,7 +1214,25 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
             dbc.Table(html.Tbody(mc_rows), size="sm", bordered=False, className="mb-0"),
         ]), className="mt-2")
 
-        return ef_fig, pie_fig, sonuc, status, bt_fig, mc_fig, mc_stats_div
+        # Rebalancing simülasyonu
+        rebal_df = simulate_rebalancing(fund_dict, w_dict, rebalance_freq="monthly", threshold=0.05)
+        rebal_chart = create_rebalancing_chart(rebal_df, theme=theme)
+
+        # Hedef bazlı projeksiyon
+        goal = goal_based_projection(rets, cov, weights, initial=100000, monthly_add=1000, years=10)
+        goal_chart = create_goal_projection_chart(
+            goal["projeksiyon"], goal["nominal_son"], goal["reel_son"], theme=theme,
+        )
+
+        sonuc_plus = html.Div([
+            sonuc,
+            html.H6("Rebalancing Simülasyonu", className="mt-3"),
+            dcc.Graph(figure=rebal_chart, config={"displayModeBar": False}),
+            html.H6("Hedef Bazlı Projeksiyon (10 Yıl)", className="mt-3"),
+            dcc.Graph(figure=goal_chart, config={"displayModeBar": False}),
+        ])
+
+        return ef_fig, pie_fig, sonuc_plus, status, bt_fig, mc_fig, mc_stats_div
 
     except Exception as exc:
         logger.warning("Optimizasyon hatasi: %s", exc)
