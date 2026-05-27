@@ -227,6 +227,7 @@ layout = dbc.Container(
                                             className="g-2 align-items-end",
                                         ),
                                         html.Div(id="selected-funds-badges", className="mt-2 d-flex flex-wrap"),
+                                        html.Div(id="portfoy-weight-panel", className="mt-2"),
                                     ],
                                     className="mb-3"
                                 ),
@@ -1304,27 +1305,18 @@ def show_favorites(fav_data):
 
 @callback(
     Output("selected-funds-badges", "children"),
-    Output("portfoy-weight-store", "data", allow_duplicate=True),
     Input("fon-select", "value"),
     Input("fav-store", "data"),
-    Input({"type": "portfoy-weight", "index": ALL}, "value"),
-    State("portfoy-weight-store", "data"),
     prevent_initial_call=True,
 )
-def render_selected_funds_badges(selected_funds, fav_data, weight_values, weight_store):
+def render_selected_funds_badges(selected_funds, fav_data):
     if not selected_funds:
-        return [], {}
+        return []
     favs = fav_data if fav_data is not None else ["NJR"]
-    weights = weight_store or {}
     badges = []
-    new_weights = {}
     for i, kod in enumerate(selected_funds):
         is_fav = kod in favs
         star_style = {"cursor": "pointer", "marginRight": "4px"}
-        current_weight = weight_values[i] if i < len(weight_values) and weight_values[i] is not None else weights.get(kod)
-        if current_weight is None:
-            current_weight = round(100.0 / len(selected_funds), 1)
-        new_weights[kod] = current_weight
         badges.append(
             html.Span(
                 [
@@ -1336,15 +1328,6 @@ def render_selected_funds_badges(selected_funds, fav_data, weight_values, weight
                         n_clicks=0,
                     ),
                     html.Span(kod, className="me-1 fw-semibold"),
-                    dbc.Input(
-                        type="number",
-                        min=0, max=100, step=1,
-                        value=current_weight,
-                        id={"type": "portfoy-weight", "index": i},
-                        style={"width": "55px", "display": "inline-block", "padding": "0 2px", "height": "22px", "fontSize": "12px"},
-                        className="me-1",
-                    ),
-                    html.Span("%", className="me-1", style={"fontSize": "12px"}),
                     html.Span(
                         "×",
                         id={"type": "sel-del-cross", "index": kod},
@@ -1357,7 +1340,59 @@ def render_selected_funds_badges(selected_funds, fav_data, weight_values, weight
                 style={"fontSize": "13px", "userSelect": "none"},
             )
         )
-    return badges, new_weights
+    return badges
+
+
+# Portföy ağırlıkları paneli
+@callback(
+    Output("portfoy-weight-panel", "children"),
+    Output("portfoy-weight-store", "data"),
+    Input("fon-select", "value"),
+    Input({"type": "pf-weight-input", "index": ALL}, "value"),
+    State("portfoy-weight-store", "data"),
+    prevent_initial_call=True,
+)
+def render_portfolio_weights(fon_kodlari, weight_values, weight_store):
+    if not fon_kodlari or len(fon_kodlari) < 2:
+        return "", {}
+    weights = weight_store or {}
+    rows = []
+    new_weights = {}
+    for i, kod in enumerate(fon_kodlari):
+        w = weight_values[i] if i < len(weight_values) and weight_values[i] is not None else weights.get(kod, 100.0)
+        try:
+            w = float(w)
+        except (ValueError, TypeError):
+            w = 100.0
+        if w <= 0:
+            w = 1.0
+        new_weights[kod] = w
+        rows.append(dbc.Row([
+            dbc.Col(html.Small(kod, className="fw-semibold"), xs=4),
+            dbc.Col(dbc.Input(
+                type="number", min=1, max=999, step=1, value=w,
+                id={"type": "pf-weight-input", "index": i},
+                style={"width": "70px", "height": "28px", "fontSize": "13px"},
+            ), xs=4),
+            dbc.Col(html.Small("%", className="text-muted"), xs=1),
+        ], className="mb-1 align-items-center"))
+
+    # Normalize et
+    total = sum(new_weights.values())
+    if total > 0:
+        normalized = {k: round(v / total * 100, 1) for k, v in new_weights.items()}
+        pct_str = " + ".join(f"{v:.0f}%" for v in normalized.values())
+    else:
+        normalized = new_weights
+        pct_str = ""
+
+    panel = dbc.Card(dbc.CardBody([
+        html.H6("Portföy Ağırlıkları", className="card-title mb-2", style={"fontSize": "0.9rem"}),
+        *rows,
+        html.Hr(className="my-1"),
+        html.Small(f"Normalize: {pct_str} = %100", className="text-muted", style={"fontSize": "0.8rem"}),
+    ]), className="mb-2")
+    return panel, normalized
 
 
 @callback(
