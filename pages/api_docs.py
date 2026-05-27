@@ -25,7 +25,7 @@ ENDPOINTS = [
         "method": "GET",
         "path": "/api/v1/funds/{kod}/history?start=&end=",
         "desc": "Fonun tarihsel fiyat verisi. Varsayılan: son 1 yıl.",
-        "curl": "curl 'http://localhost:8050/api/v1/funds/AAS/history?start=2025-01-01&end=2025-12-31'",
+        "curl": "curl http://localhost:8050/api/v1/funds/AAS/history?start=2025-01-01&end=2025-12-31",
     },
     {
         "method": "GET",
@@ -37,7 +37,7 @@ ENDPOINTS = [
         "method": "GET",
         "path": "/api/v1/benchmarks/{kod}/data?start=&end=",
         "desc": "Benchmark endeks verisi.",
-        "curl": "curl 'http://localhost:8050/api/v1/benchmarks/FHISE/data?start=2025-01-01&end=2025-12-31'",
+        "curl": "curl http://localhost:8050/api/v1/benchmarks/FHISE/data?start=2025-01-01&end=2025-12-31",
     },
     {
         "method": "POST",
@@ -67,8 +67,7 @@ def _build_endpoint_card(ep):
 
 layout = dbc.Container([
     dbc.Alert([
-        html.I(className="bi bi-exclamation-triangle me-2"),
-        "Burada yer alan bilgiler güncel olmayabilir ve 6362 sayılı Sermaye Piyasası Kanunu gereğince yatırım tavsiyesi olarak değerlendirilemez.",
+        "⚠ Burada yer alan bilgiler güncel olmayabilir ve 6362 sayılı Sermaye Piyasası Kanunu gereğince yatırım tavsiyesi olarak değerlendirilemez.",
     ], color="warning", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"}),
     html.H3("FAS REST API", className="mb-3"),
     html.P("Tüm endpoint'ler Dash uygulaması ile aynı Flask sunucusunda çalışır. "
