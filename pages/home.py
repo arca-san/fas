@@ -859,6 +859,9 @@ def run_analysis(
         # Rolling Sharpe
         rolling_fig = create_rolling_sharpe_chart(fund_dict, rf_daily=rf_daily, window=63, theme=theme)
 
+        # Export verisi (CSV için)
+        export_data = {k: {mk: (round(v, 4) if isinstance(v, (int, float)) else v) for mk, v in m.items()} for k, m in tooltip_metrics.items()}
+
         return fig, scatter_fig, portfoy_fig, kor_fig, rolling_fig, fon_bilgi_kart, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes, export_data
     except Exception as exc:
         logger.exception("Analiz hatasi")
