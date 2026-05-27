@@ -48,7 +48,8 @@ from config.constants import (
     METRIC_TREYNOR,
     METRIC_DESCRIPTIONS,
 )
-from tlref_scraper import TLREFScraper, TLREFConverter
+from data.dao import save_portfolio, list_portfolios, delete_portfolio
+from flask_login import current_user
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/portfolio")
@@ -228,6 +229,9 @@ layout = dbc.Container([
             ], className="h-100 mb-3"),
         ], xs=12, md=4),
     ], className="align-items-stretch"),
+
+    html.Div(id="pf-portfolio-actions", className="mb-2"),
+    # Kayıtlı portföy yükleme (ilk açılışta gizli, sadece giriş yapmış kullanıcılar)
 
     html.Div(id="pf-results", style={"display": "none"}, children=[
         dbc.Tabs([
@@ -1268,6 +1272,94 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
 
 
 # ── Atıf & Stres callback ─────────────────────────────────────────────
+@callback(
+    Output("pf-portfolio-actions", "children"),
+    Output("pf-load-select", "options"),
+    Output("pf-portfolio-actions", "className"),
+    Input("url", "pathname"),
+    prevent_initial_call=False,
+)
+def show_portfolio_actions(pathname):
+    if current_user.is_authenticated:
+        pfs = list_portfolios(current_user.id) or []
+        options = [{"label": p["name"], "value": p["id"]} for p in pfs]
+        return html.Div([
+            dbc.Button("Portföyü Kaydet", id="pf-save-btn", color="outline-primary", size="sm", className="me-2"),
+            dbc.Button("Kayıtlı Yükle", id="pf-load-btn", color="outline-secondary", size="sm", className="me-2"),
+            dcc.Dropdown(id="pf-load-select", options=options, placeholder="Portföy seç...",
+                        searchable=True, clearable=True, style={"display": "inline-block", "width": "300px", "verticalAlign": "middle"}),
+            _make_save_modal(),
+        ]), options, "mb-2"
+    return "", [], "d-none"
+
+
+def _make_save_modal():
+    return dbc.Modal([
+        dbc.ModalHeader(dbc.ModalTitle("Portföyü Kaydet")),
+        dbc.ModalBody([
+            dbc.Input(id="pf-save-name", placeholder="Portföy adı...", className="mb-2"),
+        ]),
+        dbc.ModalFooter([
+            dbc.Button("Kaydet", id="pf-confirm-save", color="primary", className="me-2"),
+            dbc.Button("İptal", id="pf-cancel-save", color="secondary"),
+        ]),
+    ], id="pf-save-modal", size="sm", is_open=False)
+
+
+@callback(
+    Output("pf-save-modal", "is_open"),
+    Input("pf-save-btn", "n_clicks"),
+    Input("pf-confirm-save", "n_clicks"),
+    Input("pf-cancel-save", "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_save_modal(save_btn, confirm, cancel):
+    if save_btn:
+        return True
+    return False
+
+
+@callback(
+    Output("pf-portfolio-actions", "children", allow_duplicate=True),
+    Output("pf-load-select", "options", allow_duplicate=True),
+    Input("pf-confirm-save", "n_clicks"),
+    State("pf-save-name", "value"),
+    State("pf-fund-select", "value"),
+    State("portfoy-weight-store", "data"),
+    State("fon-tipi-store", "data"),
+    prevent_initial_call=True,
+)
+def confirm_save(n_clicks, name, fund_codes, weights, fon_tipi):
+    if not name or not fund_codes or not current_user.is_authenticated:
+        return dash.no_update, dash.no_update
+    save_portfolio(current_user.id, name, fund_codes, weights, fon_tipi or "YAT")
+    pfs = list_portfolios(current_user.id) or []
+    options = [{"label": p["name"], "value": p["id"]} for p in pfs]
+    return html.Div([
+        dbc.Button("Portföyü Kaydet", id="pf-save-btn", color="outline-primary", size="sm", className="me-2"),
+        dbc.Button("Kayıtlı Yükle", id="pf-load-btn", color="outline-secondary", size="sm", className="me-2"),
+        dcc.Dropdown(id="pf-load-select", options=options, placeholder="Portföy seç...",
+                    searchable=True, clearable=True, style={"display": "inline-block", "width": "300px", "verticalAlign": "middle"}),
+    ]), options
+
+
+@callback(
+    Output("pf-fund-select", "value"),
+    Output("fon-tipi-store", "data"),
+    Input("pf-load-select", "value"),
+    prevent_initial_call=True,
+)
+def load_portfolio(portfolio_id):
+    if not portfolio_id:
+        return dash.no_update, dash.no_update
+    from data.dao import list_portfolios
+    pfs = list_portfolios(current_user.id) if current_user.is_authenticated else []
+    pf = next((p for p in pfs if p["id"] == portfolio_id), None)
+    if pf:
+        return pf["fund_codes"], pf.get("fon_tipi", "YAT")
+    return dash.no_update, dash.no_update
+
+
 @callback(
     Output("pf-te-sonuc", "children"),
     Output("pf-ff-chart", "figure"),
