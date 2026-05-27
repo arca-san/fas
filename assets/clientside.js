@@ -156,19 +156,38 @@
             return updateBarChart(newBar, t);
         },
         update_optimization_charts: function(theme, efFig, pieFig, backtestFig, mcFig, ffFig, driftFig, brinsonFig, stressFig) {
-            if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update];
-            var t = getTheme(theme);
-            var newEf = efFig ? JSON.parse(JSON.stringify(efFig)) : efFig;
-            var newPie = pieFig ? JSON.parse(JSON.stringify(pieFig)) : pieFig;
-            var newBt = backtestFig ? JSON.parse(JSON.stringify(backtestFig)) : backtestFig;
-            var newMc = mcFig ? JSON.parse(JSON.stringify(mcFig)) : mcFig;
-            var newFf = ffFig ? JSON.parse(JSON.stringify(ffFig)) : ffFig;
-            var newDrift = driftFig ? JSON.parse(JSON.stringify(driftFig)) : driftFig;
-            var newBrinson = brinsonFig ? JSON.parse(JSON.stringify(brinsonFig)) : brinsonFig;
-            var newStress = stressFig ? JSON.parse(JSON.stringify(stressFig)) : stressFig;
+            // ...
             return [updateLineChart(newEf, t), updateLineChart(newPie, t), updateLineChart(newBt, t), updateLineChart(newMc, t), updateLineChart(newFf, t), updateLineChart(newDrift, t), updateLineChart(newBrinson, t), updateLineChart(newStress, t)];
         }
     };
+
+    // ── Keyboard Shortcuts ─────────────────────────────────────────────
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey === true && !e.shiftKey && !e.ctrlKey) {
+            var url = null;
+            switch (e.key) {
+                case '1': url = '/'; break;
+                case '2': url = '/fon-bulucu'; break;
+                case '3': url = '/portfolio'; break;
+                case '4': url = '/duyurular'; break;
+                case 'g': case 'G': url = '/giris'; break;
+            }
+            if (url) { window.location.href = url; e.preventDefault(); }
+        }
+    });
+    
+    // ── ARIA improvements ──────────────────────────────────────────────
+    (function() {
+        var graphs = document.querySelectorAll('.js-plotly-plot');
+        graphs.forEach(function(g, i) {
+            g.setAttribute('role', 'img');
+            g.setAttribute('aria-label', 'Grafik ' + (i + 1));
+        });
+        var navs = document.querySelectorAll('.sidebar');
+        navs.forEach(function(n) { n.setAttribute('role', 'navigation'); });
+        var mains = document.querySelectorAll('#page-content');
+        mains.forEach(function(m) { m.setAttribute('role', 'main'); });
+    })();
 
     if (window.dash_clientside) {
         window.dash_clientside.clientside = window.dash_clientside.clientside || {};

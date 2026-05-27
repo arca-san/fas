@@ -6,6 +6,16 @@ import dash_bootstrap_components as dbc
 def create_navbar() -> dbc.Navbar:
     return dbc.Navbar(
         [
+            # Mobil hamburger menü
+            dbc.Button(
+                html.I(className="bi bi-list", style={"fontSize": "1.5rem"}),
+                id="mobile-menu-btn",
+                color="light",
+                outline=True,
+                className="d-md-none me-2 border-0",
+                style={"--bs-btn-color": "white"},
+                **{"aria-label": "Menüyü aç/kapat"},
+            ),
             html.Div(
                 html.Img(
                     src="/assets/logo.png",
@@ -66,4 +76,5 @@ def create_sidebar() -> html.Div:
             ),
         ],
         className="p-3",
+        **{"role": "navigation", "aria-label": "Ana navigasyon"},
     )
