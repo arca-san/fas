@@ -11,6 +11,7 @@ import dash_mantine_components as dmc
 from datetime import date, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
+import io
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
@@ -82,6 +83,8 @@ layout = dbc.Container(
         dcc.Store(id="mix-benchmark-store"),
         dcc.Store(id="auto-benchmarks-store"),
         dcc.Store(id="fav-store", storage_type="local"),
+        dcc.Store(id="export-store", storage_type="session"),
+        dcc.Download(id="download-csv"),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
                 [
@@ -104,6 +107,16 @@ layout = dbc.Container(
                         [
                             html.H5("Fon Metrikleri", className="card-title"),
                             dcc.Loading(id="loading-metrik", type="default", children=html.Div(id="metrik-tablosu")),
+                            html.Div(
+                                dbc.Button(
+                                    [html.I(className="bi bi-download me-1"), "CSV İndir"],
+                                    id="export-csv-btn",
+                                    color="outline-primary",
+                                    size="sm",
+                                    className="mt-2",
+                                ),
+                                className="mt-2",
+                            ),
                         ]
                     )
                 ],
@@ -298,6 +311,7 @@ def uppercase_search(val):
     Output("tefas-uyari", "style"),
     Output("metrik-tablosu", "children"),
     Output("auto-benchmarks-store", "data"),
+    Output("export-store", "data"),
     Input("analiz-btn", "n_clicks"),
     State("fon-select", "value"),
     State("benchmark-dropdown", "value"),
@@ -323,7 +337,7 @@ def run_analysis(
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
-        return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), []
+        return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), [], None
 
     try:
         from datetime import datetime
@@ -356,7 +370,7 @@ def run_analysis(
                     hata_list.append(f"{fon_kodu}: {exc}")
 
         if not fund_dict:
-            return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), []
+            return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), [], None
 
         status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
@@ -701,10 +715,13 @@ def run_analysis(
             logger.debug("Fon bilgileri alınamadı: %s", exc)
             fon_bilgi_kart = ""
 
-        return fig, scatter_fig, portfoy_fig, fon_bilgi_kart, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
+        # Export verisi (CSV için)
+        export_data = {k: {mk: (round(v, 4) if isinstance(v, (int, float)) else v) for mk, v in m.items()} for k, m in tooltip_metrics.items()}
+
+        return fig, scatter_fig, portfoy_fig, fon_bilgi_kart, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes, export_data
     except Exception as exc:
         logger.exception("Analiz hatasi")
-        return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), []
+        return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), [], None
 
 
 def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None, fon_benchmark_correlations: dict = None):
@@ -1246,3 +1263,22 @@ dash.clientside_callback(
     State("portfoy-dagilimi", "figure"),
     prevent_initial_call=True,
 )
+
+
+# CSV export callback
+@callback(
+    Output("download-csv", "data"),
+    Input("export-csv-btn", "n_clicks"),
+    State("export-store", "data"),
+    prevent_initial_call=True,
+)
+def export_to_csv(n_clicks, export_data):
+    if not export_data:
+        return dash.no_update
+    rows = []
+    for fon_kodu, metrikler in export_data.items():
+        row = {"Fon Kodu": fon_kodu}
+        row.update(metrikler)
+        rows.append(row)
+    df = pd.DataFrame(rows)
+    return dcc.send_data_frame(df.to_csv, "fas_metrikler.csv", index=False, encoding="utf-8-sig")
