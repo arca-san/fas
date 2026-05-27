@@ -118,6 +118,13 @@ layout = dbc.Container([
                         placeholder="Kategori seçin...",
                         clearable=False,
                     ),
+                    html.Label("Fon Şirketi Kodu (opsiyonel)", className="mt-2 mb-1", style={"fontSize": "0.8rem"}),
+                    dbc.Input(
+                        id="fb-kurucu",
+                        type="text",
+                        placeholder="örn: AKP, ISP, YAK",
+                        debounce=True,
+                    ),
                 ])
             ], className="h-100 mb-3"),
         ], xs=12, md=4),
@@ -212,19 +219,22 @@ layout = dbc.Container([
     State("fb-sort", "value"),
     State("theme-store", "data"),
     State("fon-tipi-store", "data"),
+    State("fb-kurucu", "value"),
     prevent_initial_call=True,
 )
-def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme, fon_tipi):
+def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme, fon_tipi, kurucu):
     if not kategori_kod:
         return {"display": "none"}, None, go.Figure(), "Lütfen bir kategori seçin."
     fon_tipi = fon_tipi or "YAT"
+    # Kurucu filtresi
+    kurucu_filtre = kurucu.strip() if kurucu else None
 
     period_field = PERIOD_FIELD_MAP.get(vade, "getiri1y")
     period_label = PERIOD_LABELS.get(vade, vade)
 
     # 1. Tüm fon getirilerini çek (kategori filtresiyle)
     try:
-        fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi=fon_tipi, fon_tur_kod=kategori_kod)
+        fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi=fon_tipi, fon_tur_kod=kategori_kod, kurucu=kurucu_filtre)
     except Exception as exc:
         logger.warning("Fon getirileri cekilemedi: %s", exc)
         return {"display": "none"}, None, go.Figure(), f"Veri alinamadi: {exc}"
@@ -360,7 +370,7 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
         METRIC_SORTINO, METRIC_ANNUALIZED_RETURN,
         METRIC_VOLATILITY, METRIC_MAX_DRAWDOWN,
     ]
-    headers = [html.Th(""), html.Th("Fon")]
+    headers = [html.Th(""), html.Th("Fon"), html.Th("Derece")]
     tooltip_components = []
     for idx, mk in enumerate(metric_keys):
         desc = METRIC_DESCRIPTIONS.get(mk, "")
@@ -385,13 +395,16 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
             best_vals[mk] = max(vals, key=lambda x: x[1]) if higher_better else min(vals, key=lambda x: x[1])
 
     rows = []
+    total_fon = len(fon_list)  # tüm fon sayısı (percentile için)
     for i, (kod, unvan, getiri) in enumerate(top_fonlar):
         m = metrics.get(kod, {})
         is_first = i == 0
+        rank_pct = round((i + 1) / max(total_fon, 1) * 100, 1)
         row_style = {"backgroundColor": "#f0fff0"} if is_first else {}
         fav_btn = _fmt_fav_btn(kod, fav_list)
         cells = [html.Td(fav_btn, style={"textAlign": "center", "width": "36px"})]
         cells.append(html.Td(html.Strong(kod) if is_first else kod))
+        cells.append(html.Td(f"Top %{rank_pct}", style={"textAlign": "center", "fontSize": "0.85em", "color": "#1abc9c" if is_first else "#888"}))
         for mk in metric_keys:
             val = m.get(mk, "-")
             is_best = best_vals.get(mk) and best_vals[mk][0] == kod
