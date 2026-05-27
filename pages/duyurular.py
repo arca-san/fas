@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 dash.register_page(__name__, path="/duyurular")
 
 layout = dbc.Container([
+    dcc.Location(id="url", refresh=False),
     html.H3("TEFAS Duyuruları", className="mb-3"),
     dbc.Row([
         dbc.Col([
@@ -25,10 +26,12 @@ layout = dbc.Container([
 
 @callback(
     Output("duyuru-listesi", "children"),
-    Input("duyuru-loading", "children"),
-    prevent_initial_call=False,
+    Input("url", "pathname"),
+    prevent_initial_call=True,
 )
-def load_duyurular(_):
+def load_duyurular(pathname):
+    if pathname != "/duyurular":
+        return ""
     try:
         duyurular = _tefas_api.duyurular()
         if not duyurular:
