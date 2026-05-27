@@ -155,6 +155,7 @@ layout = dbc.Container([
     ], color="warning", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"}),
     dcc.Store(id="pf-mix-store"),
     dcc.Store(id="pf-results-store"),
+    dcc.Store(id="portfoy-weight-store", storage_type="session"),
 
     html.H3("Portföy Analizi", className="mb-3"),
 
