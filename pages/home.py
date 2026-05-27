@@ -740,6 +740,18 @@ def run_analysis(
         # Yönetim ücreti ve büyüklük bilgileri
         fon_bilgi_rows = []
         fon_kodlari_list = list(fund_dict.keys())
+        # Enflasyon (TTUFE)
+        enflasyon_info = None
+        try:
+            tufe_df = get_benchmark_data("TTUFE", bas, bit)
+            if not tufe_df.empty and len(tufe_df) >= 2:
+                from components.metrics import compute_real_return
+                tufe_series = tufe_df.set_index("tarih")["fiyat"].pct_change().dropna()
+                first_fund = list(fund_dict.values())[0]
+                fund_rets = first_fund.set_index("tarih")["fiyat"].pct_change().dropna()
+                enflasyon_info = compute_real_return(fund_rets, tufe_series)
+        except Exception:
+            pass
         # USD/TRY kuru (dövize göre düzeltilmiş getiri için)
         usdtry_rate = None
         usdtry_change = None
@@ -810,6 +822,13 @@ def run_analysis(
                 fon_bilgi_icerik.append(dbc.Alert(
                     f"USD/TRY: {usdtry_rate:.4f} | Dönemsel Kur Değişimi: %{usdtry_change:.2f}" if usdtry_change else f"USD/TRY: {usdtry_rate:.4f}",
                     color="info", className="mt-2 py-1", style={"fontSize": "0.85em"}
+                ))
+            if enflasyon_info:
+                fon_bilgi_icerik.append(dbc.Alert(
+                    f"TÜFE (TTUFE): %{enflasyon_info.get('enflasyon_yillik', 0):.1f} yıllık | "
+                    f"Nominal: %{enflasyon_info.get('nominal_yillik', 0):.1f} | "
+                    f"Reel: %{enflasyon_info.get('reel_yillik', 0):.1f}",
+                    color="warning", className="mt-2 py-1", style={"fontSize": "0.85em"}
                 ))
             fon_bilgi_icerik.append(html.Small("Veriler TEFAS'tan anlık olarak çekilir.", className="text-muted d-block mt-1", style={"fontSize": "0.8em"}))
             fon_bilgi_kart = dbc.Card(dbc.CardBody(fon_bilgi_icerik), className="mb-3") if (fon_bilgi_rows or usdtry_rate) else ""

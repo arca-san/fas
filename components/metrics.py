@@ -538,3 +538,114 @@ def get_fund_benchmarks(fon_kodu: str, fon_kategori: str = None) -> dict:
 
     scraper = TefasBenchmarkScraper()
     return scraper.get_fund_benchmarks(fon_kodu, fon_kategori)
+
+
+# ── Reel Getiri (Enflasyon Düzeltmeli) ────────────────────────────────
+
+def compute_real_return(nominal_returns: pd.Series, inflation_series: pd.Series):
+    """Reel getiri hesapla. nominal ve enflasyon serileri TRADING_DAYS üzerinden.
+
+    Returns dict: nominal_yillik, enflasyon_yillik, reel_yillik, reel_kumulatif_pct.
+    """
+    if nominal_returns.empty or inflation_series.empty:
+        return {}
+
+    common = nominal_returns.index.intersection(inflation_series.index)
+    if len(common) < 5:
+        return {}
+
+    nom = nominal_returns.loc[common]
+    inf = inflation_series.loc[common]
+
+    n = len(nom)
+    nom_prod = (1 + nom).prod()
+    inf_prod = (1 + inf).prod()
+
+    nom_ann = nom_prod ** (TRADING_DAYS / n) - 1
+    inf_ann = inf_prod ** (TRADING_DAYS / n) - 1
+    reel_ann = (1 + nom_ann) / (1 + inf_ann) - 1
+
+    reel_cum = (nom_prod / inf_prod - 1) * 100
+
+    return {
+        "nominal_yillik": round(nom_ann * 100, 2),
+        "enflasyon_yillik": round(inf_ann * 100, 2),
+        "reel_yillik": round(reel_ann * 100, 2),
+        "reel_kumulatif": round(reel_cum, 2),
+    }
+
+
+# ── IRR / MWR ──────────────────────────────────────────────────────────
+
+def compute_irr(cash_flows: list, tol: float = 1e-8, max_iter: int = 1000):
+    """IRR (İç Verim Oranı) Newton yöntemi ile.
+
+    cash_flows: list of (date, amount) — amount > 0 = giriş (yatırım),
+                amount < 0 = çıkış (çekme/geri ödeme).
+    Son öğe: (bugün, terminal_değer) — portföyün güncel değeri (negatif).
+    """
+    if len(cash_flows) < 2:
+        return None
+
+    dates = [cf[0] for cf in cash_flows]
+    amounts = [cf[1] for cf in cash_flows]
+    base_date = dates[0]
+
+    # Gün farkları, yıl kesri
+    years = [(d - base_date).days / 365.0 for d in dates]
+    if any(y < 0 for y in years):
+        years = [abs((base_date - d).days) / 365.0 for d in dates]
+
+    def npv(rate):
+        return sum(a / (1 + rate) ** y for a, y in zip(amounts, years))
+
+    def npv_deriv(rate):
+        return sum(-y * a / (1 + rate) ** (y + 1) for a, y in zip(amounts, years))
+
+    rate = 0.1
+    for _ in range(max_iter):
+        f = npv(rate)
+        f_prime = npv_deriv(rate)
+        if abs(f_prime) < 1e-12:
+            break
+        rate_new = rate - f / f_prime
+        if abs(rate_new - rate) < tol:
+            return round(rate_new * 100, 2)
+        rate = rate_new
+    return round(rate * 100, 2) if abs(npv(rate)) < 0.01 else None
+
+
+def estimate_mwr_vs_twr(fund_returns: pd.Series, initial: float = 100000,
+                         monthly_add: float = 0, years: int = 1):
+    """TWR ve MWR karşılaştırması.
+
+    TWR: geometrik bağlama (nakit akışından bağımsız)
+    MWR: IRR ile (nakit akışlarını dikkate alır)
+    """
+    if fund_returns.empty:
+        return {}
+
+    twr = (1 + fund_returns).prod() - 1
+
+    # Nakit akışları: başlangıç (-) + aylık eklemeler (-) + son değer (+)
+    n = len(fund_returns)
+    total_months = min(years * 12, n // 21)
+    cash_flows = [(fund_returns.index[0], -initial)]
+    for m in range(1, total_months + 1):
+        idx = min(m * 21, n - 1)
+        cash_flows.append((fund_returns.index[idx], -monthly_add))
+
+    terminal = initial
+    cum_ret = 1.0
+    for ret in fund_returns.iloc[:total_months * 21]:
+        cum_ret *= (1 + ret)
+    terminal_val = initial * cum_ret + monthly_add * ((cum_ret - 1) / (cum_ret ** (1 / total_months) - 1) if total_months > 0 else 0)
+    cash_flows.append((fund_returns.index[min(total_months * 21, n - 1)], terminal_val))
+
+    mwr = compute_irr(cash_flows)
+
+    return {
+        "twr": round(twr * 100, 2),
+        "mwr": round(mwr, 2) if mwr is not None else None,
+        "fark": round((twr * 100) - mwr, 2) if mwr is not None else None,
+    }

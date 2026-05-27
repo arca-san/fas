@@ -45,6 +45,10 @@ METRIC_ACTIVE_SHARE = "Active Share (%)"
 METRIC_M2 = "M² Ölçüsü (%)"
 METRIC_SYSTEMATIC_TE = "Sistematik TE (%)"
 METRIC_IDIOSYNCRATIC_TE = "İdiosinkratik TE (%)"
+METRIC_REAL_RETURN = "Reel Getiri (%)"
+METRIC_CONSUMER_INFLATION = "TÜFE (Enflasyon %)"
+METRIC_MWR_RETURN = "MWR (İç Verim Oranı %)"
+METRIC_IRR = "IRR (Nakit Akışı %)"
 
 # Metrik açıklamaları (raporlarda kullanılır)
 METRIC_DESCRIPTIONS = {
