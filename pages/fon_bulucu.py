@@ -90,9 +90,9 @@ info_bar = dbc.Alert([
     "Seçtiğiniz kategoride belirlediğiniz vadede en yüksek getirili fonları, "
     "fon yöneticisi başarı metriklerine (Alfa, Sharpe, Enformasyon Oranı) göre karşılaştırın.",
     html.A(
-        " Detaylı Bilgi",
+        "Detaylı Bilgi",
         href="/detayli-bilgi",
-        className="alert-link ms-1",
+        className="alert-link ms-1 fw-semibold detayli-link",
         style={"textDecoration": "underline", "cursor": "pointer"},
     ),
 ], color="info", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"})

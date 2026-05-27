@@ -357,6 +357,11 @@ a {
   color: var(--color-primary);
 }
 
+.detayli-link,
+.detayli-link:hover {
+  color: var(--color-primary) !important;
+}
+
 /* ==========================================================================
    Placeholders (global)
    ========================================================================== */
