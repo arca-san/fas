@@ -722,6 +722,20 @@ def run_analysis(
         # Yönetim ücreti ve büyüklük bilgileri
         fon_bilgi_rows = []
         fon_kodlari_list = list(fund_dict.keys())
+        # USD/TRY kuru (dövize göre düzeltilmiş getiri için)
+        usdtry_rate = None
+        usdtry_change = None
+        try:
+            import yfinance as yf
+            usdtry = yf.download("USDTRY=X", start=bas, end=bit, progress=False, auto_adjust=False)
+            if not usdtry.empty and "Close" in usdtry.columns:
+                usdtry_rate = float(usdtry["Close"].iloc[-1])
+                usdtry_first = float(usdtry["Close"].iloc[0])
+                usdtry_change = ((usdtry_rate / usdtry_first) - 1) * 100 if usdtry_first > 0 else None
+        except Exception:
+            pass
+        if usdtry_change is not None:
+            status_parts.append(f"USD/TRY %{usdtry_change:+.2f}")
         try:
             ucret_list = _tefas_api.fonlar_yonetim_ucretleri(fon_tipi=fon_tipi)
             buyukluk_list = _tefas_api.fonlar_buyukluk(fon_tipi=fon_tipi)
@@ -748,19 +762,21 @@ def run_analysis(
                 cells.append(html.Td(info or "-", style={"textAlign": "center"}))
                 fon_bilgi_rows.append(html.Tr(cells))
 
-            fon_bilgi_kart = dbc.Card(
-                dbc.CardBody([
-                    html.H5("Fon Bilgileri", className="card-title mb-2"),
-                    dbc.Table(
-                        [html.Thead(html.Tr([
-                            html.Th("Fon"), html.Th("Yönetim Ücreti (%)"), html.Th("Portföy Büyüklüğü (TL)"), html.Th("Kategori")
-                        ])), html.Tbody(fon_bilgi_rows)],
-                        striped=True, bordered=True, hover=True, size="sm", responsive=True,
-                    ),
-                    html.Small("Veriler TEFAS'tan anlık olarak çekilir.", className="text-muted d-block mt-1", style={"fontSize": "0.8em"}),
-                ]),
-                className="mb-3",
-            ) if fon_bilgi_rows else ""
+            fon_bilgi_icerik = [html.H5("Fon Bilgileri", className="card-title mb-2")]
+            if fon_bilgi_rows:
+                fon_bilgi_icerik.append(dbc.Table(
+                    [html.Thead(html.Tr([
+                        html.Th("Fon"), html.Th("Yönetim Ücreti (%)"), html.Th("Portföy Büyüklüğü (TL)"), html.Th("Kategori")
+                    ])), html.Tbody(fon_bilgi_rows)],
+                    striped=True, bordered=True, hover=True, size="sm", responsive=True,
+                ))
+            if usdtry_rate:
+                fon_bilgi_icerik.append(dbc.Alert(
+                    f"USD/TRY: {usdtry_rate:.4f} | Dönemsel Kur Değişimi: %{usdtry_change:.2f}" if usdtry_change else f"USD/TRY: {usdtry_rate:.4f}",
+                    color="info", className="mt-2 py-1", style={"fontSize": "0.85em"}
+                ))
+            fon_bilgi_icerik.append(html.Small("Veriler TEFAS'tan anlık olarak çekilir.", className="text-muted d-block mt-1", style={"fontSize": "0.8em"}))
+            fon_bilgi_kart = dbc.Card(dbc.CardBody(fon_bilgi_icerik), className="mb-3") if (fon_bilgi_rows or usdtry_rate) else ""
         except Exception as exc:
             logger.debug("Fon bilgileri alınamadı: %s", exc)
             fon_bilgi_kart = ""
