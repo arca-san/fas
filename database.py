@@ -27,12 +27,9 @@ def init_db(app=None):
 
 
 def get_db():
-    """Yeni bir DB session döndürür."""
+    """Yeni bir DB session döndürür. Arayan tarafından kapatılmalıdır."""
     db = SessionLocal()
-    try:
-        return db
-    finally:
-        db.close()
+    return db
 
 
 def get_session():

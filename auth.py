@@ -16,7 +16,10 @@ login_manager.login_view = "/giris"
 @login_manager.user_loader
 def load_user(user_id):
     db = get_db()
-    return db.query(User).filter(User.id == int(user_id)).first()
+    try:
+        return db.query(User).filter(User.id == int(user_id)).first()
+    finally:
+        db.close()
 
 
 def init_auth(server):
