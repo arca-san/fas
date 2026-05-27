@@ -831,6 +831,26 @@ def run_analysis(
                     fon_bilgi_icerik.append(dcc.Graph(figure=hacim_fig, config={"displayModeBar": False}))
                 except Exception:
                     pass
+            # Benzer fonlar
+            if len(fund_dict) >= 2:
+                try:
+                    from components.attribution import find_similar_funds
+                    ilk_kod = list(fund_dict.keys())[0]
+                    benzerler = find_similar_funds(ilk_kod, fund_dict, top_n=4)
+                    if benzerler:
+                        satirlar = []
+                        for b in benzerler:
+                            satirlar.append(html.Span(
+                                b["kod"],
+                                className="badge bg-light text-dark border me-1",
+                                style={"fontSize": "0.8rem"},
+                            ))
+                        fon_bilgi_icerik.append(html.Div([
+                            html.Small(f"{ilk_kod} benzer fonlar: ", className="text-muted me-1", style={"fontSize": "0.8rem"}),
+                            *satirlar,
+                        ], className="mt-1"))
+                except Exception:
+                    pass
             fon_bilgi_kart = dbc.Card(dbc.CardBody(fon_bilgi_icerik), className="mb-3") if (fon_bilgi_rows or usdtry_rate or enflasyon_info or hacim_data) else ""
         except Exception as exc:
             logger.debug("Fon bilgileri alınamadı: %s", exc)
