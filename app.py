@@ -12,6 +12,7 @@ from flask_login import current_user
 
 from database import init_db
 from auth import init_auth
+from api import api
 
 # .env dosyasını yükle (opsiyonel)
 try:
@@ -68,6 +69,9 @@ server = app.server
 # Veritabanı + Auth başlatma
 init_db()
 init_auth(server)
+
+# REST API
+server.register_blueprint(api)
 
 
 # Login koruması — giriş yapmamış kullanıcıları /giris sayfasına yönlendir
