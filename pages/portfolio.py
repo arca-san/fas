@@ -150,8 +150,7 @@ mix_modal = dbc.Modal(
 # ── Sayfa Layout ─────────────────────────────────────────────────────
 layout = dbc.Container([
     dbc.Alert([
-        html.I(className="bi bi-exclamation-triangle me-2"),
-        "Burada yer alan bilgiler güncel olmayabilir ve 6362 sayılı Sermaye Piyasası Kanunu gereğince yatırım tavsiyesi olarak değerlendirilemez.",
+        "⚠ Burada yer alan bilgiler güncel olmayabilir ve 6362 sayılı Sermaye Piyasası Kanunu gereğince yatırım tavsiyesi olarak değerlendirilemez.",
     ], color="warning", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"}),
     dcc.Store(id="pf-mix-store"),
     dcc.Store(id="pf-results-store"),
