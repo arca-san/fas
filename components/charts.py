@@ -279,3 +279,64 @@ def create_portfolio_distribution_chart(
         legend=dict(orientation="v", x=1.05, y=0.5),
     )
     return fig
+
+
+def create_correlation_heatmap(
+    fund_dict: dict,
+    title: str = "Fon Korelasyon Matrisi",
+    theme: str = "light",
+) -> go.Figure:
+    """Fonlar arası günlük getiri korelasyon matrisini heatmap ile gösterir."""
+    if not fund_dict or len(fund_dict) < 2:
+        fig = go.Figure()
+        fig.update_layout(title=title)
+        fig.add_annotation(text="En az 2 fon seçilmeli", showarrow=False, font=dict(size=14))
+        return fig
+
+    is_dark = theme == "dark"
+    daily_returns = {}
+    for kod, df in fund_dict.items():
+        df = df.sort_values("tarih")
+        ret = df["fiyat"].pct_change().dropna()
+        if not ret.empty:
+            daily_returns[kod] = ret
+
+    if len(daily_returns) < 2:
+        fig = go.Figure()
+        fig.update_layout(title=title)
+        fig.add_annotation(text="Yetersiz veri", showarrow=False)
+        return fig
+
+    kodlar = list(daily_returns.keys())
+    ortak_idx = daily_returns[kodlar[0]].index
+    for k in kodlar[1:]:
+        ortak_idx = ortak_idx.intersection(daily_returns[k].index)
+
+    ret_df = pd.DataFrame({k: daily_returns[k].reindex(ortak_idx) for k in kodlar})
+    corr = ret_df.corr().round(3)
+    labels = kodlar
+
+    colorscale = [[0, '#d62728'], [0.5, '#ffffff' if not is_dark else '#1a1a1a'], [1, '#2ca02c']]
+
+    fig = go.Figure(data=go.Heatmap(
+        z=corr.values,
+        x=labels,
+        y=labels,
+        colorscale=colorscale,
+        zmin=-1, zmax=1,
+        text=corr.values,
+        texttemplate="%{text:.2f}",
+        textfont={"size": 11, "color": "#ffffff" if is_dark else "#212529"},
+        hovertemplate="%{x} vs %{y}<br>Korelasyon: %{z:.3f}<extra></extra>",
+        colorbar=dict(title="r", titleside="right",
+                       tickfont=dict(color="#ffffff" if is_dark else "#212529"),
+                       titlefont=dict(color="#ffffff" if is_dark else "#212529")),
+    ))
+    fig.update_layout(
+        title=title,
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=40, r=40, t=60, b=40),
+        xaxis=dict(tickfont=dict(size=10)),
+        yaxis=dict(tickfont=dict(size=10)),
+    )
+    return fig
