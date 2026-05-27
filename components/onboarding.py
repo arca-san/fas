@@ -43,7 +43,7 @@ def make_onboarding_modal():
 
 # Onboarding açma/kapama callback
 @callback(
-    Output("onboarding-modal", "is_open", allow_duplicate=True),
+    Output("onboarding-modal", "is_open"),
     Input("onb-open", "n_clicks"),
     Input("onb-close", "n_clicks"),
     State("onboarding-modal", "is_open"),
