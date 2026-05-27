@@ -7,6 +7,11 @@ Dash uygulaması giriş noktası.
 import dash
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
+from flask import redirect, request
+from flask_login import current_user
+
+from database import init_db
+from auth import init_auth
 
 # .env dosyasını yükle (opsiyonel)
 try:
@@ -59,3 +64,22 @@ app.index_string = """
 """
 
 server = app.server
+
+# Veritabanı + Auth başlatma
+init_db()
+init_auth(server)
+
+
+# Login koruması — giriş yapmamış kullanıcıları /giris sayfasına yönlendir
+@server.before_request
+def require_login():
+    if request.path.startswith("/_dash-"):
+        return None
+    if request.path.startswith("/assets"):
+        return None
+    if request.path in ("/giris", "/", ""):
+        return None
+    if request.path.startswith("/api/"):
+        return None
+    if not current_user.is_authenticated:
+        return redirect("/giris")
