@@ -389,3 +389,188 @@ def create_correlation_heatmap(
         yaxis=dict(tickfont=dict(size=10)),
     )
     return fig
+
+
+def create_efficient_frontier_chart(
+    frontier_points: list,
+    fund_metrics: dict,
+    optimal_weights: dict = None,
+    optimal_label: str = "Optimal Portföy",
+    rf_rate: float = 0.0,
+    theme: str = "light",
+) -> go.Figure:
+    """Efficient frontier + CML + bireysel fon scatter plotu.
+
+    Parameters
+    ----------
+    frontier_points : list of (vol, ret, weights)
+    fund_metrics : {"FON_KODU": {"Volatilite (Yıllık)": 12.3, "Yıllıklandırılmış Getiri": 45.2}, ...}
+    optimal_weights : {kod: agirlik} veya None
+    """
+    is_dark = theme == "dark"
+    text_color = "#ffffff" if is_dark else "#212529"
+    fig = go.Figure()
+
+    # Efficient frontier eğrisi
+    if frontier_points:
+        vols = [p[0] * 100 for p in frontier_points]
+        rets = [p[1] * 100 for p in frontier_points]
+        fig.add_trace(go.Scatter(
+            x=vols, y=rets, mode="lines",
+            name="Efficient Frontier",
+            line=dict(color="#1abc9c" if not is_dark else "#b666d2", width=2),
+            hovertemplate="Vol: %{x:.2f}%<br>Ret: %{y:.2f}%<extra></extra>",
+        ))
+
+    # Bireysel fonlar
+    palet = DEFAULT_COLOR_PALETTE
+    idx = 0
+    for kod, m in fund_metrics.items():
+        vol = m.get("Volatilite (Yıllık)", 0)
+        ret = m.get("Yıllıklandırılmış Getiri", 0)
+        if vol <= 0:
+            continue
+        fig.add_trace(go.Scatter(
+            x=[vol], y=[ret], mode="markers+text",
+            name=kod, text=[kod], textposition="top center",
+            textfont=dict(size=10, color=text_color),
+            marker=dict(size=10, color=palet[idx % len(palet)],
+                       line=dict(width=1, color=text_color)),
+            hovertemplate=f"<b>{kod}</b><br>Vol: {vol:.2f}%<br>Ret: {ret:.2f}%<extra></extra>",
+        ))
+        idx += 1
+
+    # Optimal portföy noktası (max Sharpe veya seçili)
+    if optimal_weights:
+        opt_ret = 0
+        opt_vol = 0
+        for kod, w in optimal_weights.items():
+            if kod in fund_metrics and w > 0:
+                m = fund_metrics[kod]
+                opt_ret += w * m.get("Yıllıklandırılmış Getiri", 0)
+        if frontier_points and len(frontier_points) > 0:
+            # En yakın frontier noktasını bul
+            best = min(frontier_points, key=lambda p: abs(p[1] * 100 - opt_ret))
+            opt_vol = best[0] * 100
+            opt_ret = best[1] * 100
+        fig.add_trace(go.Scatter(
+            x=[opt_vol], y=[opt_ret], mode="markers",
+            name=optimal_label,
+            marker=dict(size=16, symbol="star", color="#f39c12",
+                       line=dict(width=2, color="#e67e22")),
+            hovertemplate=f"<b>{optimal_label}</b><br>Vol: {opt_vol:.2f}%<br>Ret: {opt_ret:.2f}%<extra></extra>",
+        ))
+        # CML: rf → optimal
+        if rf_rate > 0:
+            fig.add_trace(go.Scatter(
+                x=[0, opt_vol], y=[rf_rate * 100, opt_ret], mode="lines",
+                name="CML",
+                line=dict(color="#e74c3c" if not is_dark else "#e74c3c", width=1.5, dash="dot"),
+                hovertemplate="CML<extra></extra>",
+            ))
+
+    fig.update_layout(
+        title="Efficient Frontier",
+        xaxis_title="Risk (Volatilite, %)",
+        yaxis_title="Getiri (Yıllık, %)",
+        template="plotly_dark" if is_dark else "plotly",
+        hovermode="closest",
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
+
+
+def create_monte_carlo_chart(
+    paths: np.ndarray,
+    initial: float = 100000.0,
+    theme: str = "light",
+) -> go.Figure:
+    """Monte Carlo simülasyonu görselleştirme: bireysel izler + medyan + bant."""
+    is_dark = theme == "dark"
+    n_sim = min(paths.shape[0], 200)
+
+    fig = go.Figure()
+
+    # Bireysel simülasyonlar (ince gri)
+    for i in range(n_sim):
+        fig.add_trace(go.Scatter(
+            y=paths[i], mode="lines",
+            line=dict(color="rgba(128,128,128,0.1)" if not is_dark else "rgba(200,200,200,0.06)", width=0.5),
+            showlegend=False,
+            hovertemplate="Sim %{i}<extra></extra>",
+        ))
+
+    # Medyan
+    median = np.median(paths, axis=0)
+    fig.add_trace(go.Scatter(
+        y=median, mode="lines",
+        name="Medyan",
+        line=dict(color="#1abc9c" if not is_dark else "#b666d2", width=2.5),
+        hovertemplate="Medyan: %{y:,.0f}<extra></extra>",
+    ))
+
+    # %5 - %95 bant
+    p5 = np.percentile(paths, 5, axis=0)
+    p95 = np.percentile(paths, 95, axis=0)
+    x_fill = list(range(len(p5))) + list(range(len(p95)))[::-1]
+    y_fill = list(p5) + list(p95)[::-1]
+    fig.add_trace(go.Scatter(
+        x=x_fill, y=y_fill, fill="toself",
+        fillcolor="rgba(26,188,156,0.15)" if not is_dark else "rgba(182,102,210,0.15)",
+        line=dict(width=0), name="%5-%95 Bant",
+        hoverinfo="skip",
+    ))
+
+    # Başlangıç çizgisi
+    fig.add_hline(y=initial, line_dash="dash", line_color="gray",
+                  annotation_text="Başlangıç")
+
+    fig.update_layout(
+        title="Monte Carlo Projeksiyonu",
+        xaxis_title="Gün",
+        yaxis_title="Portföy Değeri (TL)",
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
+
+
+def create_backtest_chart(
+    backtest_df: pd.DataFrame,
+    theme: str = "light",
+) -> go.Figure:
+    """Walk-forward backtest: optimize vs equal-weight karşılaştırma."""
+    if backtest_df.empty:
+        return go.Figure()
+
+    is_dark = theme == "dark"
+
+    opt_cum = (1 + backtest_df["optimize_getiri"]).cumprod()
+    eq_cum = (1 + backtest_df["equal_getiri"]).cumprod()
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=backtest_df["test_sonu"], y=opt_cum, mode="lines+markers",
+        name="Optimize Portföy",
+        line=dict(color="#1abc9c" if not is_dark else "#b666d2", width=2),
+        hovertemplate="%{x|%Y-%m-%d}<br>%{y:.3f}<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=backtest_df["test_sonu"], y=eq_cum, mode="lines+markers",
+        name="Eşit Ağırlıklı",
+        line=dict(color="#95a5a6", width=1.5, dash="dash"),
+        hovertemplate="%{x|%Y-%m-%d}<br>%{y:.3f}<extra></extra>",
+    ))
+
+    fig.update_layout(
+        title="Walk-Forward Backtest",
+        xaxis_title="Tarih",
+        yaxis_title="Kümülatif Getiri (x)",
+        template="plotly_dark" if is_dark else "plotly",
+        hovermode="x unified",
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
