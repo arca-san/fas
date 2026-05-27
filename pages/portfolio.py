@@ -1274,7 +1274,6 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
 # ── Atıf & Stres callback ─────────────────────────────────────────────
 @callback(
     Output("pf-portfolio-actions", "children"),
-    Output("pf-load-select", "options"),
     Output("pf-portfolio-actions", "className"),
     Input("url", "pathname"),
     prevent_initial_call=False,
@@ -1289,8 +1288,8 @@ def show_portfolio_actions(pathname):
             dcc.Dropdown(id="pf-load-select", options=options, placeholder="Portföy seç...",
                         searchable=True, clearable=True, style={"display": "inline-block", "width": "300px", "verticalAlign": "middle"}),
             _make_save_modal(),
-        ]), options, "mb-2"
-    return "", [], "d-none"
+        ]), "mb-2"
+    return "", "d-none"
 
 
 def _make_save_modal():
@@ -1321,7 +1320,6 @@ def toggle_save_modal(save_btn, confirm, cancel):
 
 @callback(
     Output("pf-portfolio-actions", "children", allow_duplicate=True),
-    Output("pf-load-select", "options", allow_duplicate=True),
     Input("pf-confirm-save", "n_clicks"),
     State("pf-save-name", "value"),
     State("pf-fund-select", "value"),
@@ -1331,7 +1329,7 @@ def toggle_save_modal(save_btn, confirm, cancel):
 )
 def confirm_save(n_clicks, name, fund_codes, weights, fon_tipi):
     if not name or not fund_codes or not current_user.is_authenticated:
-        return dash.no_update, dash.no_update
+        return dash.no_update
     save_portfolio(current_user.id, name, fund_codes, weights, fon_tipi or "YAT")
     pfs = list_portfolios(current_user.id) or []
     options = [{"label": p["name"], "value": p["id"]} for p in pfs]
