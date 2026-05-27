@@ -5,6 +5,7 @@ Konfigürasyon ayarları — teknik borcu önlemek için tüm sabitler burada.
 Değiştirmek gerektiğinde sadece bu dosya güncellenir.
 """
 
+import os
 from pathlib import Path
 
 # Proje kök dizini
@@ -60,3 +61,7 @@ RISK_PARITY_MAX_ITER = 100
 MONTE_CARLO_SIMULATIONS = 5000
 BACKTEST_WINDOW_YEARS = 1
 BACKTEST_STEP_MONTHS = 3
+
+# Auth & DB
+SECRET_KEY = os.environ.get("FAS_SECRET_KEY", "fas-dev-key-change-in-production")
+DATABASE_URL = os.environ.get("FAS_DATABASE_URL", None)
