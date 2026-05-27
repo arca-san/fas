@@ -86,6 +86,8 @@ layout = dbc.Container(
         dcc.Store(id="export-store", storage_type="session"),
         dcc.Store(id="portfoy-weight-store", storage_type="session"),
         dcc.Download(id="download-csv"),
+        # Piyasa Özeti
+        html.Div(id="piyasa-ozeti", className="mb-3"),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
                 [
@@ -1429,3 +1431,46 @@ def export_to_csv(n_clicks, export_data):
         rows.append(row)
     df = pd.DataFrame(rows)
     return dcc.send_data_frame(df.to_csv, "fas_metrikler.csv", index=False, encoding="utf-8-sig")
+
+
+# Piyasa özeti callback
+@callback(
+    Output("piyasa-ozeti", "children"),
+    Input("fon-tipi-store", "data"),
+)
+def render_piyasa_ozeti(fon_tipi):
+    """Günlük en çok yükselen 5 fonu gösterir."""
+    fon_tipi = fon_tipi or "YAT"
+    try:
+        fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi=fon_tipi)
+        if not fonlar:
+            return ""
+        sirali = sorted(
+            [(f.get("fonKodu", ""), f.get("fonUnvan", ""), float(f.get("gunlukGetiri", 0) or 0))
+             for f in fonlar if f.get("gunlukGetiri")],
+            key=lambda x: x[2], reverse=True
+        )[:5]
+        if not sirali:
+            return ""
+        rows = []
+        for kod, unvan, getiri in sirali:
+            renk = "#2ca02c" if getiri >= 0 else "#d62728"
+            rows.append(html.Tr([
+                html.Td(html.Strong(kod)),
+                html.Td(unvan, style={"fontSize": "0.85em"}),
+                html.Td(f"%{getiri:+.2f}", style={"color": renk, "fontWeight": "bold", "textAlign": "center"}),
+            ]))
+        return dbc.Card(
+            dbc.CardBody([
+                html.H5("📊 Piyasa Özeti — Günlük En Çok Yükselenler", className="card-title mb-2"),
+                dbc.Table(
+                    [html.Thead(html.Tr([html.Th("Fon"), html.Th("Ünvan"), html.Th("Günlük (%)")])),
+                     html.Tbody(rows)],
+                    striped=True, bordered=True, hover=True, size="sm", responsive=True,
+                ),
+                html.Small("Veriler TEFAS'tan çekilmiştir. 15 dk gecikmelidir.", className="text-muted d-block mt-1", style={"fontSize": "0.75em"}),
+            ]),
+            className="mb-3",
+        )
+    except Exception:
+        return ""
