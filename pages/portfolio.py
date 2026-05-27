@@ -1345,7 +1345,7 @@ def confirm_save(n_clicks, name, fund_codes, weights, fon_tipi):
 
 @callback(
     Output("pf-fund-select", "value"),
-    Output("fon-tipi-store", "data"),
+    Output("fon-tipi-store", "data", allow_duplicate=True),
     Input("pf-load-select", "value"),
     prevent_initial_call=True,
 )
