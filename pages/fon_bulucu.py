@@ -125,6 +125,13 @@ layout = dbc.Container([
                         placeholder="örn: AKP, ISP, YAK",
                         debounce=True,
                     ),
+                    html.Label("Fon Arama", className="mt-2 mb-1", style={"fontSize": "0.8rem"}),
+                    dbc.Input(
+                        id="fb-ara",
+                        type="text",
+                        placeholder="Fon adı veya kod yazın...",
+                        debounce=True,
+                    ),
                 ])
             ], className="h-100 mb-3"),
         ], xs=12, md=4),
@@ -220,21 +227,22 @@ layout = dbc.Container([
     State("theme-store", "data"),
     State("fon-tipi-store", "data"),
     State("fb-kurucu", "value"),
+    State("fb-ara", "value"),
     prevent_initial_call=True,
 )
-def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme, fon_tipi, kurucu):
+def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme, fon_tipi, kurucu, arama_metni):
     if not kategori_kod:
         return {"display": "none"}, None, go.Figure(), "Lütfen bir kategori seçin."
     fon_tipi = fon_tipi or "YAT"
-    # Kurucu filtresi
     kurucu_filtre = kurucu.strip() if kurucu else None
+    arama_metni = arama_metni.strip() if arama_metni else None
 
     period_field = PERIOD_FIELD_MAP.get(vade, "getiri1y")
     period_label = PERIOD_LABELS.get(vade, vade)
 
     # 1. Tüm fon getirilerini çek (kategori filtresiyle)
     try:
-        fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi=fon_tipi, fon_tur_kod=kategori_kod, kurucu=kurucu_filtre)
+        fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi=fon_tipi, fon_tur_kod=kategori_kod, kurucu=kurucu_filtre, arama_metni=arama_metni)
     except Exception as exc:
         logger.warning("Fon getirileri cekilemedi: %s", exc)
         return {"display": "none"}, None, go.Figure(), f"Veri alinamadi: {exc}"
@@ -411,6 +419,10 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
             cells.append(html.Td(html.Span("KATILIM", className="badge bg-success", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
         elif "serbest" in unvan_lower:
             cells.append(html.Td(html.Span("SERBEST", className="badge bg-warning text-dark", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+        elif "surdurulebilir" in unvan_lower or "sürdürülebilir" in unvan_lower or "esg" in unvan_lower:
+            cells.append(html.Td(html.Span("ESG", className="badge bg-success", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+        elif "borsa yatirim" in unvan_lower or "byf" in unvan_lower or "etf" in unvan_lower:
+            cells.append(html.Td(html.Span("BYF", className="badge bg-info", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
         else:
             cells.append(html.Td("", style={"textAlign": "center"}))
         for mk in metric_keys:

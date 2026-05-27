@@ -582,7 +582,8 @@ def fonlar_donemsel_getiri(fon_tipi: str = "YAT",
                             bas_tarih: Optional[str] = None,
                             bit_tarih: Optional[str] = None,
                             fon_tur_kod: Optional[int] = None,
-                            kurucu: Optional[str] = None) -> List[Dict[str, Any]]:
+                            kurucu: Optional[str] = None,
+                            arama_metni: Optional[str] = None) -> List[Dict[str, Any]]:
     """Tüm fonların dönemsel getiri yüzdeleri (TEK İSTEKTE).
 
     POST /api/funds/fonGetiriBazliBilgiGetir
@@ -593,6 +594,7 @@ def fonlar_donemsel_getiri(fon_tipi: str = "YAT",
     aralikli = bool(bas_tarih and bit_tarih)
     body = {
         "dil": "TR", "fonTipi": fon_tipi, "kurucuKodu": kurucu,
+        "aramaMetni": arama_metni,
         "sfonTurKod": fon_tur_kod, "fonTurAciklama": None, "islem": 1,
         "fonTurKod": None, "fonGrubu": None,
         "donemGetiri1a": "0" if aralikli else "1",
