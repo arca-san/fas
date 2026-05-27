@@ -670,12 +670,12 @@ def tum_fonlar(fon_tipi: str = "YAT") -> List[Dict[str, Any]]:
 _tum_fonlar_cache: Optional[List[Dict[str, Any]]] = None
 
 
-def get_all_fonlar() -> List[Dict[str, Any]]:
-    """Tüm fonları bir kez yükle, cache'le."""
+def get_all_fonlar(fon_tipi: str = None) -> List[Dict[str, Any]]:
+    """Tüm fonları bir kez yükle, cache'le. fon_tipi verilmezse YAT."""
     global _tum_fonlar_cache
-    if _tum_fonlar_cache is None:
-        _tum_fonlar_cache = tum_fonlar("YAT")
-    return _tum_fonlar_cache
+    if fon_tipi is None and _tum_fonlar_cache is not None:
+        return _tum_fonlar_cache
+    return tum_fonlar(fon_tipi or "YAT")
 
 
 def fon_unvan_ara_local(arama: str) -> List[Dict[str, Any]]:

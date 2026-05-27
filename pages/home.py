@@ -1306,6 +1306,7 @@ def show_favorites(fav_data):
     Input("fav-store", "data"),
     Input({"type": "portfoy-weight", "index": ALL}, "value"),
     State("portfoy-weight-store", "data"),
+    prevent_initial_call=True,
 )
 def render_selected_funds_badges(selected_funds, fav_data, weight_values, weight_store):
     if not selected_funds:
