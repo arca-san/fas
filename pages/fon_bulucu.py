@@ -370,7 +370,7 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
         METRIC_SORTINO, METRIC_ANNUALIZED_RETURN,
         METRIC_VOLATILITY, METRIC_MAX_DRAWDOWN,
     ]
-    headers = [html.Th(""), html.Th("Fon"), html.Th("Derece")]
+    headers = [html.Th(""), html.Th("Fon"), html.Th("Derece"), html.Th("Tip")]
     tooltip_components = []
     for idx, mk in enumerate(metric_keys):
         desc = METRIC_DESCRIPTIONS.get(mk, "")
@@ -405,6 +405,14 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
         cells = [html.Td(fav_btn, style={"textAlign": "center", "width": "36px"})]
         cells.append(html.Td(html.Strong(kod) if is_first else kod))
         cells.append(html.Td(f"Top %{rank_pct}", style={"textAlign": "center", "fontSize": "0.85em", "color": "#1abc9c" if is_first else "#888"}))
+        # Katılım/Serbest etiketi
+        unvan_lower = unvan.lower()
+        if "katilim" in unvan_lower or "katılım" in unvan_lower:
+            cells.append(html.Td(html.Span("KATILIM", className="badge bg-success", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+        elif "serbest" in unvan_lower:
+            cells.append(html.Td(html.Span("SERBEST", className="badge bg-warning text-dark", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+        else:
+            cells.append(html.Td("", style={"textAlign": "center"}))
         for mk in metric_keys:
             val = m.get(mk, "-")
             is_best = best_vals.get(mk) and best_vals[mk][0] == kod

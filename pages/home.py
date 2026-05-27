@@ -779,13 +779,28 @@ def run_analysis(
                 # Fon yaşı (ihraç tarihi)
                 ihrac_tarih = anlik.get("ihracTarihi") or anlik.get("kurulusTarihi") or "-"
                 cells.append(html.Td(ihrac_tarih, style={"textAlign": "center", "fontSize": "0.85em"}))
+                # Stopaj oranı
+                unvan_lower = ""
+                for f in _ALL_FUNDS:
+                    if f.get("fonKod", "").upper() == k:
+                        unvan_lower = (f.get("unvan") or "").lower()
+                        break
+                if fon_tipi == "BES":
+                    stopaj = "%0"
+                elif "serbest" in unvan_lower:
+                    stopaj = "%10"
+                elif "katilim" in unvan_lower or "katılım" in unvan_lower:
+                    stopaj = "%7.5"
+                else:
+                    stopaj = "%10"
+                cells.append(html.Td(stopaj, style={"textAlign": "center"}))
                 fon_bilgi_rows.append(html.Tr(cells))
 
             fon_bilgi_icerik = [html.H5("Fon Bilgileri", className="card-title mb-2")]
             if fon_bilgi_rows:
                 fon_bilgi_icerik.append(dbc.Table(
                     [html.Thead(html.Tr([
-                        html.Th("Fon"), html.Th("Yönetim Ücreti (%)"), html.Th("Portföy Büyüklüğü (TL)"), html.Th("Kategori"), html.Th("İhraç Tarihi")
+                        html.Th("Fon"), html.Th("Yönetim Ücreti (%)"), html.Th("Portföy Büyüklüğü (TL)"), html.Th("Kategori"), html.Th("İhraç Tarihi"), html.Th("Stopaj")
                     ])), html.Tbody(fon_bilgi_rows)],
                     striped=True, bordered=True, hover=True, size="sm", responsive=True,
                 ))
