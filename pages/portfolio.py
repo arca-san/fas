@@ -20,7 +20,13 @@ from components.metrics import (
     calculate_mix_metrics,
     get_fund_benchmarks,
 )
-from components.charts import create_price_chart
+from components.charts import create_price_chart, create_efficient_frontier_chart, create_portfolio_distribution_chart, create_monte_carlo_chart, create_backtest_chart
+from components.optimizer import (
+    compute_covariance_matrix, compute_expected_returns,
+    max_sharpe_portfolio, min_variance_portfolio, risk_parity_portfolio,
+    efficient_frontier_points, simulate_rebalancing, walk_forward_backtest,
+    monte_carlo_simulation, monte_carlo_stats, goal_based_projection,
+)
 from config.logger import get_logger
 from config.benchmarks import benchmark_koda_gore, all_benchmark_options, get_benchmark_data
 from config.constants import (
@@ -254,6 +260,49 @@ layout = dbc.Container([
                         type="default",
                         children=dcc.Graph(id="pf-chart", config={"displayModeBar": True}),
                     ),
+                ],
+            ),
+            dbc.Tab(
+                label="Optimizasyon",
+                tab_id="pf-tab-optimizasyon",
+                children=[
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Card(dbc.CardBody([
+                                html.H5("Optimizasyon Ayarları", className="card-title mb-3"),
+                                dbc.RadioItems(
+                                    id="pf-optim-method",
+                                    options=[
+                                        {"label": "Max Sharpe", "value": "sharpe"},
+                                        {"label": "Min Varyans", "value": "minvar"},
+                                        {"label": "Risk Parity (ERC)", "value": "riskparity"},
+                                    ],
+                                    value="sharpe",
+                                    className="mb-3",
+                                ),
+                                html.Label("Max Tek Fon Ağırlığı (%)", className="fw-semibold"),
+                                dbc.Input(id="pf-optim-maxw", type="number", value=40, min=1, max=100, className="mb-2"),
+                                html.Label("Min Tek Fon Ağırlığı (%)", className="fw-semibold"),
+                                dbc.Input(id="pf-optim-minw", type="number", value=1, min=0, max=50, className="mb-3"),
+                                dbc.Button("Optimize Et", id="pf-optim-btn", color="primary", className="w-100"),
+                                html.Div(id="pf-optim-status", className="mt-2 text-info"),
+                            ])),
+                        ], xs=12, md=4),
+                        dbc.Col([
+                            dcc.Loading(html.Div([
+                                html.Div(id="pf-optim-sonuc"),
+                                dcc.Graph(id="pf-ef-grafik", config={"displayModeBar": False}),
+                                dcc.Graph(id="pf-optim-pie", config={"displayModeBar": False}),
+                            ]))
+                        ], xs=12, md=8),
+                    ]),
+                    html.Hr(),
+                    html.H5("Rebalancing & Backtest", className="mt-4"),
+                    dcc.Loading(html.Div([
+                        dcc.Graph(id="pf-backtest-chart", config={"displayModeBar": False}),
+                        dcc.Graph(id="pf-mc-chart", config={"displayModeBar": False}),
+                        html.Div(id="pf-mc-stats"),
+                    ])),
                 ],
             ),
         ], active_tab="pf-tab-ozet"),
@@ -1022,6 +1071,156 @@ def update_summary_table(results_data, selected_metric):
     return _build_summary_table(results_data, selected_metric)
 
 
+# ── Optimizasyon callback ──────────────────────────────────────────────
+@callback(
+    Output("pf-ef-grafik", "figure"),
+    Output("pf-optim-pie", "figure"),
+    Output("pf-optim-sonuc", "children"),
+    Output("pf-optim-status", "children"),
+    Output("pf-backtest-chart", "figure"),
+    Output("pf-mc-chart", "figure"),
+    Output("pf-mc-stats", "children"),
+    Input("pf-optim-btn", "n_clicks"),
+    State("pf-fund-select", "value"),
+    State("pf-optim-method", "value"),
+    State("pf-optim-maxw", "value"),
+    State("pf-optim-minw", "value"),
+    State("theme-store", "data"),
+    prevent_initial_call=True,
+)
+def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme):
+    if not fon_kodlari or len(fon_kodlari) < 2:
+        return (go.Figure(), go.Figure(), "", "En az 2 fon seçmelisiniz.",
+                go.Figure(), go.Figure(), "")
+    fon_kodlari = [k.upper() for k in fon_kodlari]
+    max_w = max_w_pct / 100.0 if max_w_pct else 0.4
+    min_w = min_w_pct / 100.0 if min_w_pct is not None else 0.01
+
+    try:
+        from datetime import date, timedelta
+        end = date.today()
+        start = end - timedelta(days=365 * 2)
+        fetcher = TefasFetcher()
+        fund_dict = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(fetcher.get_historical_data, f, start, end): f for f in fon_kodlari}
+            for future in as_completed(futures):
+                f = futures[future]
+                try:
+                    df = future.result()
+                    if not df.empty and len(df) >= 20:
+                        fund_dict[f] = df
+                except Exception:
+                    pass
+        if len(fund_dict) < 2:
+            return (go.Figure(), go.Figure(), "", "Yeterli veri bulunamadı.",
+                    go.Figure(), go.Figure(), "")
+
+        # Kovaryans ve getiri
+        cov, kodlar = compute_covariance_matrix(fund_dict)
+        rets, _ = compute_expected_returns(fund_dict)
+        if len(cov) < 2 or np.isnan(cov).any():
+            return (go.Figure(), go.Figure(), "", "Kovaryans matrisi hesaplanamadı.",
+                    go.Figure(), go.Figure(), "")
+        # Kovaryans düzeltme (pozitif tanımlı değilse)
+        try:
+            np.linalg.cholesky(cov)
+        except np.linalg.LinAlgError:
+            cov = cov + np.eye(len(cov)) * 1e-6
+
+        # TLREF
+        rf_annual = 0.45
+        try:
+            tlref_scraper = TLREFScraper()
+            tlref_all = tlref_scraper.from_zip() if True else tlref_scraper.from_csv()
+            fon_tarihler = pd.to_datetime(fund_dict[kodlar[0]]["tarih"])
+            min_t, max_t = fon_tarihler.min(), fon_tarihler.max()
+            tlref_filtre = tlref_all[(tlref_all["date"] >= min_t) & (tlref_all["date"] <= max_t)]
+            if not tlref_filtre.empty:
+                rf_annual = tlref_filtre["value"].mean() / 100.0
+        except Exception:
+            pass
+
+        # Optimize et
+        if method == "sharpe":
+            weights = max_sharpe_portfolio(rets, cov, rf_annual, min_w, max_w)
+            method_label = "Max Sharpe"
+        elif method == "minvar":
+            weights = min_variance_portfolio(cov, min_w, max_w)
+            method_label = "Min Varyans"
+        else:
+            weights = risk_parity_portfolio(cov, max_iter=100, tol=1e-8, min_w=min_w, max_w=max_w)
+            method_label = "Risk Parity (ERC)"
+
+        w_dict = {k: round(float(weights[i]), 4) for i, k in enumerate(kodlar) if weights[i] > 0.001}
+        n_selected = len(w_dict)
+        port_ret = sum(weights[i] * rets[i] for i in range(len(kodlar)))
+        port_vol = np.sqrt(np.dot(weights.T, np.dot(cov, weights)))
+        sharpe = (port_ret - rf_annual) / port_vol if port_vol > 0 else 0
+
+        # Efficient frontier
+        frontier = efficient_frontier_points(rets, cov, rf_annual, n_points=50, min_w=min_w, max_w=max_w)
+
+        # Fon metrikleri (scatter için)
+        fund_metrics = {}
+        for i, k in enumerate(kodlar):
+            fund_metrics[k] = {
+                "Volatilite (Yıllık)": round(np.sqrt(cov[i, i]) * 100, 2),
+                "Yıllıklandırılmış Getiri": round(rets[i] * 100, 2),
+            }
+
+        # EF chart
+        ef_fig = create_efficient_frontier_chart(
+            frontier, fund_metrics, w_dict,
+            optimal_label=f"Optimal ({method_label})",
+            rf_rate=rf_annual, theme=theme,
+        )
+
+        # Optimal weights pie
+        pie_fig = create_portfolio_distribution_chart(
+            w_dict, title=f"Optimal Ağırlıklar ({method_label})", theme=theme,
+        )
+
+        # Özet kartı
+        sonuc = dbc.Card(dbc.CardBody([
+            html.H5(f"Optimal Portföy — {method_label}", className="card-title"),
+            dbc.Table([
+                html.Tbody([
+                    html.Tr([html.Td("Beklenen Getiri"), html.Td(f"%{port_ret*100:.2f}", className="fw-bold")]),
+                    html.Tr([html.Td("Portföy Volatilitesi"), html.Td(f"%{port_vol*100:.2f}")]),
+                    html.Tr([html.Td("Sharpe Oranı"), html.Td(f"{sharpe:.3f}")]),
+                    html.Tr([html.Td("Seçilen Fon"), html.Td(f"{n_selected}/{len(kodlar)}")]),
+                ])
+            ], size="sm", bordered=False, className="mb-0"),
+        ]), className="mb-3")
+
+        status = f"Optimizasyon tamamlandı: {method_label}, {n_selected} fon"
+
+        # Backtest
+        backtest_df = walk_forward_backtest(
+            fund_dict, rets, cov, window_years=1, step_months=3,
+            method=method, rf_rate=rf_annual, min_w=min_w, max_w=max_w,
+        )
+        bt_fig = create_backtest_chart(backtest_df, theme=theme)
+
+        # Monte Carlo
+        paths, terminal = monte_carlo_simulation(rets, cov, weights, initial=100000, horizon_days=252, n_sim=500)
+        mc_fig = create_monte_carlo_chart(paths, initial=100000, theme=theme)
+        mc_stats_data = monte_carlo_stats(terminal, confidence=0.95, initial=100000)
+        mc_rows = [html.Tr([html.Td(k), html.Td(str(v))]) for k, v in mc_stats_data.items()]
+        mc_stats_div = dbc.Card(dbc.CardBody([
+            html.H6("Monte Carlo İstatistikleri (1 Yıl)", className="card-title"),
+            dbc.Table(html.Tbody(mc_rows), size="sm", bordered=False, className="mb-0"),
+        ]), className="mt-2")
+
+        return ef_fig, pie_fig, sonuc, status, bt_fig, mc_fig, mc_stats_div
+
+    except Exception as exc:
+        logger.warning("Optimizasyon hatasi: %s", exc)
+        return (go.Figure(), go.Figure(), "", f"Hata: {exc}",
+                go.Figure(), go.Figure(), "")
+
+
 dash.clientside_callback(
     ClientsideFunction(
         namespace='clientside',
@@ -1030,5 +1229,23 @@ dash.clientside_callback(
     Output("pf-chart", "figure", allow_duplicate=True),
     Input("theme-store", "data"),
     State("pf-chart", "figure"),
+    prevent_initial_call=True,
+)
+
+# Optimizasyon chart'ları için clientside theme güncelleme
+dash.clientside_callback(
+    ClientsideFunction(
+        namespace='clientside',
+        function_name='update_optimization_charts'
+    ),
+    Output("pf-ef-grafik", "figure", allow_duplicate=True),
+    Output("pf-optim-pie", "figure", allow_duplicate=True),
+    Output("pf-backtest-chart", "figure", allow_duplicate=True),
+    Output("pf-mc-chart", "figure", allow_duplicate=True),
+    Input("theme-store", "data"),
+    State("pf-ef-grafik", "figure"),
+    State("pf-optim-pie", "figure"),
+    State("pf-backtest-chart", "figure"),
+    State("pf-mc-chart", "figure"),
     prevent_initial_call=True,
 )

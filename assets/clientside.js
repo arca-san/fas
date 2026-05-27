@@ -154,6 +154,15 @@
             var t = getTheme(theme);
             var newBar = barFig ? JSON.parse(JSON.stringify(barFig)) : barFig;
             return updateBarChart(newBar, t);
+        },
+        update_optimization_charts: function(theme, efFig, pieFig, backtestFig, mcFig) {
+            if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update];
+            var t = getTheme(theme);
+            var newEf = efFig ? JSON.parse(JSON.stringify(efFig)) : efFig;
+            var newPie = pieFig ? JSON.parse(JSON.stringify(pieFig)) : pieFig;
+            var newBt = backtestFig ? JSON.parse(JSON.stringify(backtestFig)) : backtestFig;
+            var newMc = mcFig ? JSON.parse(JSON.stringify(mcFig)) : mcFig;
+            return [updateLineChart(newEf, t), updateLineChart(newPie, t), updateLineChart(newBt, t), updateLineChart(newMc, t)];
         }
     };
 
