@@ -15,6 +15,8 @@ venv/
 # Uygulama
 logs/
 data/cache/*.parquet
+# Veritabanları (lokalde oluşur)
+*.db
 
 
 
