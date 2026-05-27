@@ -403,7 +403,7 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
             best_vals[mk] = max(vals, key=lambda x: x[1]) if higher_better else min(vals, key=lambda x: x[1])
 
     rows = []
-    total_fon = len(fon_list)  # tüm fon sayısı (percentile için)
+    total_fon = len(top_fonlar)  # tüm fon sayısı (percentile için)
     for i, (kod, unvan, getiri) in enumerate(top_fonlar):
         m = metrics.get(kod, {})
         is_first = i == 0
