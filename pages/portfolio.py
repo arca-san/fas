@@ -1502,6 +1502,37 @@ def run_attribution(fon_kodlari, theme, fon_tipi):
         except Exception:
             pass
 
+        # ADF + Cointegration
+        adf_coint_html = ""
+        try:
+            from components.attribution import adf_test, cointegration_test
+            if not fhise_ret.empty:
+                adf = adf_test(fund_ret)
+                if adf:
+                    stat_str = "Durağan" if adf["stationary"] else "Durağan Değil"
+                    adf_coint_html += dbc.Card(dbc.CardBody([
+                        html.H6(f"ADF Birim Kök Testi — {first_kod}", className="card-title"),
+                        html.Small(f"ADF: {adf['stat']} | p-value: {adf['pvalue']} | "
+                                   f"Sonuç: {stat_str} (kritik %5: {adf['critical_5pct']})",
+                                   className="text-muted"),
+                    ]), className="mb-2")
+            # Cointegration: ilk 2 fon arasında
+            if len(fund_dict) >= 2:
+                kodlar_c = list(fund_dict.keys())
+                ret_a = fund_dict[kodlar_c[0]].set_index("tarih")["fiyat"].pct_change().dropna()
+                ret_b = fund_dict[kodlar_c[1]].set_index("tarih")["fiyat"].pct_change().dropna()
+                coint = cointegration_test(ret_a, ret_b)
+                if coint:
+                    coint_str = "Eşbütünleşik" if coint["cointegrated"] else "Eşbütünleşik Değil"
+                    adf_coint_html += dbc.Card(dbc.CardBody([
+                        html.H6(f"Eşbütünleşme Testi — {kodlar_c[0]} & {kodlar_c[1]}", className="card-title"),
+                        html.Small(f"EG-tau: {coint['stat']} | p-value: {coint['pvalue']} | "
+                                   f"Sonuç: {coint_str} | Hedge: {coint['hedge_ratio']}",
+                                   className="text-muted"),
+                    ]), className="mb-2")
+        except Exception:
+            pass
+
         # Stres Testi
         fund_metrics_simple = {}
         for kod, df in fund_dict.items():
@@ -1528,7 +1559,7 @@ def run_attribution(fon_kodlari, theme, fon_tipi):
                           striped=True, bordered=True, hover=True, size="sm", responsive=True),
             ]), className="mt-2")
 
-        return te_html, ff_fig, drift_fig, brinson_fig, stress_fig, stress_table
+        return te_html + adf_coint_html, ff_fig, drift_fig, brinson_fig, stress_fig, stress_table
 
     except Exception as exc:
         logger.warning("Atıf hatasi: %s", exc)
