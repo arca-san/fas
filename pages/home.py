@@ -833,6 +833,9 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
         METRIC_SKEWNESS,
         METRIC_AVG_DRAWDOWN,
         METRIC_ULCER,
+        METRIC_OMEGA,
+        METRIC_ACTIVE_SHARE,
+        METRIC_M2,
     )
 
     # Fon unvanlarini bul
@@ -996,6 +999,9 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
         METRIC_DOWN_CAPTURE,
         METRIC_BATTING_AVG,
         METRIC_SKEWNESS,
+        METRIC_OMEGA,
+        METRIC_M2,
+        METRIC_ACTIVE_SHARE,
     ]
 
     # Tablo basliklari

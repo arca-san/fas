@@ -35,6 +35,9 @@ from config.constants import (
     METRIC_DD_DURATION,
     METRIC_RECOVERY_TIME,
     METRIC_ULCER,
+    METRIC_OMEGA,
+    METRIC_ACTIVE_SHARE,
+    METRIC_M2,
 )
 from config.settings import VAR_CONFIDENCE
 from scipy import stats as sp_stats
@@ -172,6 +175,33 @@ def _drawdown_analysis(prices: pd.Series) -> dict:
     return {"avg_dd": round(avg_dd, 2), "dd_duration": int(avg_duration), "recovery": int(recovery), "ulcer": round(ulcer, 2)}
 
 
+def _omega_ratio(daily_returns: pd.Series, threshold: float = 0.0) -> float:
+    """Omega Oranı = E[max(R-threshold, 0)] / E[max(threshold-R, 0)]."""
+    if len(daily_returns) < 2:
+        return 0.0
+    gains = daily_returns[daily_returns > threshold].mean() if (daily_returns > threshold).any() else 0.0
+    losses = abs(daily_returns[daily_returns < threshold].mean()) if (daily_returns < threshold).any() else 0.0
+    return round(gains / losses, 3) if losses > 0 else 0.0
+
+
+def _m2_measure(ann_ret: float, vol: float, market_vol: float, rf_annual: float) -> float:
+    """M² = Rf + (Sharpe * Market_Vol). Riske göre düzeltilmiş getiri."""
+    sharpe = (ann_ret - rf_annual) / vol if vol > 0 else 0.0
+    return round((rf_annual + sharpe * market_vol) * 100, 2)
+
+
+def _active_share_approx(fund_returns: pd.Series, market_returns: pd.Series) -> float:
+    """Active Share yaklaşımı: Tracking Error / (Volatility_fund + Volatility_market)."""
+    common = fund_returns.index.intersection(market_returns.index)
+    if len(common) < 5:
+        return 0.0
+    fr = fund_returns.loc[common]
+    mr = market_returns.loc[common]
+    te = (fr - mr).std(ddof=1) * np.sqrt(TRADING_DAYS)
+    total_vol = fr.std(ddof=1) * np.sqrt(TRADING_DAYS) + mr.std(ddof=1) * np.sqrt(TRADING_DAYS)
+    return round(min(te / total_vol * 100, 100), 1) if total_vol > 0 else 0.0
+
+
 def calculate_fund_metrics(
     fund_dict: dict,
     rf_daily_returns: pd.Series,
@@ -237,6 +267,7 @@ def calculate_fund_metrics(
             treynor = 0.0
             jensen = 0.0
             info_ratio = 0.0
+            market_common = pd.Series(dtype=float)
         else:
             fund_common = daily_returns_dates.loc[common_dates]
             market_common = market_aligned.loc[common_dates]
@@ -292,6 +323,10 @@ def calculate_fund_metrics(
         batting = _batting_average(daily_returns_dates, market_returns)
         skew = round(float(sp_stats.skew(daily_returns_dates)), 3)
         kurt = round(float(sp_stats.kurtosis(daily_returns_dates)), 3)
+        omega = _omega_ratio(daily_returns_dates)
+        market_vol = _annualized_vol(market_common) if len(common_dates) >= 2 else 0.0
+        m2 = _m2_measure(ann_ret, vol, market_vol, rf_annual)
+        active_share = _active_share_approx(daily_returns_dates, market_returns)
 
         results[kod] = {
             METRIC_TOTAL_RETURN: round(total_return, 2),
@@ -319,6 +354,9 @@ def calculate_fund_metrics(
             METRIC_DD_DURATION: dd_info["dd_duration"],
             METRIC_RECOVERY_TIME: dd_info["recovery"],
             METRIC_ULCER: dd_info["ulcer"],
+            METRIC_OMEGA: omega,
+            METRIC_ACTIVE_SHARE: active_share,
+            METRIC_M2: m2,
         }
 
     return results

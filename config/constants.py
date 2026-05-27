@@ -40,6 +40,9 @@ METRIC_AVG_DRAWDOWN = "Ortalama Düşüş (%)"
 METRIC_DD_DURATION = "DD Süresi (Gün)"
 METRIC_RECOVERY_TIME = "Toparlanma Süresi (Gün)"
 METRIC_ULCER = "Ulcer Index (%)"
+METRIC_OMEGA = "Omega Oranı"
+METRIC_ACTIVE_SHARE = "Active Share (%)"
+METRIC_M2 = "M² Ölçüsü (%)"
 
 # Metrik açıklamaları (raporlarda kullanılır)
 METRIC_DESCRIPTIONS = {
@@ -68,6 +71,9 @@ METRIC_DESCRIPTIONS = {
     METRIC_DD_DURATION: "Ortalama düşüş süresi (iş günü).",
     METRIC_RECOVERY_TIME: "Düşüşten toparlanma için geçen ortalama süre (iş günü).",
     METRIC_ULCER: "Düşüşlerin kareleri toplamının karekökü. Drawdown şiddeti ölçüsü.",
+    METRIC_OMEGA: "Getiri dağılımının tamamını kullanan risk-ödül oranı. >1 iyi.",
+    METRIC_ACTIVE_SHARE: "Fon portföyünün benchmark'tan ne kadar farklılaştığı (basit yaklaşım).",
+    METRIC_M2: "Riske göre düzeltilmiş getiri. Fon volatilitesini benchmark seviyesine ölçekler.",
 }
 
 # Rapor şablonu ayarları
