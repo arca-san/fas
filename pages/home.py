@@ -136,6 +136,7 @@ layout = dbc.Container(
                 ],
                 className="mb-3",
             ),
+            html.Div(id="fon-bilgi-karti"),
         ]),
         dbc.Row(
             dbc.Col(
@@ -275,6 +276,7 @@ def uppercase_search(val):
     Output("fiyat-grafigi", "figure"),
     Output("risk-getiri-scatter", "figure"),
     Output("portfoy-dagilimi", "figure"),
+    Output("fon-bilgi-karti", "children"),
     Output("grafik-alani", "style"),
     Output("analiz-status", "children"),
     Output("tefas-uyari", "style"),
@@ -302,7 +304,7 @@ def run_analysis(
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
-        return go.Figure(), go.Figure(), go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), []
+        return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), []
 
     try:
         from datetime import datetime
@@ -335,7 +337,7 @@ def run_analysis(
                     hata_list.append(f"{fon_kodu}: {exc}")
 
         if not fund_dict:
-            return go.Figure(), go.Figure(), go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), []
+            return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), []
 
         status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
@@ -634,10 +636,56 @@ def run_analysis(
             theme=theme,
         )
 
-        return fig, scatter_fig, portfoy_fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
+        # Yönetim ücreti ve büyüklük bilgileri
+        fon_bilgi_rows = []
+        fon_kodlari_list = list(fund_dict.keys())
+        try:
+            ucret_list = _tefas_api.fonlar_yonetim_ucretleri()
+            buyukluk_list = _tefas_api.fonlar_buyukluk()
+            ucret_map = {r.get("fonKodu", ""): r for r in ucret_list}
+            buyukluk_map = {r.get("fonKodu", ""): r for r in buyukluk_list}
+
+            for k in fon_kodlari_list:
+                cells = [html.Td(html.Strong(k))]
+                u = ucret_map.get(k, {})
+                fee = u.get("yonetimUcreti") or u.get("toplamGiderOrani") or "-"
+                cells.append(html.Td(f"{fee}", style={"textAlign": "center"}))
+                b = buyukluk_map.get(k, {})
+                size = b.get("portfoyBuyukluk") or b.get("portfoyDeger") or "-"
+                cells.append(html.Td(f"{size}", style={"textAlign": "center"}))
+                # Kategori
+                info = fund_kategoriler.get(k, "")
+                if not info:
+                    try:
+                        anlik = _tefas_api.fon_anlik_bilgi(k)
+                        if anlik:
+                            info = anlik.get("fonKategori", "")
+                    except Exception:
+                        pass
+                cells.append(html.Td(info or "-", style={"textAlign": "center"}))
+                fon_bilgi_rows.append(html.Tr(cells))
+
+            fon_bilgi_kart = dbc.Card(
+                dbc.CardBody([
+                    html.H5("Fon Bilgileri", className="card-title mb-2"),
+                    dbc.Table(
+                        [html.Thead(html.Tr([
+                            html.Th("Fon"), html.Th("Yönetim Ücreti (%)"), html.Th("Portföy Büyüklüğü (TL)"), html.Th("Kategori")
+                        ])), html.Tbody(fon_bilgi_rows)],
+                        striped=True, bordered=True, hover=True, size="sm", responsive=True,
+                    ),
+                    html.Small("Veriler TEFAS'tan anlık olarak çekilir.", className="text-muted d-block mt-1", style={"fontSize": "0.8em"}),
+                ]),
+                className="mb-3",
+            ) if fon_bilgi_rows else ""
+        except Exception as exc:
+            logger.debug("Fon bilgileri alınamadı: %s", exc)
+            fon_bilgi_kart = ""
+
+        return fig, scatter_fig, portfoy_fig, fon_bilgi_kart, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
     except Exception as exc:
         logger.exception("Analiz hatasi")
-        return go.Figure(), go.Figure(), go.Figure(), {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), []
+        return go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), []
 
 
 def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None, fon_benchmark_correlations: dict = None):
