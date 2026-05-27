@@ -378,9 +378,8 @@ def create_correlation_heatmap(
         texttemplate="%{text:.2f}",
         textfont={"size": 11, "color": "#ffffff" if is_dark else "#212529"},
         hovertemplate="%{x} vs %{y}<br>Korelasyon: %{z:.3f}<extra></extra>",
-        colorbar=dict(title=dict(text="r", side="right"),
-                       tickfont=dict(color="#ffffff" if is_dark else "#212529"),
-                       titlefont=dict(color="#ffffff" if is_dark else "#212529")),
+        colorbar=dict(title=dict(text="r", side="right", font=dict(color="#ffffff" if is_dark else "#212529")),
+                       tickfont=dict(color="#ffffff" if is_dark else "#212529")),
     ))
     fig.update_layout(
         title=title,
