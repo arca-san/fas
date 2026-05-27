@@ -728,6 +728,43 @@ def create_stress_test_chart(
     return fig
 
 
+def create_volume_chart(
+    volume_data: list,
+    fon_kodlari: list,
+    theme: str = "light",
+) -> go.Figure:
+    """Fon bazlı işlem hacmi bar chart."""
+    if not volume_data:
+        return go.Figure()
+    is_dark = theme == "dark"
+    kod_hacim = {}
+    for r in volume_data:
+        kod = r.get("fonKodu", "")
+        try:
+            hacim = float(r.get("islemHacmi", 0) or 0)
+            kod_hacim[kod] = hacim
+        except (ValueError, TypeError):
+            pass
+    kodlar = [k for k in fon_kodlari if k in kod_hacim]
+    hacimler = [kod_hacim[k] for k in kodlar]
+    if not kodlar:
+        return go.Figure()
+    renkler = ["#2ca02c" if i == 0 else "#1f77b4" for i in range(len(kodlar))]
+    fig = go.Figure(data=[go.Bar(
+        x=kodlar, y=hacimler, marker_color=renkler,
+        text=[f"{h:,.0f} TL" for h in hacimler],
+        textposition="outside",
+        textfont=dict(color="#ffffff" if is_dark else "#212529"),
+    )])
+    fig.update_layout(
+        title="İşlem Hacmi (Fon Bazlı)",
+        xaxis_title="Fon", yaxis_title="Hacim (TL)",
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=40, r=40, t=60, b=40),
+    )
+    return fig
+
+
 def create_brinson_chart(
     attribution_result: dict,
     theme: str = "light",

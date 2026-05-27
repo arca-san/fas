@@ -766,6 +766,16 @@ def run_analysis(
             pass
         if usdtry_change is not None:
             status_parts.append(f"USD/TRY %{usdtry_change:+.2f}")
+
+        # İşlem hacmi
+        hacim_data = []
+        try:
+            hacim_list = _tefas_api.fon_bazli_islem_hacmi()
+            if hacim_list:
+                hacim_data = hacim_list
+                status_parts.append("hacim alındı")
+        except Exception:
+            pass
         try:
             ucret_list = _tefas_api.fonlar_yonetim_ucretleri(fon_tipi=fon_tipi)
             buyukluk_list = _tefas_api.fonlar_buyukluk(fon_tipi=fon_tipi)
@@ -831,7 +841,14 @@ def run_analysis(
                     color="warning", className="mt-2 py-1", style={"fontSize": "0.85em"}
                 ))
             fon_bilgi_icerik.append(html.Small("Veriler TEFAS'tan anlık olarak çekilir.", className="text-muted d-block mt-1", style={"fontSize": "0.8em"}))
-            fon_bilgi_kart = dbc.Card(dbc.CardBody(fon_bilgi_icerik), className="mb-3") if (fon_bilgi_rows or usdtry_rate) else ""
+            if hacim_data:
+                from components.charts import create_volume_chart
+                try:
+                    hacim_fig = create_volume_chart(hacim_data, fon_kodlari_list, theme=theme)
+                    fon_bilgi_icerik.append(dcc.Graph(figure=hacim_fig, config={"displayModeBar": False}))
+                except Exception:
+                    pass
+            fon_bilgi_kart = dbc.Card(dbc.CardBody(fon_bilgi_icerik), className="mb-3") if (fon_bilgi_rows or usdtry_rate or enflasyon_info or hacim_data) else ""
         except Exception as exc:
             logger.debug("Fon bilgileri alınamadı: %s", exc)
             fon_bilgi_kart = ""
