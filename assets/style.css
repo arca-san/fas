@@ -1044,6 +1044,315 @@ button.dash-dropdown-clear:active {
 }
 
 /* ==========================================================================
+   Dark Mode Catch-All — force all text white, all backgrounds dark
+   ========================================================================== */
+
+/* ── Headings & inline text ───────────────────────────────────────── */
+[data-bs-theme="dark"] h1,
+[data-bs-theme="dark"] h2,
+[data-bs-theme="dark"] h3,
+[data-bs-theme="dark"] h4,
+[data-bs-theme="dark"] h5,
+[data-bs-theme="dark"] h6,
+[data-bs-theme="dark"] .h1,
+[data-bs-theme="dark"] .h2,
+[data-bs-theme="dark"] .h3,
+[data-bs-theme="dark"] .h4,
+[data-bs-theme="dark"] .h5,
+[data-bs-theme="dark"] .h6,
+[data-bs-theme="dark"] p,
+[data-bs-theme="dark"] span:not(.badge),
+[data-bs-theme="dark"] label,
+[data-bs-theme="dark"] caption,
+[data-bs-theme="dark"] small,
+[data-bs-theme="dark"] strong,
+[data-bs-theme="dark"] em,
+[data-bs-theme="dark"] b,
+[data-bs-theme="dark"] i,
+[data-bs-theme="dark"] dt,
+[data-bs-theme="dark"] dd,
+[data-bs-theme="dark"] figcaption,
+[data-bs-theme="dark"] code,
+[data-bs-theme="dark"] pre {
+  color: var(--text-primary) !important;
+}
+
+/* ── Bootstrap text utility classes ───────────────────────────────── */
+[data-bs-theme="dark"] .text-body,
+[data-bs-theme="dark"] .text-dark,
+[data-bs-theme="dark"] .text-black,
+[data-bs-theme="dark"] .text-body-emphasis {
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .text-secondary,
+[data-bs-theme="dark"] .text-body-secondary {
+  color: var(--text-secondary) !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* ── Card internals ───────────────────────────────────────────────── */
+[data-bs-theme="dark"] .card-title,
+[data-bs-theme="dark"] .card-text,
+[data-bs-theme="dark"] .card-subtitle,
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-body,
+[data-bs-theme="dark"] .card-footer,
+[data-bs-theme="dark"] .card-header-tabs .nav-link,
+[data-bs-theme="dark"] .card-header-pills .nav-link {
+  color: var(--text-primary) !important;
+}
+
+/* ── Modal internals ──────────────────────────────────────────────── */
+[data-bs-theme="dark"] .modal-title {
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .modal-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* ── Form internals ───────────────────────────────────────────────── */
+[data-bs-theme="dark"] .form-label,
+[data-bs-theme="dark"] .form-text,
+[data-bs-theme="dark"] .col-form-label,
+[data-bs-theme="dark"] .input-group-text,
+[data-bs-theme="dark"] .form-check-label {
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .input-group-text {
+  background-color: var(--bg-hover) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ── Table internals ──────────────────────────────────────────────── */
+[data-bs-theme="dark"] th,
+[data-bs-theme="dark"] td,
+[data-bs-theme="dark"] .table th,
+[data-bs-theme="dark"] .table td,
+[data-bs-theme="dark"] thead th,
+[data-bs-theme="dark"] .thead-light th,
+[data-bs-theme="dark"] .thead-dark th {
+  color: var(--text-primary) !important;
+}
+
+/* ── Alert internals ──────────────────────────────────────────────── */
+[data-bs-theme="dark"] .alert-heading {
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .alert-primary {
+  background-color: rgba(182, 102, 210, 0.15) !important;
+  border-color: rgba(182, 102, 210, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .alert-success {
+  background-color: rgba(25, 135, 84, 0.15) !important;
+  border-color: rgba(25, 135, 84, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .alert-info {
+  background-color: rgba(13, 202, 240, 0.15) !important;
+  border-color: rgba(13, 202, 240, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .alert-warning {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+  border-color: rgba(255, 193, 7, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .alert-danger {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+  border-color: rgba(220, 53, 69, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Badge (non-primary) ──────────────────────────────────────────── */
+[data-bs-theme="dark"] .badge:not(.bg-primary):not(.bg-success):not(.bg-danger):not(.bg-warning):not(.bg-info) {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── List group ───────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .list-group-item-action:hover,
+[data-bs-theme="dark"] .list-group-item-action:focus {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ── Nav tabs ─────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .nav-tabs .nav-link {
+  color: var(--text-secondary) !important;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) var(--border-color) var(--bg-card) !important;
+}
+
+[data-bs-theme="dark"] .nav-tabs {
+  border-color: var(--border-color) !important;
+}
+
+/* ── Popover ──────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .popover {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .popover-body {
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .popover-header {
+  background-color: var(--bg-hover) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Tooltip ──────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .tooltip-inner {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .toast {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .toast-header {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-secondary) !important;
+}
+
+[data-bs-theme="dark"] .toast-body {
+  color: var(--text-primary) !important;
+}
+
+/* ── Breadcrumb ───────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .breadcrumb {
+  background-color: var(--bg-card) !important;
+}
+
+[data-bs-theme="dark"] .breadcrumb-item.active {
+  color: var(--text-secondary) !important;
+}
+
+/* ── Pagination ───────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .page-link {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .page-link:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+[data-bs-theme="dark"] .page-item.active .page-link {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+[data-bs-theme="dark"] .page-item.disabled .page-link {
+  background-color: var(--bg-card) !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Accordion ────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .accordion-button {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .accordion-button:not(.collapsed) {
+  background-color: var(--bg-hover) !important;
+  color: var(--color-primary) !important;
+}
+
+[data-bs-theme="dark"] .accordion-button::after {
+  filter: invert(1);
+}
+
+[data-bs-theme="dark"] .accordion-item {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .accordion-body {
+  color: var(--text-primary) !important;
+}
+
+/* ── Progress ─────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .progress {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ── Close button ─────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* ── Blockquote / Figure ──────────────────────────────────────────── */
+[data-bs-theme="dark"] .blockquote-footer {
+  color: var(--text-muted) !important;
+}
+
+/* ── Mark / Highlight ─────────────────────────────────────────────── */
+[data-bs-theme="dark"] mark {
+  background-color: rgba(182, 102, 210, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Spinner ──────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .spinner-border,
+[data-bs-theme="dark"] .spinner-grow {
+  --bs-spinner-border-color: var(--text-secondary);
+}
+
+/* ── Offcanvas ────────────────────────────────────────────────────── */
+[data-bs-theme="dark"] .offcanvas {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Inline style override: any white bg → dark ───────────────────── */
+[data-bs-theme="dark"] [style*="background-color:#fff"],
+[data-bs-theme="dark"] [style*="background-color: #fff"],
+[data-bs-theme="dark"] [style*="background: #fff"],
+[data-bs-theme="dark"] [style*="background:#fff"],
+[data-bs-theme="dark"] [style*="background-color: rgb(255, 255, 255)"],
+[data-bs-theme="dark"] [style*="background-color:rgb(255,255,255)"],
+[data-bs-theme="dark"] [style*="background-color: white"],
+[data-bs-theme="dark"] [style*="background: white"] {
+  background-color: var(--bg-card) !important;
+}
+
+/* ── Inline style override: any black/dark text → white ───────────── */
+[data-bs-theme="dark"] [style*="color:#000"],
+[data-bs-theme="dark"] [style*="color: #000"],
+[data-bs-theme="dark"] [style*="color:#000000"],
+[data-bs-theme="dark"] [style*="color: #000000"],
+[data-bs-theme="dark"] [style*="color: black"],
+[data-bs-theme="dark"] [style*="color:black"],
+[data-bs-theme="dark"] [style*="color: rgb(0, 0, 0)"],
+[data-bs-theme="dark"] [style*="color:rgb(0,0,0)"],
+[data-bs-theme="dark"] [style*="color:#212529"],
+[data-bs-theme="dark"] [style*="color: #212529"] {
+  color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
    Dash DevTools Isolation — prevent dark mode from breaking debug toolbar
    ========================================================================== */
 #_dash-devtools,
