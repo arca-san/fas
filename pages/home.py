@@ -27,19 +27,22 @@ dash.register_page(__name__, path="/")
 
 # Tüm fonları bir kez yükle (startup'da)
 try:
-    _ALL_FUNDS = _tefas_api.get_all_fonlar()
-    logger.info("Tum fonlar yuklendi: %s adet", len(_ALL_FUNDS))
-    if _ALL_FUNDS:
-        logger.info("Ornek veri: %s", _ALL_FUNDS[0])
+    _ALL_FUNDS_YAT = _tefas_api.get_all_fonlar("YAT")
+    _ALL_FUNDS_BES = _tefas_api.get_all_fonlar("BES")
+    for f in _ALL_FUNDS_YAT:
+        f["_tip"] = "YAT"
+    for f in _ALL_FUNDS_BES:
+        f["_tip"] = "BES"
+    _ALL_FUNDS_ALL = _ALL_FUNDS_YAT + _ALL_FUNDS_BES
+    logger.info("Tum fonlar yuklendi: YAT=%s, BES=%s", len(_ALL_FUNDS_YAT), len(_ALL_FUNDS_BES))
     # Tekrarlari temizle
     seen = set()
-    _ALL_FUNDS_UNIQUE = []
-    for f in _ALL_FUNDS:
+    _ALL_FUNDS = []
+    for f in _ALL_FUNDS_ALL:
         kod = f.get("fonKod")
         if kod and kod not in seen:
             seen.add(kod)
-            _ALL_FUNDS_UNIQUE.append(f)
-    _ALL_FUNDS = _ALL_FUNDS_UNIQUE
+            _ALL_FUNDS.append(f)
     logger.info("Tekrarsiz fon sayisi: %s", len(_ALL_FUNDS))
 except Exception as exc:
     logger.warning("Fon listesi yuklenemedi: %s", exc)
@@ -260,6 +263,19 @@ layout = dbc.Container(
     fluid=True,
 )
 
+# Fon tipi değişince dropdown seçeneklerini filtrele
+@callback(
+    Output("fon-select", "data"),
+    Input("fon-tipi-store", "data"),
+)
+def filter_fon_select_by_tip(fon_tipi):
+    fon_tipi = fon_tipi or "YAT"
+    filtered = [f for f in _ALL_FUNDS if f.get("_tip") == fon_tipi]
+    return [
+        {"value": f.get("fonKod", ""), "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}"}
+        for f in filtered if f.get("fonKod")
+    ]
+
 # Kullanıcı yazdıkça otomatik uppercase yap
 @callback(
     Output("fon-select", "searchValue"),
@@ -289,6 +305,7 @@ def uppercase_search(val):
     State("tarih-araligi", "end_date"),
     State("mix-benchmark-store", "data"),
     State("theme-store", "data"),
+    State("fon-tipi-store", "data"),
     prevent_initial_call=True,
 )
 def run_analysis(
@@ -299,7 +316,9 @@ def run_analysis(
     end_date,
     mix_data,
     theme,
+    fon_tipi,
 ):
+    fon_tipi = fon_tipi or "YAT"
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
@@ -624,7 +643,7 @@ def run_analysis(
         portfoy_dagilim = {}
         try:
             first_fon = list(fund_dict.keys())[0]
-            dist = fetcher.get_portfolio_distribution(first_fon)
+            dist = fetcher.get_portfolio_distribution(first_fon, fon_tipi=fon_tipi)
             if dist:
                 portfoy_dagilim = dist
                 status_parts.append("portföy dağılımı alındı")
@@ -640,8 +659,8 @@ def run_analysis(
         fon_bilgi_rows = []
         fon_kodlari_list = list(fund_dict.keys())
         try:
-            ucret_list = _tefas_api.fonlar_yonetim_ucretleri()
-            buyukluk_list = _tefas_api.fonlar_buyukluk()
+            ucret_list = _tefas_api.fonlar_yonetim_ucretleri(fon_tipi=fon_tipi)
+            buyukluk_list = _tefas_api.fonlar_buyukluk(fon_tipi=fon_tipi)
             ucret_map = {r.get("fonKodu", ""): r for r in ucret_list}
             buyukluk_map = {r.get("fonKodu", ""): r for r in buyukluk_list}
 

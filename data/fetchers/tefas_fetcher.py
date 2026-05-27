@@ -120,10 +120,10 @@ class TefasFetcher(AbstractFetcher):
     # ---------------------------------------------------------
     # Özel TEFAS metodları (adaptör katmanı)
     # ---------------------------------------------------------
-    def get_portfolio_distribution(self, symbol: str, tarih: Optional[str] = None) -> Dict[str, float]:
+    def get_portfolio_distribution(self, symbol: str, tarih: Optional[str] = None, fon_tipi: str = "YAT") -> Dict[str, float]:
         """Tek fonun portföy dağılımını normalize ederek döndürür."""
         symbol = symbol.upper().strip()
-        raw = _tefas_api.fon_portfoy_dagilimi(symbol, tarih)
+        raw = _tefas_api.fon_portfoy_dagilimi(symbol, tarih, fon_tipi)
         if not raw:
             return {}
         return _tefas_api.portfoy_dagilimi_normalize(raw)

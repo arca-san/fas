@@ -211,18 +211,20 @@ layout = dbc.Container([
     State("fb-vade", "value"),
     State("fb-sort", "value"),
     State("theme-store", "data"),
+    State("fon-tipi-store", "data"),
     prevent_initial_call=True,
 )
-def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme):
+def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme, fon_tipi):
     if not kategori_kod:
         return {"display": "none"}, None, go.Figure(), "Lütfen bir kategori seçin."
+    fon_tipi = fon_tipi or "YAT"
 
     period_field = PERIOD_FIELD_MAP.get(vade, "getiri1y")
     period_label = PERIOD_LABELS.get(vade, vade)
 
     # 1. Tüm fon getirilerini çek (kategori filtresiyle)
     try:
-        fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi="YAT", fon_tur_kod=kategori_kod)
+        fonlar = _tefas_api.fonlar_donemsel_getiri(fon_tipi=fon_tipi, fon_tur_kod=kategori_kod)
     except Exception as exc:
         logger.warning("Fon getirileri cekilemedi: %s", exc)
         return {"display": "none"}, None, go.Figure(), f"Veri alinamadi: {exc}"

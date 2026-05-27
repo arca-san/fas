@@ -466,7 +466,7 @@ def fonlar_gunluk_detay_aralik(fon_tipi: str = "YAT",
 # ============================================================
 #  4) PORTFÖY DAĞILIMI — dagilimSiraliGetirT  ⭐
 # ============================================================
-def fon_portfoy_dagilimi(fon_kodu: str, tarih: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def fon_portfoy_dagilimi(fon_kodu: str, tarih: Optional[str] = None, fon_tipi: str = "YAT") -> Optional[Dict[str, Any]]:
     """Tek fonun portföy dağılımı (kısa kod → yüzde).
 
     POST /api/funds/dagilimSiraliGetirT
@@ -476,7 +476,7 @@ def fon_portfoy_dagilimi(fon_kodu: str, tarih: Optional[str] = None) -> Optional
     """
     t = tarih or _son_isgunu_yyyymmdd()
     body = {
-        "fonTipi": "YAT", "fonKodu": None, "aramaMetni": None,
+        "fonTipi": fon_tipi, "fonKodu": None, "aramaMetni": None,
         "fonTurKod": None, "fonGrubu": None, "sfonTurKod": None,
         "basTarih": t, "bitTarih": t,
         "basSira": 1, "bitSira": 1,

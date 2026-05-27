@@ -12,6 +12,7 @@ app.layout = dmc.MantineProvider(
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="analysis-store", storage_type="session"),
             dcc.Store(id="theme-store", data="light", storage_type="session"),
+            dcc.Store(id="fon-tipi-store", data="YAT", storage_type="session"),
             create_navbar(),
             dbc.Row(
                 [
@@ -54,6 +55,16 @@ clientside_callback(
     State("theme-store", "data"),
     prevent_initial_call=True,
 )
+
+# Fon tipi senkronizasyonu
+from dash import callback, Output, Input
+
+@callback(
+    Output("fon-tipi-store", "data"),
+    Input("fon-tipi-toggle", "value"),
+)
+def sync_fon_tipi(value):
+    return value or "YAT"
 
 if __name__ == "__main__":
     app.run(debug=True, port=8050)
