@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    ports:
+      - "8050:8050"
+    volumes:
+      - "./data:/app/data"
+      - "./logs:/app/logs"
+    environment:
+      - FAS_DEBUG=0
+      - FAS_SECRET_KEY=${FAS_SECRET_KEY:-change-me-in-production}
+    restart: unless-stopped
