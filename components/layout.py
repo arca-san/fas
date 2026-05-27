@@ -60,20 +60,25 @@ def create_navbar() -> dbc.Navbar:
     )
 
 
+def create_sidebar_nav() -> dbc.Nav:
+    """Sadece navigasyon linkleri (offcanvas için)."""
+    return dbc.Nav(
+        [
+            dbc.NavLink("Ana Sayfa", href="/", active="exact"),
+            dbc.NavLink("Fon Bulucu", href="/fon-bulucu", active="exact"),
+            dbc.NavLink("Portföy Analizi", href="/portfolio", active="exact"),
+            dbc.NavLink("Duyurular", href="/duyurular", active="exact"),
+        ],
+        vertical=True,
+        pills=True,
+        className="mb-3",
+    )
+
+
 def create_sidebar() -> html.Div:
     return html.Div(
         [
-            dbc.Nav(
-                [
-                    dbc.NavLink("Ana Sayfa", href="/", active="exact"),
-                    dbc.NavLink("Fon Bulucu", href="/fon-bulucu", active="exact"),
-                    dbc.NavLink("Portföy Analizi", href="/portfolio", active="exact"),
-                    dbc.NavLink("Duyurular", href="/duyurular", active="exact"),
-                ],
-                vertical=True,
-                pills=True,
-                className="mb-3",
-            ),
+            create_sidebar_nav(),
             html.Hr(className="mb-2"),
             html.Label("Fon Tipi", className="fw-semibold mb-1", style={"fontSize": "0.8rem"}),
             dbc.RadioItems(

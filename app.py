@@ -82,7 +82,7 @@ server.register_blueprint(api)
 @server.before_request
 def require_login():
     try:
-        if request.path.startswith(("/_dash-", "/assets", "/api/", "/_realtime-")):
+        if request.path.startswith(("/_dash-", "/assets", "/api/", "/_realtime-", "/_pages/")):
             return None
         if request.method == "POST":
             return None

@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 
 from app import app
-from components.layout import create_navbar, create_sidebar
+from components.layout import create_navbar, create_sidebar, create_sidebar_nav
 from components.onboarding import make_onboarding_modal
 
 app.layout = dmc.MantineProvider(
@@ -17,7 +17,7 @@ app.layout = dmc.MantineProvider(
             create_navbar(),
             # Mobil offcanvas sidebar
             dbc.Offcanvas(
-                create_sidebar(),
+                create_sidebar_nav(),
                 id="mobile-sidebar",
                 title="Navigasyon",
                 is_open=False,
