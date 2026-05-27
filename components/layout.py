@@ -67,7 +67,6 @@ def create_sidebar_nav() -> dbc.Nav:
             dbc.NavLink("Ana Sayfa", href="/", active="exact"),
             dbc.NavLink("Fon Bulucu", href="/fon-bulucu", active="exact"),
             dbc.NavLink("Portföy Analizi", href="/portfolio", active="exact"),
-            dbc.NavLink("Duyurular", href="/duyurular", active="exact"),
             dbc.NavLink("API", href="/api-docs", active="exact"),
         ],
         vertical=True,
