@@ -6,7 +6,7 @@ gore karsilastirir.
 """
 
 import dash
-from dash import html, dcc, callback, Output, Input, State, ALL
+from dash import html, dcc, callback, Output, Input, State, ALL, ClientsideFunction
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objects as go
@@ -210,9 +210,10 @@ layout = dbc.Container([
     State("fb-kategori", "value"),
     State("fb-vade", "value"),
     State("fb-sort", "value"),
+    State("theme-store", "data"),
     prevent_initial_call=True,
 )
-def fonlari_bul(n_clicks, kategori_kod, vade, sort_key):
+def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme):
     if not kategori_kod:
         return {"display": "none"}, None, go.Figure(), "Lütfen bir kategori seçin."
 
@@ -299,7 +300,7 @@ def fonlari_bul(n_clicks, kategori_kod, vade, sort_key):
             top_fonlar = sorted(top_fonlar, key=key_fn, reverse=reverse)
 
         # 4. Grafik
-        fig = _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari)
+        fig = _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari, theme)
 
         # 5. Cache verisini hazirla (JSON uyumlu)
         cached = {
@@ -412,11 +413,14 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
 
 
 # ── Helper: bar chart ───────────────────────────────────────────────
-def _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari):
+def _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari, theme="light"):
     kod_list = [f[0] for f in top_fonlar]
     getiri_list = [f[2] for f in top_fonlar]
     renkler = ["#2ca02c" if g > 0 else "#d62728" for g in getiri_list]
     renkler[0] = "#1f77b4"  # en iyi fon ayri renk
+
+    is_dark = theme == "dark"
+    text_color = "#ffffff" if is_dark else "#212529"
 
     fig = go.Figure(data=[
         go.Bar(
@@ -425,13 +429,14 @@ def _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari):
             marker_color=renkler,
             text=[f"%{g:.2f}" for g in getiri_list],
             textposition="outside",
+            textfont=dict(color=text_color),
         )
     ])
     fig.update_layout(
         title=f"Dönemsel Getiri Karşılaştırması ({period_label})",
         xaxis_title="Fon",
         yaxis_title="Getiri (%)",
-        template="plotly_white",
+        template="plotly_dark" if is_dark else "plotly_white",
         hovermode="x",
         margin=dict(l=40, r=40, t=60, b=40),
     )
@@ -513,4 +518,15 @@ def toggle_fav(n_clicks_list, fav_data):
     return favs
 
 
+# ── Clientside: bar chart re-theming on theme toggle ──────────────────
+dash.clientside_callback(
+    ClientsideFunction(
+        namespace='clientside',
+        function_name='update_fonbulucu_charts'
+    ),
+    Output("fb-grafik", "figure", allow_duplicate=True),
+    Input("theme-store", "data"),
+    State("fb-grafik", "figure"),
+    prevent_initial_call=True,
+)
 

@@ -105,9 +105,9 @@ def create_price_chart(
     bm_colors = ["#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"]
     
     if benchmark_dict:
-        logger.warning("=== CHARTS BENCHMARK DICT: %s ===", list(benchmark_dict.keys()))
+        logger.debug("=== CHARTS BENCHMARK DICT: %s ===", list(benchmark_dict.keys()))
         for i, (bm_kod, bm_series) in enumerate(benchmark_dict.items()):
-            logger.warning("BM %s: len=%s, ilk degerler=%s", bm_kod, len(bm_series), bm_series[:5].tolist())
+            logger.debug("BM %s: len=%s, ilk degerler=%s", bm_kod, len(bm_series), bm_series[:5].tolist())
             
             if bm_series is None or bm_series.empty:
                 continue
@@ -115,7 +115,7 @@ def create_price_chart(
             # Forward fill ile NaN'ları doldur
             bm_filled = bm_series.ffill()
             if bm_filled.dropna().empty:
-                logger.warning("BM %s: ffill sonrasi bos", bm_kod)
+                logger.debug("BM %s: ffill sonrasi bos", bm_kod)
                 continue
             
             # İlk geçerli değer (her zaman 0 olmalı, çünkü normalize ettik)
@@ -125,7 +125,7 @@ def create_price_chart(
             tarihler = list(ortak_tarihler)
             bm_values = bm_filled.reindex(pd.DatetimeIndex(tarihler)).ffill().values
             
-            logger.warning("BM reindex: len=%s, ilk=%s", len(bm_values), bm_values[:5])
+            logger.debug("BM reindex: len=%s, ilk=%s", len(bm_values), bm_values[:5])
             
             fig.add_trace(
                 go.Scatter(
