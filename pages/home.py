@@ -15,7 +15,7 @@ import io
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
-from components.charts import create_price_chart, create_risk_return_scatter, create_portfolio_distribution_chart, create_correlation_heatmap
+from components.charts import create_price_chart, create_risk_return_scatter, create_portfolio_distribution_chart, create_correlation_heatmap, create_rolling_sharpe_chart
 from components.metrics import calculate_fund_metrics, select_fund_benchmark, calculate_mix_metrics, get_fund_benchmarks
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
@@ -162,6 +162,21 @@ layout = dbc.Container(
                                 id="loading-kor",
                                 type="default",
                                 children=dcc.Graph(id="korelasyon-matrisi", config={"displayModeBar": False}),
+                            ),
+                        ]
+                    )
+                ],
+                className="mb-3",
+            ),
+            dbc.Card(
+                [
+                    dbc.CardBody(
+                        [
+                            html.H5("Rolling Sharpe Oranı (3 Aylık)", className="card-title"),
+                            dcc.Loading(
+                                id="loading-rolling",
+                                type="default",
+                                children=dcc.Graph(id="rolling-sharpe", config={"displayModeBar": False}),
                             ),
                         ]
                     )
@@ -322,6 +337,7 @@ def uppercase_search(val):
     Output("risk-getiri-scatter", "figure"),
     Output("portfoy-dagilimi", "figure"),
     Output("korelasyon-matrisi", "figure"),
+    Output("rolling-sharpe", "figure"),
     Output("fon-bilgi-karti", "children"),
     Output("grafik-alani", "style"),
     Output("analiz-status", "children"),
@@ -356,7 +372,7 @@ def run_analysis(
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
-        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), [], None, None
+        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), [], None, None
 
     try:
         from datetime import datetime
@@ -389,7 +405,7 @@ def run_analysis(
                     hata_list.append(f"{fon_kodu}: {exc}")
 
         if not fund_dict:
-            return go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), [], None, None
+            return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), [], None, None
 
         status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
@@ -784,10 +800,13 @@ def run_analysis(
         # Korelasyon matrisi
         kor_fig = create_correlation_heatmap(fund_dict, title="Fon Getiri Korelasyon Matrisi", theme=theme)
 
-        return fig, scatter_fig, portfoy_fig, kor_fig, fon_bilgi_kart, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes, export_data
+        # Rolling Sharpe
+        rolling_fig = create_rolling_sharpe_chart(fund_dict, rf_daily=rf_daily, window=63, theme=theme)
+
+        return fig, scatter_fig, portfoy_fig, kor_fig, rolling_fig, fon_bilgi_kart, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes, export_data
     except Exception as exc:
         logger.exception("Analiz hatasi")
-        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), [], None, None
+        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), [], None, None
 
 
 def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None, fon_benchmark_correlations: dict = None):
@@ -1342,11 +1361,13 @@ dash.clientside_callback(
     Output("risk-getiri-scatter", "figure", allow_duplicate=True),
     Output("portfoy-dagilimi", "figure", allow_duplicate=True),
     Output("korelasyon-matrisi", "figure", allow_duplicate=True),
+    Output("rolling-sharpe", "figure", allow_duplicate=True),
     Input("theme-store", "data"),
     State("fiyat-grafigi", "figure"),
     State("risk-getiri-scatter", "figure"),
     State("portfoy-dagilimi", "figure"),
     State("korelasyon-matrisi", "figure"),
+    State("rolling-sharpe", "figure"),
     prevent_initial_call=True,
 )
 

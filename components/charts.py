@@ -281,6 +281,55 @@ def create_portfolio_distribution_chart(
     return fig
 
 
+def create_rolling_sharpe_chart(
+    fund_dict: dict,
+    rf_daily: pd.Series = None,
+    window: int = 63,
+    theme: str = "light",
+) -> go.Figure:
+    """Kayan pencere Sharpe oranı çizgi grafiği (default 63 iş günü ≈ 3 ay)."""
+    if not fund_dict:
+        return go.Figure()
+
+    is_dark = theme == "dark"
+    fig = go.Figure()
+    palet = DEFAULT_COLOR_PALETTE
+
+    for i, (kod, df) in enumerate(fund_dict.items()):
+        df = df.sort_values("tarih")
+        returns = df["fiyat"].pct_change().dropna()
+        if len(returns) < window:
+            continue
+
+        rf = rf_daily.reindex(returns.index).fillna(0.0) if rf_daily is not None else pd.Series(0, index=returns.index)
+        excess = returns - rf
+
+        rolling_sharpe = (excess.rolling(window).mean() / excess.rolling(window).std() * (252 ** 0.5)).dropna()
+
+        if rolling_sharpe.empty:
+            continue
+
+        fig.add_trace(go.Scatter(
+            x=rolling_sharpe.index,
+            y=rolling_sharpe.values,
+            mode="lines",
+            name=f"{kod} (rolling Sharpe)",
+            line=dict(color=palet[i % len(palet)], width=1.5),
+            hovertemplate="%{x|%Y-%m-%d}<br>Sharpe: %{y:.3f}<extra></extra>",
+        ))
+
+    fig.update_layout(
+        title=f"Rolling Sharpe Oranı ({window} Gün)",
+        xaxis_title="Tarih",
+        yaxis_title="Sharpe Oranı (Yıllık)",
+        hovermode="x unified",
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
+
+
 def create_correlation_heatmap(
     fund_dict: dict,
     title: str = "Fon Korelasyon Matrisi",

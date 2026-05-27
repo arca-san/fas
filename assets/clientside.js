@@ -133,14 +133,15 @@
     /* ── Exported client-side callbacks ─────────────────────────────── */
 
     var clientsideFuncs = {
-        update_home_charts: function(theme, fiyatFig, scatterFig, portfoyFig, korFig) {
-            if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update];
+        update_home_charts: function(theme, fiyatFig, scatterFig, portfoyFig, korFig, rollingFig) {
+            if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update];
             var t = getTheme(theme);
             var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
             var newScatter = scatterFig ? JSON.parse(JSON.stringify(scatterFig)) : scatterFig;
             var newPortfoy = portfoyFig ? JSON.parse(JSON.stringify(portfoyFig)) : portfoyFig;
             var newKor = korFig ? JSON.parse(JSON.stringify(korFig)) : korFig;
-            return [updateLineChart(newFiyat, t), updateLineChart(newScatter, t), updateLineChart(newPortfoy, t), updateLineChart(newKor, t)];
+            var newRolling = rollingFig ? JSON.parse(JSON.stringify(rollingFig)) : rollingFig;
+            return [updateLineChart(newFiyat, t), updateLineChart(newScatter, t), updateLineChart(newPortfoy, t), updateLineChart(newKor, t), updateLineChart(newRolling, t)];
         },
         update_portfolio_charts: function(theme, fiyatFig) {
             if (!theme) return window.dash_clientside.no_update;
