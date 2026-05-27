@@ -43,6 +43,8 @@ METRIC_ULCER = "Ulcer Index (%)"
 METRIC_OMEGA = "Omega Oranı"
 METRIC_ACTIVE_SHARE = "Active Share (%)"
 METRIC_M2 = "M² Ölçüsü (%)"
+METRIC_SYSTEMATIC_TE = "Sistematik TE (%)"
+METRIC_IDIOSYNCRATIC_TE = "İdiosinkratik TE (%)"
 
 # Metrik açıklamaları (raporlarda kullanılır)
 METRIC_DESCRIPTIONS = {
@@ -74,6 +76,8 @@ METRIC_DESCRIPTIONS = {
     METRIC_OMEGA: "Getiri dağılımının tamamını kullanan risk-ödül oranı. >1 iyi.",
     METRIC_ACTIVE_SHARE: "Fon portföyünün benchmark'tan ne kadar farklılaştığı (basit yaklaşım).",
     METRIC_M2: "Riske göre düzeltilmiş getiri. Fon volatilitesini benchmark seviyesine ölçekler.",
+    METRIC_SYSTEMATIC_TE: "Benchmark hareketlerinden kaynaklanan tracking error.",
+    METRIC_IDIOSYNCRATIC_TE: "Fona özgü risklerden kaynaklanan tracking error.",
 }
 
 # Rapor şablonu ayarları
