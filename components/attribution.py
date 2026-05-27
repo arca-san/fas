@@ -404,3 +404,36 @@ def cointegration_test(series1: pd.Series, series2: pd.Series):
         "hedge_ratio": round(hedge, 4),
         "nobs": len(common),
     }
+
+
+# ── Benzer Fon Keşfi ──────────────────────────────────────────────────
+
+def find_similar_funds(target_kod: str, fund_dict: dict, top_n: int = 5):
+    """Hedef fona en benzer 5 fonu bul (korelasyon bazlı)."""
+    if target_kod not in fund_dict or len(fund_dict) < 2:
+        return []
+
+    from components.metrics import compute_daily_returns
+    returns = {}
+    for kod, df in fund_dict.items():
+        df = df.sort_values("tarih")
+        ret = df["fiyat"].pct_change().dropna()
+        if len(ret) > 20:
+            returns[kod] = ret
+
+    if target_kod not in returns:
+        return []
+
+    target_ret = returns[target_kod]
+    scores = []
+    for kod, ret in returns.items():
+        if kod == target_kod:
+            continue
+        common = target_ret.index.intersection(ret.index)
+        if len(common) < 20:
+            continue
+        corr = target_ret.loc[common].corr(ret.loc[common])
+        scores.append((kod, abs(corr)))
+
+    scores.sort(key=lambda x: x[1], reverse=True)
+    return [{"kod": kod, "skor": round(skor, 4)} for kod, skor in scores[:top_n]]

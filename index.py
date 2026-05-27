@@ -5,6 +5,7 @@ import dash_mantine_components as dmc
 
 from app import app
 from components.layout import create_navbar, create_sidebar
+from components.onboarding import make_onboarding_modal
 
 app.layout = dmc.MantineProvider(
     dbc.Container(
@@ -43,6 +44,7 @@ app.layout = dmc.MantineProvider(
         fluid=True,
         className="dbc",
     ),
+    make_onboarding_modal(),
     id="mantine-provider",
 )
 
