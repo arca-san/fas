@@ -1,44 +1,646 @@
+/* ==========================================================================
+   FAS Design System — Light Mode Tokens (default)
+   ========================================================================== */
 :root {
-  --bs-primary: #1abc9c;
-  --bs-primary-rgb: 26, 188, 156;
+  /* ── Brand primaries ────────────────────────────────────────────── */
+  --color-primary: #1abc9c;
+  --color-primary-hover: #16a085;
+  --color-primary-rgb: 26, 188, 156;
+  --color-primary-dark: #b666d2;
+  --color-primary-dark-hover: #9f55b8;
+  --color-primary-dark-rgb: 182, 102, 210;
+
+  /* ── Backgrounds ────────────────────────────────────────────────── */
+  --bg-body: #ffffff;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f0fdfa;
+  --bg-input: #ffffff;
+  --bg-hover: #f1f3f5;
+  --bg-stripe: rgba(0, 0, 0, 0.02);
+  --bg-header: rgb(230, 230, 230);
+
+  /* ── Borders ────────────────────────────────────────────────────── */
+  --border-color: #ced4da;
+  --border-color-light: #dee2e6;
+
+  /* ── Text ───────────────────────────────────────────────────────── */
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --text-muted: #868e96;
+  --text-placeholder: #adb5bd;
+  --text-white: #ffffff;
+
+  /* ── Shadows ────────────────────────────────────────────────────── */
+  --shadow-focus: 0 0 0 0.2rem rgba(26, 188, 156, 0.25);
+  --shadow-focus-dark: 0 0 0 0.2rem rgba(182, 102, 210, 0.25);
+  --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-dropdown-dark: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  /* ── Radii ──────────────────────────────────────────────────────── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.875rem;
+  --font-size-md: 0.9375rem;
+  --font-size-lg: 1.0625rem;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --line-height: 1.55;
+
+  /* ── Transitions ────────────────────────────────────────────────── */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+
+  /* ── Bootstrap primary override ─────────────────────────────────── */
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
 }
 
+/* ==========================================================================
+   Dark Mode Tokens
+   ========================================================================== */
+[data-bs-theme="dark"] {
+  --color-primary: var(--color-primary-dark);
+  --color-primary-hover: var(--color-primary-dark-hover);
+  --color-primary-rgb: var(--color-primary-dark-rgb);
+  --bs-primary: var(--color-primary-dark);
+  --bs-primary-rgb: var(--color-primary-dark-rgb);
+
+  --bg-body: #0d0d0d;
+  --bg-card: #1a1a1a;
+  --bg-sidebar: #141414;
+  --bg-input: #1a1a1a;
+  --bg-hover: #2a2a2a;
+  --bg-stripe: rgba(255, 255, 255, 0.02);
+  --bg-header: #222;
+
+  --border-color: #333333;
+  --border-color-light: #3a3a3a;
+
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888888;
+  --text-placeholder: #5c5f66;
+
+  --shadow-focus: var(--shadow-focus-dark);
+  --shadow-dropdown: var(--shadow-dropdown-dark);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================================================
+   Base — Inherited colors, no wildcard * override
+   ========================================================================== */
+body,
+.dbc {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: var(--line-height);
+}
+
+/* ==========================================================================
+   Navbar
+   ========================================================================== */
 .navbar.bg-primary {
-  background-color: var(--bs-primary) !important;
+  background-color: var(--color-primary) !important;
 }
 
+/* ==========================================================================
+   Sidebar
+   ========================================================================== */
+.sidebar,
+.sidebar-col {
+  background-color: var(--bg-sidebar) !important;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
 .btn-primary {
-  background-color: var(--bs-primary) !important;
-  border-color: var(--bs-primary) !important;
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  transition: background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .btn-primary:hover {
-  background-color: #16a085 !important;
-  border-color: #16a085 !important;
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
 }
 
-[data-bs-theme="light"] .bg-light.sidebar {
-  background-color: #f0fdfa !important;
+.btn-primary:focus-visible {
+  box-shadow: var(--shadow-focus) !important;
 }
 
-[data-bs-theme="light"] .card,
-[data-bs-theme="light"] .card-header,
-[data-bs-theme="light"] .card-body,
-[data-bs-theme="light"] .card-footer,
-[data-bs-theme="light"] .modal-content,
-[data-bs-theme="light"] .modal-header,
-[data-bs-theme="light"] .modal-body,
-[data-bs-theme="light"] .modal-footer,
-[data-bs-theme="light"] .list-group-item {
-  background-color: #fff !important;
-  color: #000 !important;
+[data-bs-theme="dark"] .btn-outline-light {
+  border-color: var(--border-color-light);
+  color: var(--text-secondary);
 }
 
-[data-bs-theme="light"] .modal-header,
-[data-bs-theme="light"] .modal-footer {
-  border-color: #dee2e6 !important;
+[data-bs-theme="dark"] .btn-outline-light:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color-light);
 }
 
+[data-bs-theme="dark"] .btn-outline-light:active {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-base);
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid var(--border-color-light);
+  border-top-left-radius: var(--radius-lg) !important;
+  border-top-right-radius: var(--radius-lg) !important;
+}
+
+.card-body {
+  background-color: transparent;
+}
+
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid var(--border-color-light);
+}
+
+.card-header,
+.card-body,
+.card-footer {
+  color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-footer {
+  border-color: var(--border-color);
+}
+
+/* ==========================================================================
+   Modals
+   ========================================================================== */
+.modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color-light);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  color: var(--text-primary);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color-light);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+  border-color: var(--border-color);
+}
+
+/* ==========================================================================
+   Forms — Inputs, Selects, Checks
+   ========================================================================== */
+.form-control,
+.form-select {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--bg-input);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+  color: var(--text-primary);
+}
+
+.form-control::placeholder {
+  color: var(--text-placeholder);
+}
+
+[data-bs-theme="dark"] .form-check-input {
+  border-color: var(--border-color-light);
+  background-color: transparent;
+}
+
+[data-bs-theme="dark"] .form-check-input:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+[data-bs-theme="dark"] .form-check-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+.table {
+  color: var(--text-primary);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: var(--bg-stripe);
+  color: var(--text-primary);
+}
+
+.table-hover > tbody > tr:hover > * {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  transition: background-color var(--transition-fast);
+}
+
+.table-bordered,
+.table-bordered th,
+.table-bordered td {
+  border-color: var(--border-color-light);
+}
+
+/* ==========================================================================
+   Alerts
+   ========================================================================== */
+.alert {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   List Groups
+   ========================================================================== */
+.list-group-item {
+  background-color: var(--bg-card);
+  border-color: var(--border-color-light);
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Nav Links & Pills (Sidebar)
+   ========================================================================== */
+.nav-link {
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.nav-link:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nav-link.active {
+  background-color: var(--bg-hover);
+  color: var(--color-primary) !important;
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--color-primary) !important;
+  color: var(--text-white) !important;
+}
+
+/* ==========================================================================
+   Dropdown Menus (Bootstrap native)
+   ========================================================================== */
+.dropdown-menu {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-md);
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Links
+   ========================================================================== */
+a {
+  color: var(--color-primary);
+}
+
+[data-bs-theme="dark"] a:not(.btn):not(.dropdown-item):not(.nav-link) {
+  color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Placeholders (global)
+   ========================================================================== */
+::placeholder {
+  color: var(--text-placeholder) !important;
+}
+
+/* ==========================================================================
+   Borders — Utility overrides for dark mode
+   ========================================================================== */
+[data-bs-theme="dark"] .border,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-start,
+[data-bs-theme="dark"] .border-end {
+  border-color: var(--border-color) !important;
+}
+
+/* ==========================================================================
+   Utilities — bg-light / bg-white / text-muted overrides (dark mode)
+   ========================================================================== */
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--bg-sidebar) !important;
+}
+
+[data-bs-theme="dark"] .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* ── Override inline white backgrounds in dark mode ───────────────── */
+[data-bs-theme="dark"] [style*="background-color: rgb(255, 255, 255)"],
+[data-bs-theme="dark"] [style*="background-color:#fff"],
+[data-bs-theme="dark"] [style*="background-color: #fff"] {
+  background-color: var(--bg-card) !important;
+}
+
+/* ==========================================================================
+   Badges
+   ========================================================================== */
+[data-bs-theme="dark"] .badge.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+/* ==========================================================================
+   Plotly Chart Overrides (CSS-level, SVG elements)
+   ========================================================================== */
+[data-bs-theme="dark"] .js-plotly-plot .plotly .main-svg,
+[data-bs-theme="dark"] .js-plotly-plot .plotly .bg,
+[data-bs-theme="dark"] .js-plotly-plot .plotly .plot-bg {
+  background-color: transparent !important;
+}
+
+[data-bs-theme="dark"] .js-plotly-plot .plotly .gridlayer .crisp > path {
+  stroke: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .js-plotly-plot .plotly .xtick,
+[data-bs-theme="dark"] .js-plotly-plot .plotly .ytick {
+  stroke: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .js-plotly-plot .plotly .modebar {
+  background-color: rgba(26, 26, 26, 0.85) !important;
+}
+
+[data-bs-theme="dark"] .js-plotly-plot .plotly .modebar-btn path {
+  fill: var(--text-secondary) !important;
+}
+
+/* ==========================================================================
+   Dash Input Elements & Steppers
+   ========================================================================== */
+.dash-input-element {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.375rem 0.75rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.dash-input-element:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+  outline: 0;
+}
+
+.dash-input-stepper {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.dash-input-stepper:hover {
+  background-color: var(--bg-hover);
+  color: var(--color-primary);
+}
+
+/* ── Fallback for unstyled inputs in dark mode ───────────────────── */
+[data-bs-theme="dark"] input:not([class*="m_"]):not(.form-control):not(.dash-dropdown-search) {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* ==========================================================================
+   Dash DatePicker Overrides
+   ========================================================================== */
+
+/* ── Light mode: turquoise selected/range ─────────────────────────── */
+.dash-datepicker-calendar-date-highlighted {
+  background-color: rgba(26, 188, 156, 0.2);
+  color: var(--color-primary);
+}
+
+.dash-datepicker-calendar-date-highlighted span {
+  color: var(--color-primary-hover);
+}
+
+.dash-datepicker-calendar-date-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--text-white) !important;
+}
+
+.dash-datepicker-calendar-date-selected span {
+  color: var(--text-white) !important;
+}
+
+/* ── Dark mode: purple selected/range ─────────────────────────────── */
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-highlighted {
+  background-color: rgba(182, 102, 210, 0.25);
+}
+
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-highlighted span {
+  color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--text-white) !important;
+}
+
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected span {
+  color: var(--text-white) !important;
+}
+
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-inside:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ── Year input width ─────────────────────────────────────────────── */
+.dash-datepicker-calendar-wrapper .dash-input-container,
+.dash-datepicker-controls .dash-input-container {
+  width: 115px;
+}
+
+.dash-datepicker-calendar-wrapper .dash-input-container .dash-input-element,
+.dash-datepicker-controls .dash-input-container .dash-input-element {
+  width: 100%;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* ── CalendarDay light hover/selection ───────────────────────────── */
+.CalendarDay__hovered_span,
+.CalendarDay__hovered_span:hover,
+.CalendarDay__selected_span,
+.CalendarDay__selected_span:hover,
+.CalendarDay_hovered_span,
+.CalendarDay_hovered_span:hover,
+.CalendarDay_selected_span,
+.CalendarDay_selected_span:hover,
+.CalendarDay:hover,
+.dash-datepicker-calendar-date:hover,
+.dash-datepicker-calendar-date-inside:hover {
+  background-color: rgba(26, 188, 156, 0.2);
+  color: var(--color-primary);
+}
+
+.CalendarDay__selected,
+.CalendarDay__selected:hover,
+.CalendarDay_selected,
+.CalendarDay_selected:hover,
+.dash-datepicker-calendar-date-selected,
+.dash-datepicker-calendar-date-selected:hover {
+  background-color: var(--color-primary) !important;
+  color: var(--text-white) !important;
+}
+
+/* ── CalendarDay dark hover/selection ─────────────────────────────── */
+[data-bs-theme="dark"] .CalendarDay__hovered_span,
+[data-bs-theme="dark"] .CalendarDay__hovered_span:hover,
+[data-bs-theme="dark"] .CalendarDay__selected_span,
+[data-bs-theme="dark"] .CalendarDay__selected_span:hover,
+[data-bs-theme="dark"] .CalendarDay_hovered_span,
+[data-bs-theme="dark"] .CalendarDay_hovered_span:hover,
+[data-bs-theme="dark"] .CalendarDay_selected_span,
+[data-bs-theme="dark"] .CalendarDay_selected_span:hover,
+[data-bs-theme="dark"] .CalendarDay:hover,
+[data-bs-theme="dark"] .dash-datepicker-calendar-date:hover,
+[data-bs-theme="dark"] .dash-datepicker-calendar-date-inside:hover {
+  background-color: rgba(182, 102, 210, 0.25);
+  color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .CalendarDay__selected,
+[data-bs-theme="dark"] .CalendarDay__selected:hover,
+[data-bs-theme="dark"] .CalendarDay_selected,
+[data-bs-theme="dark"] .CalendarDay_selected:hover,
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected,
+[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected:hover {
+  background-color: var(--color-primary) !important;
+  color: var(--text-white) !important;
+}
+
+/* ── DatePicker inner input border removal (compact set) ──────────── */
+.dash-datepicker-input,
+.dash-datepicker-input:focus,
+.dash-datepicker-input:focus-visible,
+.dash-datepicker-input:active,
+.dash-datepicker-input-wrapper input,
+.dash-datepicker-input-wrapper input:focus,
+.dash-datepicker-input-wrapper input:focus-visible,
+.dash-datepicker-input-wrapper input:active {
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ── DatePicker input wrapper accent (light: turquoise, dark: purple) */
+.dash-datepicker-input-wrapper:hover,
+.dash-datepicker-input-wrapper[data-state="open"],
+.dash-datepicker-input-wrapper:focus-within {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+.dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-range-arrow,
+.dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-caret-icon,
+.dash-datepicker-input-wrapper:focus-within .dash-datepicker-range-arrow,
+.dash-datepicker-input-wrapper:focus-within .dash-datepicker-caret-icon,
+.dash-datepicker-input-wrapper:hover .dash-datepicker-range-arrow,
+.dash-datepicker-input-wrapper:hover .dash-datepicker-caret-icon {
+  color: var(--color-primary) !important;
+  fill: var(--color-primary) !important;
+}
+
+.dash-datepicker-input:focus,
+.dash-datepicker-input-wrapper input:focus {
+  outline: none !important;
+  border-color: var(--color-primary) !important;
+  caret-color: var(--color-primary) !important;
+}
+
+/* ── Dark: datepicker dialog (calendar popover) ──────────────────── */
+[data-bs-theme="dark"] [role="dialog"],
+[data-bs-theme="dark"] [data-radix-popper-content-wrapper] {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] table,
+[data-bs-theme="dark"] [role="dialog"] td,
+[data-bs-theme="dark"] [role="dialog"] th {
+  background-color: var(--bg-card) !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] button {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] [role="dialog"] button:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ── Dialog selected dates (light: turquoise, dark: purple) ──────── */
 [data-bs-theme="light"] [role="dialog"] button[data-selected],
 [data-bs-theme="light"] [role="dialog"] [data-state="selected"],
 [data-bs-theme="light"] [role="dialog"] .rdp-day_selected,
@@ -47,11 +649,7 @@
 [data-bs-theme="light"] [role="dialog"] .CalendarDay_selected,
 [data-bs-theme="light"] [role="dialog"] [data-highlighted],
 [data-bs-theme="light"] [role="dialog"] .rdp-day_selectedStart,
-[data-bs-theme="light"] [role="dialog"] .rdp-day_selectedEnd {
-  background-color: #1abc9c !important;
-  color: #ffffff !important;
-}
-
+[data-bs-theme="light"] [role="dialog"] .rdp-day_selectedEnd,
 [data-bs-theme="light"] [role="dialog"] button[data-range-start],
 [data-bs-theme="light"] [role="dialog"] button[data-range-end],
 [data-bs-theme="light"] [role="dialog"] [data-state="range-start"],
@@ -65,7 +663,6 @@
 }
 
 [data-bs-theme="light"] [role="dialog"] [data-state="range-middle"],
-[data-bs-theme="light"] [role="dialog"] [data-state="range-middle"],
 [data-bs-theme="light"] [role="dialog"] .rdp-day_rangeMiddle {
   background-color: rgba(26, 188, 156, 0.3) !important;
 }
@@ -76,349 +673,6 @@
   border-color: #1abc9c !important;
 }
 
-[data-bs-theme="dark"] body,
-[data-bs-theme="dark"] .dbc {
-  background-color: #0d0d0d !important;
-}
-
-[data-bs-theme="dark"] * {
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [class*="css-"],
-[data-bs-theme="dark"] [class^="css-"] {
-  background-color: #1a1a1a !important;
-}
-
-[data-bs-theme="dark"] .navbar {
-  background-color: #1a1a1a !important;
-}
-
-[data-bs-theme="dark"] .sidebar,
-[data-bs-theme="dark"] .sidebar-col {
-  background-color: #141414 !important;
-}
-
-[data-bs-theme="dark"] .card,
-[data-bs-theme="dark"] .card-header,
-[data-bs-theme="dark"] .card-body,
-[data-bs-theme="dark"] .card-footer {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .modal-content,
-[data-bs-theme="dark"] .modal-header,
-[data-bs-theme="dark"] .modal-body,
-[data-bs-theme="dark"] .modal-footer {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .list-group-item {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
-  background-color: #141414 !important;
-}
-
-[data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
-  background-color: #222 !important;
-}
-
-[data-bs-theme="dark"] .table-bordered,
-[data-bs-theme="dark"] .table-bordered th,
-[data-bs-theme="dark"] .table-bordered td {
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .alert {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .dropdown-menu {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .dropdown-item:hover,
-[data-bs-theme="dark"] .dropdown-item:focus {
-  background-color: #2a2a2a !important;
-}
-
-[data-bs-theme="dark"] .form-control,
-[data-bs-theme="dark"] .form-select {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .form-control:focus,
-[data-bs-theme="dark"] .form-select:focus {
-  background-color: #1a1a1a !important;
-  border-color: #1abc9c !important;
-}
-
-[data-bs-theme="dark"] .btn-outline-light {
-  border-color: #555 !important;
-}
-
-[data-bs-theme="dark"] .text-muted {
-  color: #999 !important;
-}
-
-[data-bs-theme="dark"] .border,
-[data-bs-theme="dark"] .border-top,
-[data-bs-theme="dark"] .border-bottom,
-[data-bs-theme="dark"] .border-start,
-[data-bs-theme="dark"] .border-end {
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .nav-link {
-  color: #ccc !important;
-}
-
-[data-bs-theme="dark"] .nav-link:hover,
-[data-bs-theme="dark"] .nav-link.active {
-  background-color: #2a2a2a !important;
-}
-
-[data-bs-theme="dark"] .Select-control,
-[data-bs-theme="dark"] .Select-menu-outer,
-[data-bs-theme="dark"] .Select-option,
-[data-bs-theme="dark"] .VirtualizedSelectOption,
-[data-bs-theme="dark"] .VirtualizedSelectFocusedOption,
-[data-bs-theme="dark"] .Select-menu {
-  background-color: #1a1a1a !important;
-}
-
-[data-bs-theme="dark"] .Select-option:hover,
-[data-bs-theme="dark"] .VirtualizedSelectFocusedOption {
-  background-color: #2a2a2a !important;
-}
-
-[data-bs-theme="dark"] ::placeholder {
-  color: #888 !important;
-}
-
-[data-bs-theme="dark"] .bg-white,
-[data-bs-theme="dark"] [style*="background-color: rgb(255, 255, 255)"],
-[data-bs-theme="dark"] [style*="background-color:#fff"],
-[data-bs-theme="dark"] [style*="background-color: #fff"] {
-  background-color: #1a1a1a !important;
-}
-
-[data-bs-theme="dark"] .bg-light {
-  background-color: #141414 !important;
-}
-
-[data-bs-theme="dark"] .btn-primary {
-  background-color: #b666d2 !important;
-  border-color: #b666d2 !important;
-}
-
-[data-bs-theme="dark"] .btn-primary:hover {
-  background-color: #9f55b8 !important;
-  border-color: #9f55b8 !important;
-}
-
-[data-bs-theme="dark"] .navbar.bg-primary,
-[data-bs-theme="dark"] .bg-primary,
-[data-bs-theme="dark"] .badge.bg-primary {
-  background-color: #b666d2 !important;
-}
-
-
-[data-bs-theme="dark"] .form-control:focus,
-[data-bs-theme="dark"] .form-select:focus {
-  border-color: #b666d2 !important;
-  box-shadow: 0 0 0 0.25rem rgba(182, 102, 210, 0.25) !important;
-}
-
-[data-bs-theme="dark"] .nav-pills .nav-link.active {
-  background-color: #b666d2 !important;
-}
-
-[data-bs-theme="dark"] a:not(.btn):not(.dropdown-item):not(.nav-link) {
-  color: #b666d2 !important;
-}
-
-[data-bs-theme="dark"] .js-plotly-plot .plotly .main-svg,
-[data-bs-theme="dark"] .js-plotly-plot .plotly .bg,
-[data-bs-theme="dark"] .js-plotly-plot .plotly .plot-bg {
-  background-color: transparent !important;
-}
-
-[data-bs-theme="dark"] .js-plotly-plot .plotly .gridlayer .crisp > path {
-  stroke: #333 !important;
-}
-
-[data-bs-theme="dark"] .js-plotly-plot .plotly .xtick,
-[data-bs-theme="dark"] .js-plotly-plot .plotly .ytick {
-  stroke: #333 !important;
-}
-
-[data-bs-theme="dark"] .js-plotly-plot .plotly .modebar {
-  background-color: rgba(26, 26, 26, 0.8) !important;
-}
-
-[data-bs-theme="dark"] .form-check,
-[data-bs-theme="dark"] .form-check-label,
-[data-bs-theme="dark"] .form-check-input {
-  background-color: transparent !important;
-}
-
-[data-bs-theme="dark"] .form-check-input {
-  border-color: #555 !important;
-}
-
-[data-bs-theme="dark"] .form-check-input:checked {
-  background-color: #b666d2 !important;
-  border-color: #b666d2 !important;
-}
-
-[data-bs-theme="dark"] .form-check-input:focus {
-  border-color: #b666d2 !important;
-  box-shadow: 0 0 0 0.25rem rgba(182, 102, 210, 0.25) !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Input"],
-[data-bs-theme="dark"] [class*="mantine-MultiSelect"],
-[data-bs-theme="dark"] [class*="mantine-Combobox"],
-[data-bs-theme="dark"] [class*="mantine-Pill"],
-[data-bs-theme="dark"] [class*="mantine-PillsInput"],
-[data-bs-theme="dark"] [class*="mantine-Select"],
-[data-bs-theme="dark"] [class*="mantine-Date"],
-[data-bs-theme="dark"] [class*="mantine-Calendar"],
-[data-bs-theme="dark"] [class*="mantine-Popover"] {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="dropdown"],
-[data-bs-theme="dark"] [class*="mantine-Popover"][class*="dropdown"] {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"] {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"]:hover,
-[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"][data-hovered] {
-  background-color: #2a2a2a !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="day"],
-[data-bs-theme="dark"] [class*="mantine-Date"][class*="day"],
-[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="weekday"],
-[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="month"] {
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="day"]:hover {
-  background-color: #2a2a2a !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-ComboboxChevron"] {
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-PillsInputField"]::placeholder {
-  color: #888 !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Pill"] {
-  background-color: #555 !important;
-  color: #ffffff !important;
-  border-color: #555 !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Pill"][data-disabled] {
-  background-color: #333 !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-InputWrapper"],
-[data-bs-theme="dark"] [class*="mantine-Input-label"] {
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-Input-section"] {
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [class*="mantine-ScrollArea"] {
-  background-color: #1a1a1a !important;
-}
-
-[data-bs-theme="dark"] div[class*="m_"],
-[data-bs-theme="dark"] span[class*="m_"],
-[data-bs-theme="dark"] button[class*="m_"],
-[data-bs-theme="dark"] input[class*="m_"],
-[data-bs-theme="dark"] table[class*="m_"],
-[data-bs-theme="dark"] thead[class*="m_"],
-[data-bs-theme="dark"] tbody[class*="m_"],
-[data-bs-theme="dark"] tr[class*="m_"],
-[data-bs-theme="dark"] td[class*="m_"],
-[data-bs-theme="dark"] th[class*="m_"] {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [class*="m_"][class*="day"]:hover,
-[data-bs-theme="dark"] [class*="m_"][class*="option"]:hover {
-  background-color: #2a2a2a !important;
-}
-
-[data-bs-theme="dark"] .dash-datepicker-input {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .dash-datepicker-input::placeholder {
-  color: #888 !important;
-}
-
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] .dash-datepicker-range-arrow,
-[data-bs-theme="dark"] .dash-datepicker-caret-icon {
-  fill: #ffffff !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [role="dialog"],
-[data-bs-theme="dark"] [data-radix-popper-content-wrapper] {
-  background-color: #1a1a1a !important;
-  border-color: #333 !important;
-}
-
-[data-bs-theme="dark"] [role="dialog"] table,
-[data-bs-theme="dark"] [role="dialog"] td,
-[data-bs-theme="dark"] [role="dialog"] th {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [role="dialog"] button {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] [role="dialog"] button:hover {
-  background-color: #2a2a2a !important;
-}
-
 [data-bs-theme="dark"] [role="dialog"] button[data-selected],
 [data-bs-theme="dark"] [role="dialog"] [data-state="selected"],
 [data-bs-theme="dark"] [role="dialog"] .rdp-day_selected,
@@ -427,11 +681,7 @@
 [data-bs-theme="dark"] [role="dialog"] .CalendarDay_selected,
 [data-bs-theme="dark"] [role="dialog"] [data-highlighted],
 [data-bs-theme="dark"] [role="dialog"] .rdp-day_selectedStart,
-[data-bs-theme="dark"] [role="dialog"] .rdp-day_selectedEnd {
-  background-color: #b666d2 !important;
-  color: #ffffff !important;
-}
-
+[data-bs-theme="dark"] [role="dialog"] .rdp-day_selectedEnd,
 [data-bs-theme="dark"] [role="dialog"] button[data-range-start],
 [data-bs-theme="dark"] [role="dialog"] button[data-range-end],
 [data-bs-theme="dark"] [role="dialog"] [data-state="range-start"],
@@ -440,288 +690,28 @@
 [data-bs-theme="dark"] [role="dialog"] [data-end-date],
 [data-bs-theme="dark"] [role="dialog"] .rdp-day_rangeStart,
 [data-bs-theme="dark"] [role="dialog"] .rdp-day_rangeEnd {
-  background-color: #b666d2 !important;
+  background-color: var(--color-primary) !important;
   color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] [role="dialog"] [data-state="range-middle"],
 [data-bs-theme="dark"] [role="dialog"] .rdp-day_rangeMiddle {
   background-color: rgba(182, 102, 210, 0.3) !important;
-  color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] [role="dialog"] button[data-today],
 [data-bs-theme="dark"] [role="dialog"] [data-state="today"],
 [data-bs-theme="dark"] [role="dialog"] .rdp-day_today {
-  border-color: #b666d2 !important;
+  border-color: var(--color-primary) !important;
 }
 
 [data-bs-theme="dark"] [role="dialog"] button:hover:not([data-selected]):not([data-state="selected"]):not([aria-selected="true"]):not(.selected):not(.rdp-day_selected) {
-  background-color: #2a2a2a !important;
+  background-color: var(--bg-hover) !important;
 }
 
-/* Dash Input Elements & Steppers styling */
-.dash-input-element {
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  border: 1px solid #ced4da !important;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.dash-input-element:focus {
-  border-color: #1abc9c !important;
-  box-shadow: 0 0 0 0.25rem rgba(26, 188, 156, 0.25) !important;
-  outline: 0;
-}
-
-.dash-input-stepper {
-  background-color: #f8f9fa !important;
-  color: #212529 !important;
-  border: 1px solid #ced4da !important;
-  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-}
-
-.dash-input-stepper:hover {
-  background-color: #e9ecef !important;
-  color: #1abc9c !important;
-}
-
-/* Dark theme overrides for Dash inputs and steppers */
-[data-bs-theme="dark"] .dash-input-element {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-  border-color: #333333 !important;
-}
-
-[data-bs-theme="dark"] .dash-input-element:focus {
-  border-color: #b666d2 !important;
-  box-shadow: 0 0 0 0.25rem rgba(182, 102, 210, 0.25) !important;
-}
-
-[data-bs-theme="dark"] .dash-input-stepper {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-  border-color: #333333 !important;
-}
-
-[data-bs-theme="dark"] .dash-input-stepper:hover {
-  background-color: #3a3a3a !important;
-  color: #b666d2 !important;
-}
-
-/* General fallback for unstyled inputs in dark mode */
-[data-bs-theme="dark"] input:not([class*="m_"]):not(.form-control) {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-  border: 1px solid #333333 !important;
-}
-
-/* --- DatePicker Overrides (Dash Custom DatePicker) --- */
-
-/* --- Light Mode (Turquoise / Turkuaz) --- */
-/* Highlighted range in light mode (days in between start and end) */
-.dash-datepicker-calendar-date-highlighted {
-  background-color: rgba(26, 188, 156, 0.2) !important;
-  color: #1abc9c !important;
-}
-
-.dash-datepicker-calendar-date-highlighted span {
-  color: #16a085 !important;
-}
-
-/* Selected start/end days in light mode */
-.dash-datepicker-calendar-date-selected {
-  background-color: #1abc9c !important;
-  color: #ffffff !important;
-}
-
-.dash-datepicker-calendar-date-selected span {
-  color: #ffffff !important;
-}
-
-
-/* --- Dark Mode (Purple / Mor) --- */
-/* Highlighted range in dark mode (days in between start and end) */
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-highlighted {
-  background-color: rgba(182, 102, 210, 0.25) !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-highlighted span {
-  color: #ffffff !important;
-}
-
-/* Selected start/end days in dark mode */
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected {
-  background-color: #b666d2 !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected span {
-  color: #ffffff !important;
-}
-
-/* Hover effect for dates in dark mode */
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-inside:hover {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-}
-
-/* Widen the year input in datepicker controls slightly so the year fits */
-.dash-datepicker-calendar-wrapper .dash-input-container,
-.dash-datepicker-controls .dash-input-container {
-  width: 115px !important;
-}
-
-.dash-datepicker-calendar-wrapper .dash-input-container .dash-input-element,
-.dash-datepicker-controls .dash-input-container .dash-input-element {
-  width: 100% !important;
-  padding-left: 6px !important;
-  padding-right: 6px !important;
-}
-
-/* --- DatePicker Hover & Selection Colors --- */
-
-/* Light Mode: Hover and selected ranges in Turquoise */
-.CalendarDay__hovered_span,
-.CalendarDay__hovered_span:hover,
-.CalendarDay__selected_span,
-.CalendarDay__selected_span:hover,
-.CalendarDay_hovered_span,
-.CalendarDay_hovered_span:hover,
-.CalendarDay_selected_span,
-.CalendarDay_selected_span:hover,
-.CalendarDay:hover,
-.dash-datepicker-calendar-date:hover,
-.dash-datepicker-calendar-date-inside:hover {
-  background-color: rgba(26, 188, 156, 0.2) !important;
-  color: #1abc9c !important;
-}
-
-.CalendarDay__selected,
-.CalendarDay__selected:hover,
-.CalendarDay_selected,
-.CalendarDay_selected:hover,
-.dash-datepicker-calendar-date-selected,
-.dash-datepicker-calendar-date-selected:hover {
-  background-color: #1abc9c !important;
-  color: #ffffff !important;
-}
-
-/* Dark Mode: Hover and selected ranges in Purple */
-[data-bs-theme="dark"] .CalendarDay__hovered_span,
-[data-bs-theme="dark"] .CalendarDay__hovered_span:hover,
-[data-bs-theme="dark"] .CalendarDay__selected_span,
-[data-bs-theme="dark"] .CalendarDay__selected_span:hover,
-[data-bs-theme="dark"] .CalendarDay_hovered_span,
-[data-bs-theme="dark"] .CalendarDay_hovered_span:hover,
-[data-bs-theme="dark"] .CalendarDay_selected_span,
-[data-bs-theme="dark"] .CalendarDay_selected_span:hover,
-[data-bs-theme="dark"] .CalendarDay:hover,
-[data-bs-theme="dark"] .dash-datepicker-calendar-date:hover,
-[data-bs-theme="dark"] .dash-datepicker-calendar-date-inside:hover,
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-inside:hover {
-  background-color: rgba(182, 102, 210, 0.25) !important;
-  color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] .CalendarDay__selected,
-[data-bs-theme="dark"] .CalendarDay__selected:hover,
-[data-bs-theme="dark"] .CalendarDay_selected,
-[data-bs-theme="dark"] .CalendarDay_selected:hover,
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected,
-[data-bs-theme="dark"] td.dash-datepicker-calendar-date-selected:hover {
-  background-color: #b666d2 !important;
-  color: #ffffff !important;
-}
-
-/* --- DatePicker Inner Inputs Styling (Border & Background Removal) --- */
-#tarih-araligi,
-#tarih-araligi-end-date,
-input#tarih-araligi,
-input#tarih-araligi-end-date,
-.dash-datepicker-input,
-.dash-datepicker-input:focus,
-.dash-datepicker-input:focus-visible,
-.dash-datepicker-input:active,
-.dash-datepicker-input-wrapper input,
-.dash-datepicker-input-wrapper input:focus,
-.dash-datepicker-input-wrapper input:focus-visible,
-.dash-datepicker-input-wrapper input:active,
-.dash-datepicker-input-wrapper div,
-.dash-datepicker-input-wrapper div:focus,
-.dash-datepicker-input-wrapper div:focus-within,
-.DateInput input,
-.DateInput_input,
-.DateInput {
-  border: none !important;
-  border-style: none !important;
-  border-width: 0 !important;
-  background-color: transparent !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-  outline-width: 0 !important;
-}
-
-
-
-
-/* --- DatePicker Input Wrapper Turquoise/Purple Styling --- */
-
-/* Light Mode: Turquoise for active/open/focused/hovered state */
-.dash-datepicker-input-wrapper:hover,
-.dash-datepicker-input-wrapper[data-state="open"],
-.dash-datepicker-input-wrapper:focus-within {
-  border-color: #1abc9c !important;
-  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2) !important;
-}
-
-.dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-range-arrow,
-.dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-caret-icon,
-.dash-datepicker-input-wrapper:focus-within .dash-datepicker-range-arrow,
-.dash-datepicker-input-wrapper:focus-within .dash-datepicker-caret-icon,
-.dash-datepicker-input-wrapper:hover .dash-datepicker-range-arrow,
-.dash-datepicker-input-wrapper:hover .dash-datepicker-caret-icon {
-  color: #1abc9c !important;
-  fill: #1abc9c !important;
-}
-
-.dash-datepicker-input:focus,
-.dash-datepicker-input-wrapper input:focus {
-  outline: none !important;
-  border-color: #1abc9c !important;
-  caret-color: #1abc9c !important;
-}
-
-/* Dark Mode: Purple for active/open/focused/hovered state */
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper:hover,
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper[data-state="open"],
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper:focus-within {
-  border-color: #b666d2 !important;
-  box-shadow: 0 0 0 2px rgba(182, 102, 210, 0.25) !important;
-}
-
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-range-arrow,
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper[data-state="open"] .dash-datepicker-caret-icon,
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper:focus-within .dash-datepicker-range-arrow,
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper:focus-within .dash-datepicker-caret-icon,
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper:hover .dash-datepicker-range-arrow,
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper:hover .dash-datepicker-caret-icon {
-  color: #b666d2 !important;
-  fill: #b666d2 !important;
-}
-
-[data-bs-theme="dark"] .dash-datepicker-input:focus,
-[data-bs-theme="dark"] .dash-datepicker-input-wrapper input:focus {
-  outline: none !important;
-  border-color: #b666d2 !important;
-  caret-color: #b666d2 !important;
-}
-
-/* --- Uniform Font Size for Control Panel Elements --- */
+/* ==========================================================================
+   Control Panel — Uniform Typography
+   ========================================================================== */
 .control-card,
 .control-card *,
 #fav-section,
@@ -746,297 +736,316 @@ input#tarih-araligi-end-date,
 [role="listbox"] *,
 [role="option"],
 [role="option"] * {
-  font-size: 15px !important;
+  font-size: var(--font-size-md);
 }
 
-/* --- Style Dash Dropdown to look exactly like Mantine Select/MultiSelect --- */
+/* ==========================================================================
+   Dash Dropdown (styled to match Mantine Select)
+   ========================================================================== */
 .dash-dropdown-wrapper {
-  width: 100% !important;
+  width: 100%;
   display: block;
 }
 
 button.dash-dropdown {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  height: 38px !important;
-  padding: 0 12px !important;
-  border-radius: 6px !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  text-align: left !important;
-  cursor: pointer !important;
-  transition: border-color 100ms ease, box-shadow 100ms ease !important;
-  box-sizing: border-box !important;
-}
-
-/* Light mode styles */
-button.dash-dropdown {
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  border: 1px solid #ced4da !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-sizing: border-box;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 button.dash-dropdown:focus,
 button.dash-dropdown[data-state="open"] {
-  border-color: #1abc9c !important;
-  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2) !important;
-  outline: none !important;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+  outline: none;
 }
 
-/* Dark mode styles */
-[data-bs-theme="dark"] button.dash-dropdown {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-  border: 1px solid #333333 !important;
-}
-
-[data-bs-theme="dark"] button.dash-dropdown:focus,
-[data-bs-theme="dark"] button.dash-dropdown[data-state="open"] {
-  border-color: #b666d2 !important;
-  box-shadow: 0 0 0 2px rgba(182, 102, 210, 0.25) !important;
-  outline: none !important;
-}
-
-/* Trigger content layout alignment */
+/* ── Trigger layout ───────────────────────────────────────────────── */
 button.dash-dropdown .dash-dropdown-grid-container,
 button.dash-dropdown .dash-dropdown-trigger {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  background: transparent;
 }
 
 button.dash-dropdown .dash-dropdown-value {
-  display: flex !important;
-  align-items: center !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  color: inherit !important;
-  background: transparent !important;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+  background: transparent;
 }
 
 button.dash-dropdown .dash-dropdown-value-item {
-  color: inherit !important;
-  font-size: 15px !important;
+  color: inherit;
+  font-size: var(--font-size-md);
 }
 
-/* Chevron Styling to match Mantine chevron exactly */
+/* ── Chevron ──────────────────────────────────────────────────────── */
 button.dash-dropdown .dash-dropdown-trigger-icon {
-  width: 16px !important;
-  height: 16px !important;
-  color: #868e96 !important;
-  margin-left: 8px !important;
-  flex-shrink: 0 !important;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  margin-left: 8px;
+  flex-shrink: 0;
 }
 
 [data-bs-theme="dark"] button.dash-dropdown .dash-dropdown-trigger-icon {
-  color: #ced4da !important;
+  color: var(--text-secondary);
 }
 
-/* Styling for the dropdown options list popover */
+/* ── Popover / options list ───────────────────────────────────────── */
 [data-radix-popper-content-wrapper] [role="listbox"],
 .dash-dropdown-popover,
 .dash-dropdown-menu {
-  border-radius: 6px !important;
-  padding: 4px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  font-size: 15px !important;
+  border-radius: var(--radius-md);
+  padding: 4px;
+  box-shadow: var(--shadow-dropdown);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color-light);
 }
 
-/* Light mode popover */
-[role="listbox"],
-.dash-dropdown-popover,
-.dash-dropdown-menu {
-  background-color: #ffffff !important;
-  border: 1px solid #dee2e6 !important;
-}
-
-/* Dark mode popover */
-[data-bs-theme="dark"] [role="listbox"],
-[data-bs-theme="dark"] .dash-dropdown-popover,
-[data-bs-theme="dark"] .dash-dropdown-menu {
-  background-color: #1a1a1a !important;
-  border: 1px solid #333333 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}
-
-/* Dropdown list items styling */
+/* ── Options ──────────────────────────────────────────────────────── */
 [role="option"],
 .dash-dropdown-option {
-  padding: 8px 12px !important;
-  border-radius: 4px !important;
-  cursor: pointer !important;
-  font-size: 15px !important;
-  transition: background-color 80ms ease !important;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  transition: background-color var(--transition-fast);
 }
 
-/* Hover and active states for list items */
 [role="option"]:hover,
 [role="option"][data-highlighted],
 .dash-dropdown-option:hover,
 .dash-dropdown-option[data-highlighted] {
-  background-color: #f1f3f5 !important;
-  color: #212529 !important;
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
 }
 
-[data-bs-theme="dark"] [role="option"]:hover,
-[data-bs-theme="dark"] [role="option"][data-highlighted],
-[data-bs-theme="dark"] .dash-dropdown-option:hover,
-[data-bs-theme="dark"] .dash-dropdown-option[data-highlighted] {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-}
-
-/* Selected item styling */
 [role="option"][aria-selected="true"],
 .dash-dropdown-option[aria-selected="true"] {
-  background-color: #1abc9c !important;
-  color: #ffffff !important;
+  background-color: var(--color-primary);
+  color: var(--text-white);
 }
 
-[data-bs-theme="dark"] [role="option"][aria-selected="true"],
-[data-bs-theme="dark"] .dash-dropdown-option[aria-selected="true"] {
-  background-color: #b666d2 !important;
-  color: #ffffff !important;
-}
-
-/* --- Style Dash Dropdown Search Component --- */
+/* ── Dropdown search ──────────────────────────────────────────────── */
 .dash-dropdown-search-container {
-  position: relative !important;
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  padding: 8px 12px !important;
-  margin: -4px -4px 4px -4px !important; /* flush to the top/sides of parent popover */
-  border-top-left-radius: 6px !important;
-  border-top-right-radius: 6px !important;
-  border-bottom: 1px solid #dee2e6 !important;
-  background-color: #ffffff !important;
-  box-sizing: border-box !important;
-  grid-template-columns: none !important;
-  grid-gap: 0 !important;
-  gap: 0 !important;
-}
-
-[data-bs-theme="dark"] .dash-dropdown-search-container {
-  border-bottom: 1px solid #333333 !important;
-  background-color: #1a1a1a !important;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 12px;
+  margin: -4px -4px 4px -4px;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+  border-bottom: 1px solid var(--border-color-light);
+  background-color: var(--bg-card);
+  box-sizing: border-box;
+  grid-template-columns: none;
+  grid-gap: 0;
+  gap: 0;
 }
 
 input.dash-dropdown-search {
-  width: 100% !important;
-  flex: 1 !important;
-  height: 32px !important;
-  padding: 0 32px 0 28px !important; /* spacing for search icon (left) and clear button (right) */
-  border-radius: 4px !important;
-  font-size: 15px !important;
-  border: 1px solid #ced4da !important;
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  outline: none !important;
-  box-sizing: border-box !important;
-  transition: border-color 100ms ease, box-shadow 100ms ease !important;
-}
-
-[data-bs-theme="dark"] input.dash-dropdown-search {
-  background-color: #141414 !important;
-  color: #ffffff !important;
-  border: 1px solid #333333 !important;
+  width: 100%;
+  flex: 1;
+  height: 32px;
+  padding: 0 32px 0 28px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 input.dash-dropdown-search:focus {
-  border-color: #1abc9c !important;
-  box-shadow: 0 0 0 2px rgba(26, 188, 156, 0.2) !important;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
 }
 
-[data-bs-theme="dark"] input.dash-dropdown-search:focus {
-  border-color: #b666d2 !important;
-  box-shadow: 0 0 0 2px rgba(182, 102, 210, 0.25) !important;
+input.dash-dropdown-search::placeholder {
+  color: var(--text-placeholder);
 }
 
-/* Hide native browser search clear icons */
+/* Hide native search cancel button */
 input.dash-dropdown-search::-webkit-search-cancel-button,
 input.dash-dropdown-search::-webkit-search-decoration,
 input.dash-dropdown-search::-webkit-search-results-button,
 input.dash-dropdown-search::-webkit-search-results-decoration {
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  display: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
 }
 
-input.dash-dropdown-search::placeholder {
-  color: #adb5bd !important;
-}
-
-[data-bs-theme="dark"] input.dash-dropdown-search::placeholder {
-  color: #5c5f66 !important;
-}
-
+/* ── Search icon ──────────────────────────────────────────────────── */
 .dash-dropdown-search-icon {
-  position: absolute !important;
-  left: 20px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 14px !important;
-  height: 14px !important;
-  color: #868e96 !important;
-  pointer-events: none !important;
-  z-index: 2 !important;
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 2;
 }
 
 [data-bs-theme="dark"] .dash-dropdown-search-icon {
-  color: #ced4da !important;
+  color: var(--text-secondary);
 }
 
+/* ── Clear button ─────────────────────────────────────────────────── */
 button.dash-dropdown-clear {
-  position: absolute !important;
-  right: 20px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  background: transparent !important;
-  border: none !important;
-  cursor: pointer !important;
-  color: #868e96 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  width: 20px !important;
-  height: 20px !important;
-  border-radius: 50% !important;
-  transition: background-color 80ms ease, color 80ms ease !important;
-  z-index: 2 !important;
-}
-
-[data-bs-theme="dark"] button.dash-dropdown-clear {
-  color: #ced4da !important;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  z-index: 2;
 }
 
 button.dash-dropdown-clear:hover {
-  color: #495057 !important;
-  background-color: #f1f3f5 !important;
-}
-
-[data-bs-theme="dark"] button.dash-dropdown-clear:hover {
-  color: #ffffff !important;
-  background-color: #2a2a2a !important;
+  color: var(--text-secondary);
+  background-color: var(--bg-hover);
 }
 
 button.dash-dropdown-clear:focus,
 button.dash-dropdown-clear:active {
-  outline: none !important;
-  border: none !important;
-  box-shadow: none !important;
+  outline: none;
+  border: none;
+  box-shadow: none;
 }
 
+/* ==========================================================================
+   Select / React-Select (legacy) overrides for dark mode
+   ========================================================================== */
+[data-bs-theme="dark"] .Select-control,
+[data-bs-theme="dark"] .Select-menu-outer,
+[data-bs-theme="dark"] .Select-option,
+[data-bs-theme="dark"] .VirtualizedSelectOption,
+[data-bs-theme="dark"] .VirtualizedSelectFocusedOption,
+[data-bs-theme="dark"] .Select-menu {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
 
-/* ── Dash DevTools Isolation ────────────────────────────────────────── */
+[data-bs-theme="dark"] .Select-option:hover,
+[data-bs-theme="dark"] .VirtualizedSelectFocusedOption {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ==========================================================================
+   Mantine Components — Dark mode
+   ========================================================================== */
+[data-bs-theme="dark"] [class*="mantine-"],
+[data-bs-theme="dark"] [class*="m_"] {
+  --mantine-color-body: var(--bg-card);
+  --mantine-color-dark-7: var(--bg-card);
+  --mantine-color-dark-6: var(--bg-hover);
+  --mantine-color-dark-5: var(--border-color);
+  --mantine-color-dark-4: var(--border-color-light);
+  --mantine-color-text: var(--text-primary);
+}
+
+[data-bs-theme="dark"] [class*="mantine-Input-"],
+[data-bs-theme="dark"] [class*="mantine-MultiSelect-"],
+[data-bs-theme="dark"] [class*="mantine-Select-"],
+[data-bs-theme="dark"] [class*="mantine-Combobox-"],
+[data-bs-theme="dark"] [class*="mantine-Pill-"],
+[data-bs-theme="dark"] [class*="mantine-PillsInput-"],
+[data-bs-theme="dark"] [class*="mantine-Date"],
+[data-bs-theme="dark"] [class*="mantine-Calendar"],
+[data-bs-theme="dark"] [class*="mantine-Popover"] {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"]:hover,
+[data-bs-theme="dark"] [class*="mantine-Combobox"][class*="option"][data-hovered] {
+  background-color: var(--bg-hover) !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Calendar"][class*="day"]:hover,
+[data-bs-theme="dark"] [class*="mantine-Date"][class*="day"]:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Pill"] {
+  background-color: var(--border-color-light) !important;
+  border-color: var(--border-color-light) !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-Pill"][data-disabled] {
+  background-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-PillsInputField"]::placeholder {
+  color: var(--text-placeholder) !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-InputWrapper"],
+[data-bs-theme="dark"] [class*="mantine-Input-label"],
+[data-bs-theme="dark"] [class*="mantine-Input-section"],
+[data-bs-theme="dark"] [class*="mantine-ComboboxChevron"] {
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] [class*="mantine-ScrollArea"] {
+  background-color: var(--bg-card) !important;
+}
+
+/* ── Wildcard catch-all for Mantine hashed classes in dark mode ──── */
+[data-bs-theme="dark"] div[class*="m_"],
+[data-bs-theme="dark"] span[class*="m_"],
+[data-bs-theme="dark"] button[class*="m_"],
+[data-bs-theme="dark"] input[class*="m_"] {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] [class*="m_"][class*="day"]:hover,
+[data-bs-theme="dark"] [class*="m_"][class*="option"]:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ==========================================================================
+   Dash DevTools Isolation — prevent dark mode from breaking debug toolbar
+   ========================================================================== */
 #_dash-devtools,
 #_dash-devtools *,
 .dash-debug-menu,
@@ -1046,8 +1055,3 @@ button.dash-dropdown-clear:active {
   color: revert !important;
   background-color: revert !important;
 }
-
-
-
-
-
