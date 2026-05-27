@@ -3,9 +3,9 @@
 Onboarding — ilk kullanım için 3 adımlı tanıtım modal'ı.
 """
 
-from dash import html, dcc, clientside_callback
+import dash
+from dash import html, dcc, clientside_callback, callback, Output, Input, State
 import dash_bootstrap_components as dbc
-from dash import callback, Output, Input, State, dash
 
 
 def make_onboarding_modal():
