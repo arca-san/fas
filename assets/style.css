@@ -618,6 +618,22 @@ a {
   caret-color: var(--color-primary) !important;
 }
 
+/* ── Dark: datepicker input wrapper ────────────────────────────────── */
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .dash-datepicker-input {
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper .dash-datepicker-range-arrow,
+[data-bs-theme="dark"] .dash-datepicker-input-wrapper .dash-datepicker-caret-icon {
+  color: var(--text-secondary) !important;
+  fill: var(--text-secondary) !important;
+}
+
 /* ── Dark: datepicker dialog (calendar popover) ──────────────────── */
 [data-bs-theme="dark"] [role="dialog"],
 [data-bs-theme="dark"] [data-radix-popper-content-wrapper] {
