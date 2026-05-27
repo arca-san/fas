@@ -1246,6 +1246,22 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
             dbc.Table(html.Tbody(mc_rows), size="sm", bordered=False, className="mb-0"),
         ]), className="mt-2")
 
+        # TWR vs MWR
+        twr_mwr_card = ""
+        try:
+            from components.metrics import estimate_mwr_vs_twr
+            first_returns = list(fund_dict.values())[0].set_index("tarih")["fiyat"].pct_change().dropna()
+            twr_mwr = estimate_mwr_vs_twr(first_returns, initial=100000, monthly_add=1000, years=1)
+            if twr_mwr:
+                twr_mwr_card = dbc.Card(dbc.CardBody([
+                    html.H6("TWR vs MWR Karşılaştırması", className="card-title"),
+                    html.Small(f"TWR (Zaman Ağırlıklı): %{twr_mwr['twr']} | "
+                               f"MWR (Para Ağırlıklı): %{twr_mwr['mwr'] if twr_mwr['mwr'] else '—'}",
+                               className="text-muted"),
+                ]), className="mt-1")
+        except Exception:
+            pass
+
         # Rebalancing simülasyonu
         rebal_df = simulate_rebalancing(fund_dict, w_dict, rebalance_freq="monthly", threshold=0.05)
         rebal_chart = create_rebalancing_chart(rebal_df, theme=theme)
@@ -1262,6 +1278,7 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
             dcc.Graph(figure=rebal_chart, config={"displayModeBar": False}),
             html.H6("Hedef Bazlı Projeksiyon (10 Yıl)", className="mt-3"),
             dcc.Graph(figure=goal_chart, config={"displayModeBar": False}),
+            twr_mwr_card,
         ])
 
         return ef_fig, pie_fig, sonuc_plus, status, bt_fig, mc_fig, mc_stats_div
