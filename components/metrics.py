@@ -146,6 +146,21 @@ def _batting_average(fund_returns: pd.Series, market_returns: pd.Series) -> floa
     return round(wins / len(common) * 100, 1)
 
 
+def _burke_ratio(ann_ret: float, rf_annual: float, prices: pd.Series) -> float:
+    """Burke Oranı = (R_p - R_f) / sqrt(Σ DD_i² / n)"""
+    if len(prices) < 2:
+        return 0.0
+    cum = prices / prices.iloc[0]
+    running_max = cum.expanding().max()
+    dd = (cum - running_max) / running_max
+    dd_squared_sum = (dd[dd < 0] ** 2).sum()
+    n = len(dd[dd < 0])
+    if n == 0:
+        return 0.0
+    burke_denom = np.sqrt(dd_squared_sum / n)
+    return (ann_ret - rf_annual) / burke_denom if burke_denom > 0 else 0.0
+
+
 def _drawdown_analysis(prices: pd.Series) -> dict:
     """Detaylı drawdown analizi: ortalama, süre, toparlanma, Ulcer Index."""
     if len(prices) < 2:
@@ -324,6 +339,7 @@ def calculate_fund_metrics(
         skew = round(float(sp_stats.skew(daily_returns_dates)), 3)
         kurt = round(float(sp_stats.kurtosis(daily_returns_dates)), 3)
         omega = _omega_ratio(daily_returns_dates)
+        burke = _burke_ratio(ann_ret, rf_annual, prices)
         market_vol = _annualized_vol(market_common) if len(common_dates) >= 2 else 0.0
         m2 = _m2_measure(ann_ret, vol, market_vol, rf_annual)
         active_share = _active_share_approx(daily_returns_dates, market_returns)
@@ -357,6 +373,7 @@ def calculate_fund_metrics(
             METRIC_OMEGA: omega,
             METRIC_ACTIVE_SHARE: active_share,
             METRIC_M2: m2,
+            METRIC_BURKE: round(burke, 3),
         }
 
     return results

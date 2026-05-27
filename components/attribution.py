@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 import statsmodels.api as sm
+from statsmodels.tsa.stattools import adfuller, coint
 
 TRADING_DAYS = 252
 
@@ -363,4 +364,43 @@ def brinson_attribution(fund_allocation: dict, benchmark_allocation: dict,
         "interaction_effect": round(interaction * 100, 3),
         "total_active": round(total_active * 100, 3),
         "details": sorted(details, key=lambda x: abs(x["allocation_effect"]), reverse=True),
+    }
+
+
+# ── Cointegration ──────────────────────────────────────────────────────
+
+def adf_test(series: pd.Series, maxlag: int = None):
+    """Augmented Dickey-Fuller birim kök testi. H0: seri durağan değil."""
+    if len(series) < 20:
+        return None
+    result = adfuller(series.dropna(), maxlag=maxlag, autolag="AIC")
+    return {
+        "stat": round(result[0], 4),
+        "pvalue": round(result[1], 4),
+        "critical_1pct": round(result[4]["1%"], 4),
+        "critical_5pct": round(result[4]["5%"], 4),
+        "critical_10pct": round(result[4]["10%"], 4),
+        "stationary": result[1] < 0.05,
+        "nobs": len(series) - result[2],
+    }
+
+
+def cointegration_test(series1: pd.Series, series2: pd.Series):
+    """Engle-Granger eşbütünleşme testi. H0: eşbütünleşme yok."""
+    common = series1.dropna().index.intersection(series2.dropna().index)
+    if len(common) < 30:
+        return None
+    s1 = series1.loc[common]
+    s2 = series2.loc[common]
+    result = coint(s1, s2, autolag="AIC")
+    hedge = (s2.std() / s1.std()) if s1.std() > 0 else 1.0
+
+    return {
+        "stat": round(result[0], 4),
+        "pvalue": round(result[1], 4),
+        "critical_1pct": round(result[2][0], 4),
+        "critical_5pct": round(result[2][1], 4),
+        "cointegrated": result[1] < 0.05,
+        "hedge_ratio": round(hedge, 4),
+        "nobs": len(common),
     }
