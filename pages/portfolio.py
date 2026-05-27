@@ -1165,7 +1165,7 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
         rf_annual = 0.45
         try:
             tlref_scraper = TLREFScraper()
-            tlref_all = tlref_scraper.from_zip() if True else tlref_scraper.from_csv()
+            tlref_all = tlref_scraper.from_zip()
             fon_tarihler = pd.to_datetime(fund_dict[kodlar[0]]["tarih"])
             min_t, max_t = fon_tarihler.min(), fon_tarihler.max()
             tlref_filtre = tlref_all[(tlref_all["date"] >= min_t) & (tlref_all["date"] <= max_t)]
@@ -1366,13 +1366,12 @@ def load_portfolio(portfolio_id):
     Output("pf-brinson-chart", "figure"),
     Output("pf-stress-chart", "figure"),
     Output("pf-stress-table", "children"),
-    Input("pf-optim-btn", "n_clicks"),
-    State("pf-fund-select", "value"),
+    Input("pf-fund-select", "value"),
     State("theme-store", "data"),
     State("fon-tipi-store", "data"),
     prevent_initial_call=True,
 )
-def run_attribution(n_clicks, fon_kodlari, theme, fon_tipi):
+def run_attribution(fon_kodlari, theme, fon_tipi):
     if not fon_kodlari or len(fon_kodlari) < 1:
         return ("", go.Figure(), go.Figure(), go.Figure(), go.Figure(), "")
     fon_kodlari = [k.upper() for k in fon_kodlari]

@@ -1,4 +1,5 @@
 (function() {
+    var noUpdate = (window.dash_clientside && window.dash_clientside.no_update);
     /* ── Chart Theme Colors (shared tokens) ─────────────────────────── */
     var CHART = {
         dark: {
@@ -134,7 +135,7 @@
 
     var clientsideFuncs = {
         update_home_charts: function(theme, fiyatFig, scatterFig, portfoyFig, korFig, rollingFig) {
-            if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update];
+            if (!theme) return [noUpdate, noUpdate, noUpdate, noUpdate, noUpdate];
             var t = getTheme(theme);
             var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
             var newScatter = scatterFig ? JSON.parse(JSON.stringify(scatterFig)) : scatterFig;
@@ -144,19 +145,28 @@
             return [updateLineChart(newFiyat, t), updateLineChart(newScatter, t), updateLineChart(newPortfoy, t), updateLineChart(newKor, t), updateLineChart(newRolling, t)];
         },
         update_portfolio_charts: function(theme, fiyatFig) {
-            if (!theme) return window.dash_clientside.no_update;
+            if (!theme) return noUpdate;
             var t = getTheme(theme);
             var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
             return updateLineChart(newFiyat, t);
         },
         update_fonbulucu_charts: function(theme, barFig) {
-            if (!theme) return window.dash_clientside.no_update;
+            if (!theme) return noUpdate;
             var t = getTheme(theme);
             var newBar = barFig ? JSON.parse(JSON.stringify(barFig)) : barFig;
             return updateBarChart(newBar, t);
         },
         update_optimization_charts: function(theme, efFig, pieFig, backtestFig, mcFig, ffFig, driftFig, brinsonFig, stressFig) {
-            // ...
+            if (!theme) return [noUpdate, noUpdate, noUpdate, noUpdate, noUpdate, noUpdate, noUpdate, noUpdate];
+            var t = getTheme(theme);
+            var newEf = efFig ? JSON.parse(JSON.stringify(efFig)) : efFig;
+            var newPie = pieFig ? JSON.parse(JSON.stringify(pieFig)) : pieFig;
+            var newBt = backtestFig ? JSON.parse(JSON.stringify(backtestFig)) : backtestFig;
+            var newMc = mcFig ? JSON.parse(JSON.stringify(mcFig)) : mcFig;
+            var newFf = ffFig ? JSON.parse(JSON.stringify(ffFig)) : ffFig;
+            var newDrift = driftFig ? JSON.parse(JSON.stringify(driftFig)) : driftFig;
+            var newBrinson = brinsonFig ? JSON.parse(JSON.stringify(brinsonFig)) : brinsonFig;
+            var newStress = stressFig ? JSON.parse(JSON.stringify(stressFig)) : stressFig;
             return [updateLineChart(newEf, t), updateLineChart(newPie, t), updateLineChart(newBt, t), updateLineChart(newMc, t), updateLineChart(newFf, t), updateLineChart(newDrift, t), updateLineChart(newBrinson, t), updateLineChart(newStress, t)];
         }
     };
@@ -178,6 +188,7 @@
     
     // ── ARIA improvements ──────────────────────────────────────────────
     (function() {
+    var noUpdate = (window.dash_clientside && window.dash_clientside.no_update);
         var graphs = document.querySelectorAll('.js-plotly-plot');
         graphs.forEach(function(g, i) {
             g.setAttribute('role', 'img');
@@ -217,3 +228,4 @@
         });
     }
 })();
+

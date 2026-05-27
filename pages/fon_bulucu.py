@@ -81,6 +81,7 @@ def _fmt_fav_btn(kod: str, fav_list: list) -> html.Span:
         className="fav-star",
         style={"cursor": "pointer", "fontSize": "1.1em"},
         n_clicks=0,
+        **{"role": "button", "aria-label": "Favorilere ekle/çıkar"},
     )
 
 

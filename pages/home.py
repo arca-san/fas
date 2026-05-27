@@ -11,7 +11,7 @@ import dash_mantine_components as dmc
 from datetime import date, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
-import io
+
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
