@@ -8,7 +8,7 @@ from components.layout import create_navbar, create_sidebar
 from components.onboarding import make_onboarding_modal
 
 app.layout = dmc.MantineProvider(
-    dbc.Container(
+    children=dbc.Container(
         [
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="analysis-store", storage_type="session"),
@@ -40,11 +40,11 @@ app.layout = dmc.MantineProvider(
                 ],
                 className="g-0",
             ),
+            make_onboarding_modal(),
         ],
         fluid=True,
         className="dbc",
     ),
-    make_onboarding_modal(),
     id="mantine-provider",
 )
 
