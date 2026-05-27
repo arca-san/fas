@@ -20,12 +20,17 @@ from components.metrics import (
     calculate_mix_metrics,
     get_fund_benchmarks,
 )
-from components.charts import create_price_chart, create_efficient_frontier_chart, create_portfolio_distribution_chart, create_monte_carlo_chart, create_backtest_chart, create_rebalancing_chart, create_goal_projection_chart
+from components.charts import create_price_chart, create_efficient_frontier_chart, create_portfolio_distribution_chart, create_monte_carlo_chart, create_backtest_chart, create_rebalancing_chart, create_goal_projection_chart, create_style_drift_chart, create_factor_loading_chart, create_stress_test_chart, create_brinson_chart
 from components.optimizer import (
     compute_covariance_matrix, compute_expected_returns,
     max_sharpe_portfolio, min_variance_portfolio, risk_parity_portfolio,
     efficient_frontier_points, simulate_rebalancing, walk_forward_backtest,
     monte_carlo_simulation, monte_carlo_stats, goal_based_projection,
+)
+from components.attribution import (
+    te_decomposition, fama_french_regression, construct_simple_factors,
+    rbsa_analysis, style_drift_tracking, run_stress_test_batch,
+    brinson_attribution,
 )
 from config.logger import get_logger
 from config.benchmarks import benchmark_koda_gore, all_benchmark_options, get_benchmark_data
@@ -302,6 +307,28 @@ layout = dbc.Container([
                         dcc.Graph(id="pf-backtest-chart", config={"displayModeBar": False}),
                         dcc.Graph(id="pf-mc-chart", config={"displayModeBar": False}),
                         html.Div(id="pf-mc-stats"),
+                    ])),
+                ],
+            ),
+            dbc.Tab(
+                label="Atıf & Faktör",
+                tab_id="pf-tab-attribution",
+                children=[
+                    dcc.Loading(html.Div([
+                        html.Div(id="pf-te-sonuc"),
+                        dcc.Graph(id="pf-ff-chart", config={"displayModeBar": False}),
+                        dcc.Graph(id="pf-style-drift-chart", config={"displayModeBar": False}),
+                        dcc.Graph(id="pf-brinson-chart", config={"displayModeBar": False}),
+                    ])),
+                ],
+            ),
+            dbc.Tab(
+                label="Stres Testi",
+                tab_id="pf-tab-stress",
+                children=[
+                    dcc.Loading(html.Div([
+                        dcc.Graph(id="pf-stress-chart", config={"displayModeBar": False}),
+                        html.Div(id="pf-stress-table"),
                     ])),
                 ],
             ),
@@ -1240,6 +1267,167 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
                 go.Figure(), go.Figure(), "")
 
 
+# ── Atıf & Stres callback ─────────────────────────────────────────────
+@callback(
+    Output("pf-te-sonuc", "children"),
+    Output("pf-ff-chart", "figure"),
+    Output("pf-style-drift-chart", "figure"),
+    Output("pf-brinson-chart", "figure"),
+    Output("pf-stress-chart", "figure"),
+    Output("pf-stress-table", "children"),
+    Input("pf-optim-btn", "n_clicks"),
+    State("pf-fund-select", "value"),
+    State("theme-store", "data"),
+    State("fon-tipi-store", "data"),
+    prevent_initial_call=True,
+)
+def run_attribution(n_clicks, fon_kodlari, theme, fon_tipi):
+    if not fon_kodlari or len(fon_kodlari) < 1:
+        return ("", go.Figure(), go.Figure(), go.Figure(), go.Figure(), "")
+    fon_kodlari = [k.upper() for k in fon_kodlari]
+    fon_tipi = fon_tipi or "YAT"
+
+    try:
+        from datetime import date, timedelta
+        end = date.today()
+        start = end - timedelta(days=365 * 2)
+        fetcher = TefasFetcher()
+        fund_dict = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(fetcher.get_historical_data, f, start, end): f for f in fon_kodlari}
+            for future in as_completed(futures):
+                f = futures[future]
+                try:
+                    df = future.result()
+                    if not df.empty and len(df) >= 20:
+                        fund_dict[f] = df
+                except Exception:
+                    pass
+        if not fund_dict:
+            return ("", go.Figure(), go.Figure(), go.Figure(), go.Figure(), "")
+
+        # Benchmark verileri
+        from config.benchmarks import get_benchmark_data
+        fhise_df = get_benchmark_data("FHISE", start, end)
+        td91g_df = get_benchmark_data("TD91G", start, end)
+        atkap_df = get_benchmark_data("ATKAP", start, end)
+        osabt_df = get_benchmark_data("OSABT", start, end)
+        repbr_df = get_benchmark_data("REPBR", start, end)
+
+        def to_ret(df):
+            if df.empty:
+                return pd.Series(dtype=float)
+            s = df.set_index("tarih")["fiyat"]
+            return s.pct_change().dropna()
+
+        fhise_ret = to_ret(fhise_df)
+        td91g_ret = to_ret(td91g_df)
+        atkap_ret = to_ret(atkap_df)
+        osabt_ret = to_ret(osabt_df)
+        repbr_ret = to_ret(repbr_df)
+
+        first_kod = list(fund_dict.keys())[0]
+        fund_df = fund_dict[first_kod].set_index("tarih")["fiyat"]
+        fund_ret = fund_df.pct_change().dropna()
+
+        # TE Decomposition
+        te_html = ""
+        if not fhise_ret.empty:
+            te = te_decomposition(fund_ret, fhise_ret)
+            if te:
+                te_html = dbc.Card(dbc.CardBody([
+                    html.H6("Tracking Error Dekompozisyonu", className="card-title"),
+                    dbc.Row([
+                        dbc.Col(html.Div([
+                            html.Small("Toplam TE"), html.H5(f"%{te['total_te']}"),
+                        ]), xs=4),
+                        dbc.Col(html.Div([
+                            html.Small("Sistematik"), html.H5(f"%{te['systematic_te']} ({te['systematic_ratio']}%)"),
+                        ]), xs=4),
+                        dbc.Col(html.Div([
+                            html.Small("İdiosinkratik"), html.H5(f"%{te['idiosyncratic_te']} ({te['idiosyncratic_ratio']}%)"),
+                        ]), xs=4),
+                    ]),
+                    html.Small(f"Beta: {te['beta']:.3f} | Alpha: {te['alpha']:.4f} | R²: {te['r_squared']:.3f}",
+                              className="text-muted"),
+                ]), className="mb-3")
+
+        # FF Regression
+        ff_factors = {"MKT": fhise_ret}
+        if not fhise_ret.empty:
+            # SMB proxy ekle
+            try:
+                bist30_df = get_benchmark_data("XU030.IS", start, end)
+                if not bist30_df.empty:
+                    bist30_ret = bist30_df.set_index("tarih")["fiyat"].pct_change().dropna()
+                    common = fhise_ret.index.intersection(bist30_ret.index)
+                    if len(common) > 20:
+                        ff_factors["SMB"] = (fhise_ret.loc[common] - bist30_ret.loc[common]).dropna()
+            except Exception:
+                pass
+        ff_result = fama_french_regression(fund_ret, ff_factors)
+        ff_fig = create_factor_loading_chart(ff_result, theme=theme) if ff_result else go.Figure()
+
+        # RBSA Style Drift
+        asset_rets = {}
+        for name, s in [("Hisse", fhise_ret), ("Tahvil", td91g_ret), ("Altın", atkap_ret),
+                         ("Özel Sektör", osabt_ret), ("Repo", repbr_ret)]:
+            if not s.empty:
+                asset_rets[name] = s
+        drift_df = style_drift_tracking(fund_ret, asset_rets, window=min(252, len(fund_ret) - 1))
+        drift_fig = create_style_drift_chart(drift_df, theme=theme) if not drift_df.empty else go.Figure()
+
+        # Brinson (point-in-time)
+        brinson_fig = go.Figure()
+        try:
+            dist = fetcher.get_portfolio_distribution(first_kod, fon_tipi=fon_tipi)
+            if dist:
+                # Benchmark: fon kategorisine göre mapping
+                benchmark_w = {"Hisse Senedi": 60, "Devlet Tahvili": 40}  # default
+                asset_rets_pct = {}
+                if not fhise_ret.empty:
+                    asset_rets_pct["Hisse Senedi"] = (fhise_df.set_index("tarih")["fiyat"].iloc[-1] / fhise_df.set_index("tarih")["fiyat"].iloc[0] - 1) * 100
+                if not td91g_ret.empty:
+                    asset_rets_pct["Devlet Tahvili"] = (td91g_df.set_index("tarih")["fiyat"].iloc[-1] / td91g_df.set_index("tarih")["fiyat"].iloc[0] - 1) * 100
+                br = brinson_attribution(dist, benchmark_w, asset_rets_pct)
+                if br:
+                    brinson_fig = create_brinson_chart(br, theme=theme)
+        except Exception:
+            pass
+
+        # Stres Testi
+        fund_metrics_simple = {}
+        for kod, df in fund_dict.items():
+            rets = df.set_index("tarih")["fiyat"].pct_change().dropna()
+            if len(rets) > 5:
+                fund_metrics_simple[kod] = {"Beta": rets.corr(fhise_ret) if not fhise_ret.empty else 1.0}
+        stress_results = run_stress_test_batch(fund_dict, fund_metrics_simple)
+        stress_fig = create_stress_test_chart(stress_results, theme=theme)
+        stress_table = ""
+        if stress_results:
+            rows = []
+            for kod in fund_dict.keys():
+                cells = [html.Td(html.Strong(kod))]
+                for scenario_name in stress_results.keys():
+                    val = stress_results[scenario_name].get(kod)
+                    color = "#d62728" if val is not None and val < 0 else "#2ca02c" if val is not None else "#888"
+                    cells.append(html.Td(f"%{val:.1f}" if val is not None else "-",
+                                         style={"textAlign": "center", "color": color}))
+                rows.append(html.Tr(cells))
+            header = [html.Th("Fon")] + [html.Th(s, style={"fontSize": "0.8em"}) for s in stress_results.keys()]
+            stress_table = dbc.Card(dbc.CardBody([
+                html.H6("Tüm Fonlar — Senaryo Etkileri", className="card-title"),
+                dbc.Table([html.Thead(html.Tr(header)), html.Tbody(rows)],
+                          striped=True, bordered=True, hover=True, size="sm", responsive=True),
+            ]), className="mt-2")
+
+        return te_html, ff_fig, drift_fig, brinson_fig, stress_fig, stress_table
+
+    except Exception as exc:
+        logger.warning("Atıf hatasi: %s", exc)
+        return (f"Hata: {exc}", go.Figure(), go.Figure(), go.Figure(), go.Figure(), "")
+
+
 dash.clientside_callback(
     ClientsideFunction(
         namespace='clientside',
@@ -1261,10 +1449,18 @@ dash.clientside_callback(
     Output("pf-optim-pie", "figure", allow_duplicate=True),
     Output("pf-backtest-chart", "figure", allow_duplicate=True),
     Output("pf-mc-chart", "figure", allow_duplicate=True),
+    Output("pf-ff-chart", "figure", allow_duplicate=True),
+    Output("pf-style-drift-chart", "figure", allow_duplicate=True),
+    Output("pf-brinson-chart", "figure", allow_duplicate=True),
+    Output("pf-stress-chart", "figure", allow_duplicate=True),
     Input("theme-store", "data"),
     State("pf-ef-grafik", "figure"),
     State("pf-optim-pie", "figure"),
     State("pf-backtest-chart", "figure"),
     State("pf-mc-chart", "figure"),
+    State("pf-ff-chart", "figure"),
+    State("pf-style-drift-chart", "figure"),
+    State("pf-brinson-chart", "figure"),
+    State("pf-stress-chart", "figure"),
     prevent_initial_call=True,
 )
