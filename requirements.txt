@@ -26,3 +26,9 @@ yfinance==1.2.0
 
 # Test
 pytest>=7.4
+
+# Gerçek zamanlı / WebSocket
+flask-socketio>=5.3
+
+# E-posta
+flask-mail>=0.9.1
