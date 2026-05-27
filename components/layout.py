@@ -14,7 +14,7 @@ def create_navbar() -> dbc.Navbar:
                 outline=True,
                 className="d-md-none me-2 border-0",
                 style={"--bs-btn-color": "white"},
-                **{"aria-label": "Menüyü aç/kapat"},
+                title="Menüyü aç/kapat",
             ),
             html.Div(
                 html.Img(
@@ -38,7 +38,7 @@ def create_navbar() -> dbc.Navbar:
                         outline=True,
                         className="me-1 border-white",
                         style={"--bs-btn-color": "white", "fontSize": "1.0rem", "padding": "0.2rem 0.4rem"},
-                        **{"aria-label": "Yardım"},
+                        title="Yardım",
                     ),
                     dbc.Button(
                         "🌙",
