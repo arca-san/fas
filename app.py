@@ -74,17 +74,7 @@ init_auth(server)
 server.register_blueprint(api)
 
 
-# Login koruması — giriş yapmamış kullanıcıları /giris sayfasına yönlendir
+# Login koruması devre dışı — şimdilik auth yok
 @server.before_request
 def require_login():
-    try:
-        if request.path.startswith(("/_dash-", "/assets", "/api/", "/_realtime-")):
-            return None
-        if request.method == "POST":
-            return None
-        if request.path in ("/giris", "/", ""):
-            return None
-        if not current_user.is_authenticated:
-            return redirect("/giris")
-    except Exception:
-        pass
+    return None
