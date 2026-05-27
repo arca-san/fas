@@ -294,7 +294,9 @@ layout = dbc.Container([
                                 html.Label("Max Tek Fon Ağırlığı (%)", className="fw-semibold"),
                                 dbc.Input(id="pf-optim-maxw", type="number", value=40, min=1, max=100, className="mb-2"),
                                 html.Label("Min Tek Fon Ağırlığı (%)", className="fw-semibold"),
-                                dbc.Input(id="pf-optim-minw", type="number", value=1, min=0, max=50, className="mb-3"),
+                                dbc.Input(id="pf-optim-minw", type="number", value=1, min=0, max=50, className="mb-2"),
+                                html.Label("Hedef Getiri (%) (opsiyonel)", className="fw-semibold"),
+                                dbc.Input(id="pf-optim-target", type="number", placeholder="boş = otomatik", className="mb-3"),
                                 dbc.Button("Optimize Et", id="pf-optim-btn", color="primary", className="w-100"),
                                 html.Div(id="pf-optim-status", className="mt-2 text-info"),
                             ])),
@@ -1118,10 +1120,11 @@ def update_summary_table(results_data, selected_metric):
     State("pf-optim-method", "value"),
     State("pf-optim-maxw", "value"),
     State("pf-optim-minw", "value"),
+    State("pf-optim-target", "value"),
     State("theme-store", "data"),
     prevent_initial_call=True,
 )
-def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme):
+def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, target_w_pct, theme):
     if not fon_kodlari or len(fon_kodlari) < 2:
         return (go.Figure(), go.Figure(), "", "En az 2 fon seçmelisiniz.",
                 go.Figure(), go.Figure(), "")
@@ -1184,6 +1187,17 @@ def run_optimization(n_clicks, fon_kodlari, method, max_w_pct, min_w_pct, theme)
         else:
             weights = risk_parity_portfolio(cov, max_iter=100, tol=1e-8, min_w=min_w, max_w=max_w)
             method_label = "Risk Parity (ERC)"
+
+        # Hedef getiri override
+        if target_w_pct and method == "sharpe":
+            target_ret = target_w_pct / 100.0
+            try:
+                from components.optimizer import min_variance_for_return
+                w_target = min_variance_for_return(rets, cov, target_ret, min_w, max_w)
+                weights = w_target
+                method_label = f"Hedef %{target_w_pct:.0f}"
+            except Exception:
+                pass
 
         w_dict = {k: round(float(weights[i]), 4) for i, k in enumerate(kodlar) if weights[i] > 0.001}
         n_selected = len(w_dict)
