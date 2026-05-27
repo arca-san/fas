@@ -637,3 +637,125 @@ def create_goal_projection_chart(
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
     return fig
+
+
+def create_style_drift_chart(
+    drift_df: pd.DataFrame,
+    theme: str = "light",
+) -> go.Figure:
+    """RBSA stil kayması — stacked area chart."""
+    if drift_df.empty or len(drift_df.columns) < 2:
+        return go.Figure()
+    is_dark = theme == "dark"
+    fig = go.Figure()
+    cols = [c for c in drift_df.columns if c != "tarih"]
+    palet = DEFAULT_COLOR_PALETTE
+    for i, col in enumerate(cols):
+        fig.add_trace(go.Scatter(
+            x=drift_df["tarih"], y=drift_df[col], mode="lines",
+            name=col, stackgroup="one",
+            line=dict(width=0.5, color=palet[i % len(palet)]),
+            hovertemplate="%{x|%Y-%m-%d}<br>" + col + ": %{y:.1%}<extra></extra>",
+        ))
+    fig.update_layout(
+        title="Stil Kayması (RBSA Rolling)",
+        xaxis_title="Tarih", yaxis_title="Ağırlık",
+        template="plotly_dark" if is_dark else "plotly",
+        hovermode="x unified", margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
+
+
+def create_factor_loading_chart(
+    ff_result: dict,
+    theme: str = "light",
+) -> go.Figure:
+    """Fama-French faktör yüklemeleri bar chart."""
+    if not ff_result or not ff_result.get("betas"):
+        return go.Figure()
+    is_dark = theme == "dark"
+    factors = list(ff_result["betas"].keys())
+    loadings = [ff_result["betas"][f] for f in factors]
+    t_vals = [ff_result["t_stats"].get(f, 0) for f in factors]
+    colors = ["#2ca02c" if abs(t) >= 2 else "#d62728" for t in t_vals]
+
+    fig = go.Figure(data=[go.Bar(
+        x=factors, y=loadings, marker_color=colors,
+        text=[f"{l:.3f} (t={t:.1f})" for l, t in zip(loadings, t_vals)],
+        textposition="outside",
+        textfont=dict(color="#ffffff" if is_dark else "#212529"),
+    )])
+    title_text = f"Faktör Yüklemeleri | Alpha: {ff_result.get('alpha', 0):.4f} | Adj R²: {ff_result.get('adj_r2', 0):.3f}"
+    fig.update_layout(
+        title=title_text, xaxis_title="Faktör", yaxis_title="Beta",
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=40, r=40, t=60, b=40),
+    )
+    fig.add_hline(y=0, line_dash="dash", line_color="gray")
+    return fig
+
+
+def create_stress_test_chart(
+    stress_results: dict,
+    theme: str = "light",
+) -> go.Figure:
+    """Stres testi sonuçları — yatay bar chart."""
+    if not stress_results:
+        return go.Figure()
+    is_dark = theme == "dark"
+
+    # İlk fon için tüm senaryoları göster
+    first_kod = list(stress_results[next(iter(stress_results))].keys())[0]
+    scenarios = list(stress_results.keys())
+    impacts = [stress_results[s].get(first_kod) for s in scenarios]
+    colors = ["#d62728" if v is not None and v < 0 else "#2ca02c" for v in impacts]
+
+    fig = go.Figure(data=[go.Bar(
+        y=scenarios, x=impacts, orientation="h",
+        marker_color=colors,
+        text=[f"%{v:.1f}" if v is not None else "-" for v in impacts],
+        textposition="outside",
+        textfont=dict(color="#ffffff" if is_dark else "#212529"),
+    )])
+    fig.update_layout(
+        title=f"Stres Testi — {first_kod}",
+        xaxis_title="Etki (%)", yaxis_title="Senaryo",
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=40, r=40, t=60, b=40),
+    )
+    fig.add_vline(x=0, line_dash="dash", line_color="gray")
+    return fig
+
+
+def create_brinson_chart(
+    attribution_result: dict,
+    theme: str = "light",
+) -> go.Figure:
+    """Brinson atıf waterfall/bar chart."""
+    if not attribution_result:
+        return go.Figure()
+    is_dark = theme == "dark"
+
+    effects = ["Allocation", "Selection", "Interaction", "Toplam Aktif"]
+    values = [
+        attribution_result.get("allocation_effect", 0),
+        attribution_result.get("selection_effect", 0),
+        attribution_result.get("interaction_effect", 0),
+        attribution_result.get("total_active", 0),
+    ]
+    colors = ["#1abc9c" if v >= 0 else "#d62728" for v in values]
+
+    fig = go.Figure(data=[go.Bar(
+        x=effects, y=values, marker_color=colors,
+        text=[f"%{v:.3f}" for v in values], textposition="outside",
+        textfont=dict(color="#ffffff" if is_dark else "#212529"),
+    )])
+    fig.update_layout(
+        title="Brinson Atıf",
+        xaxis_title="Etki", yaxis_title="Katkı (%)",
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=40, r=40, t=60, b=40),
+    )
+    fig.add_hline(y=0, line_dash="dash", line_color="gray")
+    return fig
