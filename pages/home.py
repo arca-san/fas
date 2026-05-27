@@ -14,7 +14,7 @@ import pandas as pd
 
 from data.fetchers import _tefas_api
 from data.fetchers.tefas_fetcher import TefasFetcher
-from components.charts import create_price_chart, create_risk_return_scatter
+from components.charts import create_price_chart, create_risk_return_scatter, create_portfolio_distribution_chart
 from components.metrics import calculate_fund_metrics, select_fund_benchmark, calculate_mix_metrics, get_fund_benchmarks
 from config.logger import get_logger
 from config.benchmarks import benchmark_options as kyd_benchmark_options
@@ -115,6 +115,21 @@ layout = dbc.Container(
                                 id="loading-scatter",
                                 type="default",
                                 children=dcc.Graph(id="risk-getiri-scatter", config={"displayModeBar": True}),
+                            ),
+                        ]
+                    )
+                ],
+                className="mb-3",
+            ),
+            dbc.Card(
+                [
+                    dbc.CardBody(
+                        [
+                            html.H5("Fon Portföy Dağılımı", className="card-title"),
+                            dcc.Loading(
+                                id="loading-portfoy",
+                                type="default",
+                                children=dcc.Graph(id="portfoy-dagilimi", config={"displayModeBar": False}),
                             ),
                         ]
                     )
@@ -259,6 +274,7 @@ def uppercase_search(val):
 @callback(
     Output("fiyat-grafigi", "figure"),
     Output("risk-getiri-scatter", "figure"),
+    Output("portfoy-dagilimi", "figure"),
     Output("grafik-alani", "style"),
     Output("analiz-status", "children"),
     Output("tefas-uyari", "style"),
@@ -286,7 +302,7 @@ def run_analysis(
     fon_kodlari = [k.upper() for k in (fon_kodlari or [])]
     logger.info("FON KODLARI GELEN: %s (type: %s)", fon_kodlari, type(fon_kodlari))
     if not fon_kodlari:
-        return go.Figure(), go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), []
+        return go.Figure(), go.Figure(), go.Figure(), {"display": "none"}, "Lutfen en az bir fon secin.", {"display": "none"}, html.Small("Henüz fon seçilmedi", className="text-muted"), []
 
     try:
         from datetime import datetime
@@ -319,7 +335,7 @@ def run_analysis(
                     hata_list.append(f"{fon_kodu}: {exc}")
 
         if not fund_dict:
-            return go.Figure(), go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), []
+            return go.Figure(), go.Figure(), go.Figure(), {"display": "none"}, " | ".join(hata_list) if hata_list else "Veri bulunamadi.", {"display": "none"}, html.Small("Metrik hesaplanamadi", className="text-muted"), []
 
         status_parts = [f"{len(fund_dict)} fon, {min(len(d) for d in fund_dict.values())} gun"]
 
@@ -602,10 +618,26 @@ def run_analysis(
 
         scatter_fig = create_risk_return_scatter(scatter_metrics, theme=theme)
 
-        return fig, scatter_fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
+        # Portföy dağılımı
+        portfoy_dagilim = {}
+        try:
+            first_fon = list(fund_dict.keys())[0]
+            dist = fetcher.get_portfolio_distribution(first_fon)
+            if dist:
+                portfoy_dagilim = dist
+                status_parts.append("portföy dağılımı alındı")
+        except Exception as exc:
+            logger.debug("Portföy dağılımı alınamadı: %s", exc)
+        portfoy_fig = create_portfolio_distribution_chart(
+            portfoy_dagilim,
+            title=f"{first_fon} - Portföy Dağılımı",
+            theme=theme,
+        )
+
+        return fig, scatter_fig, portfoy_fig, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes
     except Exception as exc:
         logger.exception("Analiz hatasi")
-        return go.Figure(), go.Figure(), {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), []
+        return go.Figure(), go.Figure(), go.Figure(), {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), []
 
 
 def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None, fon_benchmark_correlations: dict = None):
@@ -1140,8 +1172,10 @@ dash.clientside_callback(
     ),
     Output("fiyat-grafigi", "figure", allow_duplicate=True),
     Output("risk-getiri-scatter", "figure", allow_duplicate=True),
+    Output("portfoy-dagilimi", "figure", allow_duplicate=True),
     Input("theme-store", "data"),
     State("fiyat-grafigi", "figure"),
     State("risk-getiri-scatter", "figure"),
+    State("portfoy-dagilimi", "figure"),
     prevent_initial_call=True,
 )

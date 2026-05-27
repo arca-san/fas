@@ -133,12 +133,13 @@
     /* ── Exported client-side callbacks ─────────────────────────────── */
 
     var clientsideFuncs = {
-        update_home_charts: function(theme, fiyatFig, scatterFig) {
-            if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update];
+        update_home_charts: function(theme, fiyatFig, scatterFig, portfoyFig) {
+            if (!theme) return [window.dash_clientside.no_update, window.dash_clientside.no_update, window.dash_clientside.no_update];
             var t = getTheme(theme);
             var newFiyat = fiyatFig ? JSON.parse(JSON.stringify(fiyatFig)) : fiyatFig;
             var newScatter = scatterFig ? JSON.parse(JSON.stringify(scatterFig)) : scatterFig;
-            return [updateLineChart(newFiyat, t), updateLineChart(newScatter, t)];
+            var newPortfoy = portfoyFig ? JSON.parse(JSON.stringify(portfoyFig)) : portfoyFig;
+            return [updateLineChart(newFiyat, t), updateLineChart(newScatter, t), updateLineChart(newPortfoy, t)];
         },
         update_portfolio_charts: function(theme, fiyatFig) {
             if (!theme) return window.dash_clientside.no_update;

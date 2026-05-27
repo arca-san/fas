@@ -243,3 +243,39 @@ def create_risk_return_scatter(
         ),
     )
     return fig
+
+
+def create_portfolio_distribution_chart(
+    distribution: dict,
+    title: str = "Fon Portföy Dağılımı",
+    theme: str = "light",
+) -> go.Figure:
+    """Fonun varlık sınıflarına göre dağılımını donut chart ile gösterir."""
+    if not distribution:
+        fig = go.Figure()
+        fig.update_layout(title=title, template="plotly_dark" if theme == "dark" else "plotly")
+        fig.add_annotation(text="Veri bulunamadı", showarrow=False, font=dict(size=14))
+        return fig
+
+    labels = list(distribution.keys())
+    values = list(distribution.values())
+    is_dark = theme == "dark"
+
+    fig = go.Figure(data=[
+        go.Pie(
+            labels=labels,
+            values=values,
+            hole=0.4,
+            textinfo="label+percent",
+            textfont=dict(size=11, color="#ffffff" if is_dark else "#212529"),
+            marker=dict(line=dict(color="#1a1a1a" if is_dark else "#ffffff", width=1)),
+            hovertemplate="%{label}<br>%{percent:.1%}<br>%{value:.1f}%<extra></extra>",
+        )
+    ])
+    fig.update_layout(
+        title=title,
+        template="plotly_dark" if is_dark else "plotly",
+        margin=dict(l=10, r=10, t=50, b=10),
+        legend=dict(orientation="v", x=1.05, y=0.5),
+    )
+    return fig
