@@ -1339,7 +1339,7 @@ def confirm_save(n_clicks, name, fund_codes, weights, fon_tipi):
         dbc.Button("Kayıtlı Yükle", id="pf-load-btn", color="outline-secondary", size="sm", className="me-2"),
         dcc.Dropdown(id="pf-load-select", options=options, placeholder="Portföy seç...",
                     searchable=True, clearable=True, style={"display": "inline-block", "width": "300px", "verticalAlign": "middle"}),
-    ]), options
+    ])
 
 
 @callback(
