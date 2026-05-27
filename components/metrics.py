@@ -24,8 +24,20 @@ from config.constants import (
     METRIC_INFORMATION_RATIO,
     METRIC_TOTAL_RETURN,
     METRIC_ANNUALIZED_RETURN,
+    METRIC_CALMAR,
+    METRIC_STERLING,
+    METRIC_UP_CAPTURE,
+    METRIC_DOWN_CAPTURE,
+    METRIC_BATTING_AVG,
+    METRIC_SKEWNESS,
+    METRIC_KURTOSIS,
+    METRIC_AVG_DRAWDOWN,
+    METRIC_DD_DURATION,
+    METRIC_RECOVERY_TIME,
+    METRIC_ULCER,
 )
 from config.settings import VAR_CONFIDENCE
+from scipy import stats as sp_stats
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +106,70 @@ def _r_squared(fund_returns: pd.Series, market_returns: pd.Series) -> float:
     if pd.isna(corr):
         return 0.0
     return round(corr ** 2, 4)
+
+
+def _calmar_ratio(ann_ret: float, max_dd: float) -> float:
+    """Calmar Oranı = Yıllık Getiri / Max Drawdown."""
+    return (ann_ret * 100) / max_dd if max_dd > 0 else 0.0
+
+
+def _sterling_ratio(ann_ret: float, avg_dd: float) -> float:
+    """Sterling Oranı = Yıllık Getiri / (Ortalama DD + %10)."""
+    return (ann_ret * 100) / (avg_dd + 10) if (avg_dd + 10) > 0 else 0.0
+
+
+def _up_down_capture(fund_returns: pd.Series, market_returns: pd.Series) -> tuple:
+    """Up/Down Capture oranları."""
+    common = fund_returns.index.intersection(market_returns.index)
+    if len(common) < 5:
+        return 0.0, 0.0
+    fr = fund_returns.loc[common]
+    mr = market_returns.loc[common]
+    up_mask = mr > 0
+    down_mask = mr < 0
+    up_cap = (fr[up_mask].mean() / mr[up_mask].mean() * 100) if up_mask.any() and mr[up_mask].mean() != 0 else 0.0
+    down_cap = (fr[down_mask].mean() / mr[down_mask].mean() * 100) if down_mask.any() and mr[down_mask].mean() != 0 else 0.0
+    return round(up_cap, 1), round(down_cap, 1)
+
+
+def _batting_average(fund_returns: pd.Series, market_returns: pd.Series) -> float:
+    """Benchmark'ı yendiği dönemlerin yüzdesi."""
+    common = fund_returns.index.intersection(market_returns.index)
+    if len(common) < 5:
+        return 0.0
+    fr = fund_returns.loc[common]
+    mr = market_returns.loc[common]
+    wins = (fr > mr).sum()
+    return round(wins / len(common) * 100, 1)
+
+
+def _drawdown_analysis(prices: pd.Series) -> dict:
+    """Detaylı drawdown analizi: ortalama, süre, toparlanma, Ulcer Index."""
+    if len(prices) < 2:
+        return {"avg_dd": 0.0, "dd_duration": 0, "recovery": 0, "ulcer": 0.0}
+    cum = prices / prices.iloc[0]
+    running_max = cum.expanding().max()
+    dd_series = (cum - running_max) / running_max
+    dd_periods = []
+    in_dd = False
+    dd_start = 0
+    dd_values = []
+    for i, dd in enumerate(dd_series):
+        if dd < 0 and not in_dd:
+            in_dd = True
+            dd_start = i
+        elif dd >= 0 and in_dd:
+            in_dd = False
+            dd_periods.append((i - dd_start, dd_series.iloc[dd_start:i].min()))
+        if dd < 0:
+            dd_values.append(dd)
+    if in_dd:
+        dd_periods.append((len(dd_series) - dd_start, dd_series.iloc[dd_start:].min()))
+    avg_dd = abs(np.mean([abs(v) for _, v in dd_periods])) * 100 if dd_periods else 0.0
+    avg_duration = np.mean([d for d, _ in dd_periods]) if dd_periods else 0
+    ulcer = np.sqrt(np.mean(np.array([v ** 2 for v in dd_values]))) * 100 if dd_values else 0.0
+    recovery = avg_duration  # basit yaklaşım
+    return {"avg_dd": round(avg_dd, 2), "dd_duration": int(avg_duration), "recovery": int(recovery), "ulcer": round(ulcer, 2)}
 
 
 def calculate_fund_metrics(
@@ -208,6 +284,15 @@ def calculate_fund_metrics(
         cvar_95 = _conditional_var(daily_returns_dates)
         r2_val = _r_squared(daily_returns_dates, market_returns)
 
+        # Yeni metrikler
+        calmar = _calmar_ratio(ann_ret, max_dd)
+        dd_info = _drawdown_analysis(prices)
+        sterling = _sterling_ratio(ann_ret, dd_info["avg_dd"])
+        up_cap, down_cap = _up_down_capture(daily_returns_dates, market_returns)
+        batting = _batting_average(daily_returns_dates, market_returns)
+        skew = round(float(sp_stats.skew(daily_returns_dates)), 3)
+        kurt = round(float(sp_stats.kurtosis(daily_returns_dates)), 3)
+
         results[kod] = {
             METRIC_TOTAL_RETURN: round(total_return, 2),
             METRIC_ANNUALIZED_RETURN: round(ann_return_pct, 2),
@@ -223,6 +308,17 @@ def calculate_fund_metrics(
             METRIC_ALPHA: round(jensen, 3),
             METRIC_R_SQUARED: r2_val,
             METRIC_INFORMATION_RATIO: round(info_ratio, 3),
+            METRIC_CALMAR: round(calmar, 3),
+            METRIC_STERLING: round(sterling, 3),
+            METRIC_UP_CAPTURE: up_cap,
+            METRIC_DOWN_CAPTURE: down_cap,
+            METRIC_BATTING_AVG: batting,
+            METRIC_SKEWNESS: skew,
+            METRIC_KURTOSIS: kurt,
+            METRIC_AVG_DRAWDOWN: dd_info["avg_dd"],
+            METRIC_DD_DURATION: dd_info["dd_duration"],
+            METRIC_RECOVERY_TIME: dd_info["recovery"],
+            METRIC_ULCER: dd_info["ulcer"],
         }
 
     return results

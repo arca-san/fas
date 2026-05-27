@@ -29,6 +29,17 @@ METRIC_R_SQUARED = "R²"
 METRIC_INFORMATION_RATIO = "Enformasyon Oranı"
 METRIC_TOTAL_RETURN = "Toplam Getiri"
 METRIC_ANNUALIZED_RETURN = "Yıllıklandırılmış Getiri"
+METRIC_CALMAR = "Calmar Oranı"
+METRIC_STERLING = "Sterling Oranı"
+METRIC_UP_CAPTURE = "Up Capture (%)"
+METRIC_DOWN_CAPTURE = "Down Capture (%)"
+METRIC_BATTING_AVG = "Batting Average (%)"
+METRIC_SKEWNESS = "Çarpıklık (Skewness)"
+METRIC_KURTOSIS = "Basıklık (Kurtosis)"
+METRIC_AVG_DRAWDOWN = "Ortalama Düşüş (%)"
+METRIC_DD_DURATION = "DD Süresi (Gün)"
+METRIC_RECOVERY_TIME = "Toparlanma Süresi (Gün)"
+METRIC_ULCER = "Ulcer Index (%)"
 
 # Metrik açıklamaları (raporlarda kullanılır)
 METRIC_DESCRIPTIONS = {
@@ -46,6 +57,17 @@ METRIC_DESCRIPTIONS = {
     METRIC_INFORMATION_RATIO: "Aktif getiri / Tracking error.",
     METRIC_TOTAL_RETURN: "Seçilen dönemdeki toplam getiri.",
     METRIC_ANNUALIZED_RETURN: "Yıllıklandırılmış ortalama getiri.",
+    METRIC_CALMAR: "Yıllık getiri / Maksimum düşüş. Drawdown bazlı risk-ayarlı getiri.",
+    METRIC_STERLING: "Yıllık getiri / (Ortalama DD + %10). Yumuşatılmış drawdown oranı.",
+    METRIC_UP_CAPTURE: "Piyasa yükselirken fonun yakaladığı getiri oranı (%).",
+    METRIC_DOWN_CAPTURE: "Piyasa düşerken fonun kaybettiği getiri oranı (%).",
+    METRIC_BATTING_AVG: "Fonun benchmark'ı yendiği dönemlerin yüzdesi.",
+    METRIC_SKEWNESS: "Getiri dağılımının asimetrisi. Negatif = sola çarpık (kötü).",
+    METRIC_KURTOSIS: "Getiri dağılımının kuyruk kalınlığı. >3 = şişman kuyruk.",
+    METRIC_AVG_DRAWDOWN: "Tüm düşüşlerin ortalaması.",
+    METRIC_DD_DURATION: "Ortalama düşüş süresi (iş günü).",
+    METRIC_RECOVERY_TIME: "Düşüşten toparlanma için geçen ortalama süre (iş günü).",
+    METRIC_ULCER: "Düşüşlerin kareleri toplamının karekökü. Drawdown şiddeti ölçüsü.",
 }
 
 # Rapor şablonu ayarları

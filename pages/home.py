@@ -816,12 +816,20 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
         METRIC_ANNUALIZED_RETURN,
         METRIC_VOLATILITY,
         METRIC_DOWNSIDE_VOL,
+        METRIC_MAX_DRAWDOWN,
         METRIC_SHARPE,
         METRIC_SORTINO,
         METRIC_BETA,
         METRIC_TREYNOR,
         METRIC_ALPHA,
         METRIC_INFORMATION_RATIO,
+        METRIC_CALMAR,
+        METRIC_UP_CAPTURE,
+        METRIC_DOWN_CAPTURE,
+        METRIC_BATTING_AVG,
+        METRIC_SKEWNESS,
+        METRIC_AVG_DRAWDOWN,
+        METRIC_ULCER,
     )
 
     # Fon unvanlarini bul
@@ -971,12 +979,20 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
         METRIC_ANNUALIZED_RETURN,
         METRIC_VOLATILITY,
         METRIC_DOWNSIDE_VOL,
+        METRIC_MAX_DRAWDOWN,
+        METRIC_AVG_DRAWDOWN,
+        METRIC_ULCER,
         METRIC_SHARPE,
         METRIC_SORTINO,
+        METRIC_CALMAR,
         METRIC_BETA,
         METRIC_TREYNOR,
         METRIC_ALPHA,
         METRIC_INFORMATION_RATIO,
+        METRIC_UP_CAPTURE,
+        METRIC_DOWN_CAPTURE,
+        METRIC_BATTING_AVG,
+        METRIC_SKEWNESS,
     ]
 
     # Tablo basliklari
