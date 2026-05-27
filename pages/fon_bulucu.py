@@ -215,6 +215,20 @@ layout = dbc.Container([
 ], fluid=True)
 
 
+# Fon tipi değişince kategori listesini güncelle
+@callback(
+    Output("fb-kategori", "options"),
+    Input("fon-tipi-store", "data"),
+)
+def update_kategori_options(fon_tipi):
+    fon_tipi = fon_tipi or "YAT"
+    try:
+        turler = _tefas_api.fon_tur_listesi(fon_tipi)
+    except Exception:
+        turler = _FON_TURLERI  # fallback
+    return [{"label": t["sfonTurAciklama"], "value": t["sfonTuru"]} for t in turler]
+
+
 # ── Callback: arama ─────────────────────────────────────────────────
 @callback(
     Output("fb-sonuclar", "style"),

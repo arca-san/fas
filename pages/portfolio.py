@@ -58,16 +58,21 @@ dash.register_page(__name__, path="/portfolio")
 
 # ── Tüm fonları yükle ────────────────────────────────────────────────
 try:
-    _ALL_FUNDS = _tefas_api.get_all_fonlar()
-    logger.info("Tum fonlar yuklendi: %s adet", len(_ALL_FUNDS))
+    _ALL_FUNDS_YAT = _tefas_api.get_all_fonlar("YAT")
+    _ALL_FUNDS_BES = _tefas_api.get_all_fonlar("BES")
+    for f in _ALL_FUNDS_YAT:
+        f["_tip"] = "YAT"
+    for f in _ALL_FUNDS_BES:
+        f["_tip"] = "BES"
+    _ALL_FUNDS_ALL = _ALL_FUNDS_YAT + _ALL_FUNDS_BES
+    logger.info("Tum fonlar yuklendi: YAT=%s, BES=%s", len(_ALL_FUNDS_YAT), len(_ALL_FUNDS_BES))
     seen = set()
-    _ALL_FUNDS_UNIQUE = []
-    for f in _ALL_FUNDS:
+    _ALL_FUNDS = []
+    for f in _ALL_FUNDS_ALL:
         kod = f.get("fonKod")
         if kod and kod not in seen:
             seen.add(kod)
-            _ALL_FUNDS_UNIQUE.append(f)
-    _ALL_FUNDS = _ALL_FUNDS_UNIQUE
+            _ALL_FUNDS.append(f)
     logger.info("Tekrarsiz fon sayisi: %s", len(_ALL_FUNDS))
 except Exception as exc:
     logger.warning("Fon listesi yuklenemedi: %s", exc)
@@ -159,6 +164,16 @@ layout = dbc.Container([
             dbc.Card([
                 dbc.CardBody([
                     html.H5("Portföy", className="card-title"),
+                    dbc.RadioItems(
+                        id="pf-fon-tipi-toggle",
+                        options=[
+                            {"label": "YAT", "value": "YAT"},
+                            {"label": "BES", "value": "BES"},
+                        ],
+                        value="YAT",
+                        inline=True,
+                        className="mb-2",
+                    ),
                     dmc.MultiSelect(
                         id="pf-fund-select",
                         label="Fon kodu veya ünvanı yazın",
@@ -355,6 +370,20 @@ def uppercase_search(val):
     if val and val != val.upper():
         return val.upper()
     return val
+
+
+# Fon tipi değişince dropdown seçeneklerini filtrele
+@callback(
+    Output("pf-fund-select", "data"),
+    Input("pf-fon-tipi-toggle", "value"),
+)
+def filter_pf_fund_by_tip(fon_tipi):
+    fon_tipi = fon_tipi or "YAT"
+    filtered = [f for f in _ALL_FUNDS if f.get("_tip") == fon_tipi]
+    return [
+        {"value": f.get("fonKod", ""), "label": f"{f.get('fonKod', '')} - {f.get('unvan', '')}"}
+        for f in filtered if f.get("fonKod")
+    ]
 
 
 # ── Callback: mix modal ──────────────────────────────────────────────

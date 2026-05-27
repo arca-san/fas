@@ -79,18 +79,6 @@ def create_sidebar() -> html.Div:
     return html.Div(
         [
             create_sidebar_nav(),
-            html.Hr(className="mb-2"),
-            html.Label("Fon Tipi", className="fw-semibold mb-1", style={"fontSize": "0.8rem"}),
-            dbc.RadioItems(
-                id="fon-tipi-toggle",
-                options=[
-                    {"label": "Yatırım Fonu (YAT)", "value": "YAT"},
-                    {"label": "BES Fonu", "value": "BES"},
-                ],
-                value="YAT",
-                inline=False,
-                className="mb-3",
-            ),
         ],
         className="p-3",
         **{"role": "navigation", "aria-label": "Ana navigasyon"},

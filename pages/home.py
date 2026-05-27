@@ -202,6 +202,16 @@ layout = dbc.Container(
                         dbc.CardBody(
                             [
                                 html.H5("Fon & Benchmark Seçimi", className="card-title mb-3"),
+                                dbc.RadioItems(
+                                    id="fon-tipi-toggle",
+                                    options=[
+                                        {"label": "Yatırım Fonu (YAT)", "value": "YAT"},
+                                        {"label": "BES Fonu", "value": "BES"},
+                                    ],
+                                    value="YAT",
+                                    inline=True,
+                                    className="mb-2",
+                                ),
                                 html.Div(
                                     [
                                         dbc.Row(

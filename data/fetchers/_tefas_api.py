@@ -653,8 +653,8 @@ def fon_grup_listesi() -> List[Dict[str, Any]]:
     return _post("/api/funds/fonGrupGetir", {}).get("resultList") or []
 
 
-def fon_tur_listesi() -> List[Dict[str, Any]]:
-    return _post("/api/funds/fonTurGetir", {}).get("resultList") or []
+def fon_tur_listesi(fon_tipi: str = "YAT") -> List[Dict[str, Any]]:
+    return _post("/api/funds/fonTurGetir", {"fonTipi": fon_tipi}).get("resultList") or []
 
 
 def doviz_listesi() -> List[Dict[str, Any]]:
@@ -662,20 +662,27 @@ def doviz_listesi() -> List[Dict[str, Any]]:
 
 
 def tum_fonlar(fon_tipi: str = "YAT") -> List[Dict[str, Any]]:
-    """Tüm fonların kod/ünvan/kurucu listesi."""
-    return _post("/api/statistics/tefas/getFplFonList",
+    """Tüm fonların kod/ünvan/kurucu listesi.
+    BES için önce "BES" dene, boş gelirse "EGM" ile dene."""
+    data = _post("/api/statistics/tefas/getFplFonList",
                  {"fonTipi": fon_tipi}).get("data") or []
+    if not data and fon_tipi.upper() in ("BES", "EGM"):
+        fallback = "EGM" if fon_tipi.upper() == "BES" else "BES"
+        data = _post("/api/statistics/tefas/getFplFonList",
+                     {"fonTipi": fallback}).get("data") or []
+    return data
 
 
-_tum_fonlar_cache: Optional[List[Dict[str, Any]]] = None
+_fon_list_cache: dict = {}  # {"YAT": [...], "BES": [...]}
 
 
 def get_all_fonlar(fon_tipi: str = None) -> List[Dict[str, Any]]:
-    """Tüm fonları bir kez yükle, cache'le. fon_tipi verilmezse YAT."""
-    global _tum_fonlar_cache
-    if fon_tipi is None and _tum_fonlar_cache is not None:
-        return _tum_fonlar_cache
-    return tum_fonlar(fon_tipi or "YAT")
+    """Tüm fonları cache'leyerek döndürür."""
+    global _fon_list_cache
+    tip = fon_tipi or "YAT"
+    if tip not in _fon_list_cache:
+        _fon_list_cache[tip] = tum_fonlar(tip)
+    return _fon_list_cache[tip]
 
 
 def fon_unvan_ara_local(arama: str) -> List[Dict[str, Any]]:
