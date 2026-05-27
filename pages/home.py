@@ -84,6 +84,7 @@ layout = dbc.Container(
         dcc.Store(id="auto-benchmarks-store"),
         dcc.Store(id="fav-store", storage_type="local"),
         dcc.Store(id="export-store", storage_type="session"),
+        dcc.Store(id="portfoy-weight-store", storage_type="session"),
         dcc.Download(id="download-csv"),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
             dbc.Card(
@@ -320,6 +321,7 @@ def uppercase_search(val):
     State("mix-benchmark-store", "data"),
     State("theme-store", "data"),
     State("fon-tipi-store", "data"),
+    State("portfoy-weight-store", "data"),
     prevent_initial_call=True,
 )
 def run_analysis(
@@ -331,6 +333,7 @@ def run_analysis(
     mix_data,
     theme,
     fon_tipi,
+    fund_weights,
 ):
     fon_tipi = fon_tipi or "YAT"
     logger.debug("Analiz butonu: fon_kodlari=%s benchmark=%s", fon_kodlari, benchmark)
@@ -602,6 +605,37 @@ def run_analysis(
             fon_benchmark_sources=fon_benchmark_sources,
             fon_benchmark_correlations=fon_benchmark_correlations,
         )
+
+        # Ağırlıklı portföy getirisi
+        portfoy_agirlikli = None
+        if fund_weights and len(fund_dict) > 1:
+            w_dict = {k.upper(): v for k, v in (fund_weights or {}).items() if v}
+            w_total = sum(w_dict.values())
+            if w_total > 0:
+                w_norm = {k: v / w_total for k, v in w_dict.items()}
+                # Ortak tarihlerde ağırlıklı getiri hesapla
+                first_kod = list(fund_dict.keys())[0]
+                ortak_tarihler = fund_dict[first_kod]["tarih"].dropna().values
+                agirlikli_cum = None
+                for k, w in w_norm.items():
+                    if k not in fund_dict:
+                        continue
+                    df_f = fund_dict[k].set_index("tarih")["fiyat"]
+                    df_f = df_f[df_f > 0]
+                    cum = df_f / df_f.iloc[0]
+                    cum = cum.reindex(ortak_tarihler).ffill()
+                    if agirlikli_cum is None:
+                        agirlikli_cum = cum * w
+                    else:
+                        agirlikli_cum = agirlikli_cum + cum * w
+                if agirlikli_cum is not None:
+                    from config.constants import COL_DATE, COL_PRICE
+                    agirlikli_df = pd.DataFrame({
+                        "tarih": agirlikli_cum.index,
+                        "fiyat": agirlikli_cum.values,
+                    })
+                    portfoy_agirlikli = agirlikli_df
+                    fund_dict["Portföy (Ağırlıklı)"] = agirlikli_df
 
         chart_mix = None
         if user_mix_series is not None:
@@ -1138,17 +1172,26 @@ def show_favorites(fav_data):
 
 @callback(
     Output("selected-funds-badges", "children"),
+    Output("portfoy-weight-store", "data", allow_duplicate=True),
     Input("fon-select", "value"),
     Input("fav-store", "data"),
+    Input({"type": "portfoy-weight", "index": ALL}, "value"),
+    State("portfoy-weight-store", "data"),
 )
-def render_selected_funds_badges(selected_funds, fav_data):
+def render_selected_funds_badges(selected_funds, fav_data, weight_values, weight_store):
     if not selected_funds:
-        return []
+        return [], {}
     favs = fav_data if fav_data is not None else ["NJR"]
+    weights = weight_store or {}
     badges = []
-    for kod in selected_funds:
+    new_weights = {}
+    for i, kod in enumerate(selected_funds):
         is_fav = kod in favs
         star_style = {"cursor": "pointer", "marginRight": "4px"}
+        current_weight = weight_values[i] if i < len(weight_values) and weight_values[i] is not None else weights.get(kod)
+        if current_weight is None:
+            current_weight = round(100.0 / len(selected_funds), 1)
+        new_weights[kod] = current_weight
         badges.append(
             html.Span(
                 [
@@ -1159,7 +1202,16 @@ def render_selected_funds_badges(selected_funds, fav_data):
                         title="Favorilere ekle/çıkar",
                         n_clicks=0,
                     ),
-                    html.Span(kod, className="me-2 fw-semibold"),
+                    html.Span(kod, className="me-1 fw-semibold"),
+                    dbc.Input(
+                        type="number",
+                        min=0, max=100, step=1,
+                        value=current_weight,
+                        id={"type": "portfoy-weight", "index": i},
+                        style={"width": "55px", "display": "inline-block", "padding": "0 2px", "height": "22px", "fontSize": "12px"},
+                        className="me-1",
+                    ),
+                    html.Span("%", className="me-1", style={"fontSize": "12px"}),
                     html.Span(
                         "×",
                         id={"type": "sel-del-cross", "index": kod},
@@ -1172,7 +1224,7 @@ def render_selected_funds_badges(selected_funds, fav_data):
                 style={"fontSize": "13px", "userSelect": "none"},
             )
         )
-    return badges
+    return badges, new_weights
 
 
 @callback(
