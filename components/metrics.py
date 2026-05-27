@@ -38,6 +38,7 @@ from config.constants import (
     METRIC_OMEGA,
     METRIC_ACTIVE_SHARE,
     METRIC_M2,
+    METRIC_BURKE,
 )
 from config.settings import VAR_CONFIDENCE
 from scipy import stats as sp_stats
