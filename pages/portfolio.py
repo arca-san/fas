@@ -51,6 +51,7 @@ from config.constants import (
 )
 from data.dao import save_portfolio, list_portfolios, delete_portfolio
 from flask_login import current_user
+from tlref_scraper import TLREFScraper, TLREFConverter
 
 logger = get_logger(__name__)
 dash.register_page(__name__, path="/portfolio")
@@ -1113,7 +1114,6 @@ def update_summary_table(results_data, selected_metric):
     Output("pf-mc-chart", "figure"),
     Output("pf-mc-stats", "children"),
     Input("pf-optim-btn", "n_clicks"),
-    State("pf-fund-select", "value"),
     State("pf-fund-select", "value"),
     State("pf-optim-method", "value"),
     State("pf-optim-maxw", "value"),
