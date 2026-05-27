@@ -663,25 +663,10 @@ def doviz_listesi() -> List[Dict[str, Any]]:
 
 def tum_fonlar(fon_tipi: str = "YAT") -> List[Dict[str, Any]]:
     """Tüm fonların kod/ünvan/kurucu listesi.
-    BES için önce getFplFonList dene, boş gelirse fonGetiriBazliBilgiGetir fallback."""
-    data = _post("/api/statistics/tefas/getFplFonList",
-                 {"fonTipi": fon_tipi}).get("data") or []
-    if not data and fon_tipi.upper() == "BES":
-        # Fallback: dönemsel getiri endpoint'i BES fon listesini döndürür
-        try:
-            bes_data = fonlar_donemsel_getiri(fon_tipi="BES")
-            if bes_data:
-                data = [
-                    {
-                        "fonKod": f.get("fonKodu", ""),
-                        "unvan": f.get("fonUnvan", ""),
-                        "kurucu": f.get("kurucu", ""),
-                    }
-                    for f in bes_data if f.get("fonKodu")
-                ]
-        except Exception:
-            pass
-    return data
+    NOT: TEFAS API'si BES (Emeklilik) fonlarını desteklemez.
+    Sadece YAT (Yatırım) fonları döndürülür."""
+    return _post("/api/statistics/tefas/getFplFonList",
+                 {"fonTipi": "YAT"}).get("data") or []
 
 
 _fon_list_cache: dict = {}  # {"YAT": [...], "BES": [...]}

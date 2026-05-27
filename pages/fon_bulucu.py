@@ -223,7 +223,7 @@ layout = dbc.Container([
 def update_kategori_options(fon_tipi):
     fon_tipi = fon_tipi or "YAT"
     try:
-        turler = _tefas_api.fon_tur_listesi(fon_tipi)
+        turler = _tefas_api.fon_tur_listesi()
     except Exception:
         turler = _FON_TURLERI  # fallback
     return [{"label": t["sfonTurAciklama"], "value": t["sfonTuru"]} for t in turler]

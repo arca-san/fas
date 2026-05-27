@@ -66,15 +66,6 @@ clientside_callback(
     prevent_initial_call=True,
 )
 
-# Fon tipi senkronizasyonu
-from dash import callback, Output, Input
-
-@callback(
-    Output("fon-tipi-store", "data"),
-    Input("fon-tipi-toggle", "value"),
-)
-def sync_fon_tipi(value):
-    return value or "YAT"
 
 # Mobil menü toggle
 @callback(
