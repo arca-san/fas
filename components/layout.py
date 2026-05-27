@@ -37,7 +37,7 @@ def create_navbar() -> dbc.Navbar:
                         size="sm",
                         outline=True,
                         className="me-1 border-white",
-                        style={"--bs-btn-color": "white", "fontSize": "1.0rem", "padding": "0.2rem 0.4rem"},
+                        style={"--bs-btn-color": "white", "fontSize": "1.2rem", "padding": "0.2rem 0.5rem"},
                         title="Yardım",
                     ),
                     dbc.Button(

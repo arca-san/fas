@@ -5,13 +5,13 @@ Onboarding — ilk kullanım için 3 adımlı tanıtım modal'ı.
 
 from dash import html, dcc, clientside_callback
 import dash_bootstrap_components as dbc
-from dash import callback, Output, Input, State
+from dash import callback, Output, Input, State, dash
 
 
 def make_onboarding_modal():
     return dbc.Modal(
         [
-            dbc.ModalHeader(dbc.ModalTitle("FAS'a Hoş Geldiniz!")),
+            dbc.ModalHeader(dbc.ModalTitle("FAS'a Hoş Geldiniz!"), close_button=False),
             dbc.ModalBody([
                 html.Div(id="onboarding-step", children=[
                     html.H5("👋 1. Adım — Fon Seçimi"),
@@ -50,9 +50,13 @@ def make_onboarding_modal():
     prevent_initial_call=True,
 )
 def toggle_onboarding(open_clicks, close_clicks, is_open):
-    if open_clicks:
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return is_open
+    btn_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if btn_id == "onb-open":
         return True
-    if close_clicks:
+    if btn_id == "onb-close":
         return False
     return is_open
 
