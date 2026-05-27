@@ -87,23 +87,16 @@ def _fmt_fav_btn(kod: str, fav_list: list) -> html.Span:
 
 # ── Info bar ────────────────────────────────────────────────────────
 info_bar = dbc.Alert([
-    html.I(className="bi bi-info-circle me-2"),
-    "Seçtiğiniz kategoride belirlediğiniz vadede en yüksek getirili fonları, "
-    "fon yöneticisi başarı metriklerine (Alfa, Sharpe, Enformasyon Oranı) göre karşılaştırın.",
-    html.A(
-        "Detaylı Bilgi",
-        href="/detayli-bilgi",
-        className="alert-link ms-1 fw-semibold detayli-link",
-        style={"textDecoration": "underline", "cursor": "pointer"},
-    ),
-], color="info", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"})
+    html.I(className="bi bi-exclamation-triangle me-2"),
+    "Burada yer alan bilgiler güncel olmayabilir ve 6362 sayılı Sermaye Piyasası Kanunu gereğince yatırım tavsiyesi olarak değerlendirilemez.",
+], color="warning", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"})
 
 
 # ── Layout ──────────────────────────────────────────────────────────
 layout = dbc.Container([
+    info_bar,
     dcc.Store(id="fav-store", storage_type="local"),
     dcc.Store(id="fb-cache"),
-    info_bar,
 
     dbc.Row([
         dbc.Col([

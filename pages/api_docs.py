@@ -66,6 +66,10 @@ def _build_endpoint_card(ep):
     ]), className="mb-3")
 
 layout = dbc.Container([
+    dbc.Alert([
+        html.I(className="bi bi-exclamation-triangle me-2"),
+        "Burada yer alan bilgiler güncel olmayabilir ve 6362 sayılı Sermaye Piyasası Kanunu gereğince yatırım tavsiyesi olarak değerlendirilemez.",
+    ], color="warning", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"}),
     html.H3("FAS REST API", className="mb-3"),
     html.P("Tüm endpoint'ler Dash uygulaması ile aynı Flask sunucusunda çalışır. "
            "JSON formatında yanıt döndürür.", className="text-muted"),
