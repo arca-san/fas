@@ -1348,7 +1348,7 @@ def render_selected_funds_badges(selected_funds, fav_data):
     Output("portfoy-weight-panel", "children"),
     Output("portfoy-weight-store", "data"),
     Input("fon-select", "value"),
-    Input({"type": "pf-weight-input", "index": ALL}, "value"),
+    State({"type": "pf-weight-input", "index": ALL}, "value"),
     State("portfoy-weight-store", "data"),
     prevent_initial_call=True,
 )
