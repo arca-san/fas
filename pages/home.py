@@ -75,6 +75,10 @@ mix_modal = dbc.Modal(
 
 layout = dbc.Container(
     [
+        dbc.Alert([
+            html.I(className="bi bi-exclamation-triangle me-2"),
+            "Burada yer alan bilgiler güncel olmayabilir ve 6362 sayılı Sermaye Piyasası Kanunu gereğince yatırım tavsiyesi olarak değerlendirilemez.",
+        ], color="warning", dismissable=False, className="py-2 mb-3", style={"fontSize": "0.9em"}),
         dcc.Store(id="mix-benchmark-store"),
         dcc.Store(id="auto-benchmarks-store"),
         dcc.Store(id="fav-store", storage_type="local"),
@@ -84,103 +88,132 @@ layout = dbc.Container(
         # Piyasa Özeti
         html.Div(id="piyasa-ozeti", className="mb-3"),
         html.Div(id="grafik-alani", style={"display": "none"}, children=[
-            dbc.Card(
-                [
-                    dbc.CardBody(
-                        [
-                            html.H5("Getiri Grafiği", className="card-title"),
-                            dcc.Loading(
-                                id="loading-chart",
-                                type="default",
-                                children=dcc.Graph(id="fiyat-grafigi", config={"displayModeBar": True}),
+            dbc.Tabs(
+                id="grafik-tabs",
+                active_tab="tab-getiri",
+                children=[
+                    dbc.Tab(
+                        label="📈 Getiri",
+                        tab_id="tab-getiri",
+                        children=[
+                            dbc.Card(
+                                [
+                                    dbc.CardBody(
+                                        [
+                                            html.H5("Getiri Grafiği", className="card-title"),
+                                            dcc.Loading(
+                                                id="loading-chart",
+                                                type="default",
+                                                children=dcc.Graph(id="fiyat-grafigi", config={"displayModeBar": True}),
+                                            ),
+                                        ]
+                                    )
+                                ],
+                                className="mb-3",
                             ),
-                        ]
-                    )
-                ],
-                className="mb-3",
-            ),
-            dbc.Card(
-                [
-                    dbc.CardBody(
-                        [
-                            html.H5("Fon Metrikleri", className="card-title"),
-                            dcc.Loading(id="loading-metrik", type="default", children=html.Div(id="metrik-tablosu")),
-                            html.Div(
-                                dbc.Button(
-                                    [html.I(className="bi bi-download me-1"), "CSV İndir"],
-                                    id="export-csv-btn",
-                                    color="outline-primary",
-                                    size="sm",
-                                    className="mt-2",
-                                ),
-                                className="mt-2",
+                            dbc.Card(
+                                [
+                                    dbc.CardBody(
+                                        [
+                                            html.H5("Risk-Getiri Saçılım Grafiği", className="card-title"),
+                                            dcc.Loading(
+                                                id="loading-scatter",
+                                                type="default",
+                                                children=dcc.Graph(id="risk-getiri-scatter", config={"displayModeBar": True}),
+                                            ),
+                                        ]
+                                    )
+                                ],
+                                className="mb-3",
                             ),
-                        ]
-                    )
-                ],
-                className="mb-3",
-            ),
-            dbc.Card(
-                [
-                    dbc.CardBody(
-                        [
-                            html.H5("Risk-Getiri Saçılım Grafiği", className="card-title"),
-                            dcc.Loading(
-                                id="loading-scatter",
-                                type="default",
-                                children=dcc.Graph(id="risk-getiri-scatter", config={"displayModeBar": True}),
+                        ],
+                    ),
+                    dbc.Tab(
+                        label="📊 Metrikler",
+                        tab_id="tab-metrikler",
+                        children=[
+                            dbc.Card(
+                                [
+                                    dbc.CardBody(
+                                        [
+                                            html.H5("Fon Metrikleri", className="card-title"),
+                                            dcc.Loading(id="loading-metrik", type="default", children=html.Div(id="metrik-tablosu")),
+                                            html.Div(
+                                                dbc.Button(
+                                                    [html.I(className="bi bi-download me-1"), "CSV İndir"],
+                                                    id="export-csv-btn",
+                                                    color="outline-primary",
+                                                    size="sm",
+                                                    className="mt-2",
+                                                ),
+                                                className="mt-2",
+                                            ),
+                                        ]
+                                    )
+                                ],
                             ),
-                        ]
-                    )
-                ],
-                className="mb-3",
-            ),
-            dbc.Card(
-                [
-                    dbc.CardBody(
-                        [
-                            html.H5("Fon Portföy Dağılımı", className="card-title"),
-                            dcc.Loading(
-                                id="loading-portfoy",
-                                type="default",
-                                children=dcc.Graph(id="portfoy-dagilimi", config={"displayModeBar": False}),
+                        ],
+                    ),
+                    dbc.Tab(
+                        label="🔬 Analiz",
+                        tab_id="tab-analiz",
+                        children=[
+                            dbc.Card(
+                                [
+                                    dbc.CardBody(
+                                        [
+                                            html.H5("Fon Portföy Dağılımı", className="card-title"),
+                                            dcc.Loading(
+                                                id="loading-portfoy",
+                                                type="default",
+                                                children=dcc.Graph(id="portfoy-dagilimi", config={"displayModeBar": False}),
+                                            ),
+                                        ]
+                                    )
+                                ],
+                                className="mb-3",
                             ),
-                        ]
-                    )
-                ],
-                className="mb-3",
-            ),
-            dbc.Card(
-                [
-                    dbc.CardBody(
-                        [
-                            html.H5("Korelasyon Matrisi", className="card-title"),
-                            dcc.Loading(
-                                id="loading-kor",
-                                type="default",
-                                children=dcc.Graph(id="korelasyon-matrisi", config={"displayModeBar": False}),
+                            dbc.Card(
+                                [
+                                    dbc.CardBody(
+                                        [
+                                            html.H5("Korelasyon Matrisi", className="card-title"),
+                                            dcc.Loading(
+                                                id="loading-kor",
+                                                type="default",
+                                                children=dcc.Graph(id="korelasyon-matrisi", config={"displayModeBar": False}),
+                                            ),
+                                        ]
+                                    )
+                                ],
+                                className="mb-3",
                             ),
-                        ]
-                    )
-                ],
-                className="mb-3",
-            ),
-            dbc.Card(
-                [
-                    dbc.CardBody(
-                        [
-                            html.H5("Rolling Sharpe Oranı (3 Aylık)", className="card-title"),
-                            dcc.Loading(
-                                id="loading-rolling",
-                                type="default",
-                                children=dcc.Graph(id="rolling-sharpe", config={"displayModeBar": False}),
+                            dbc.Card(
+                                [
+                                    dbc.CardBody(
+                                        [
+                                            html.H5("Rolling Sharpe Oranı (3 Aylık)", className="card-title"),
+                                            dcc.Loading(
+                                                id="loading-rolling",
+                                                type="default",
+                                                children=dcc.Graph(id="rolling-sharpe", config={"displayModeBar": False}),
+                                            ),
+                                        ]
+                                    )
+                                ],
+                                className="mb-3",
                             ),
-                        ]
-                    )
+                        ],
+                    ),
+                    dbc.Tab(
+                        label="ℹ️ Bilgi",
+                        tab_id="tab-bilgi",
+                        children=[
+                            html.Div(id="fon-bilgi-karti"),
+                        ],
+                    ),
                 ],
-                className="mb-3",
             ),
-            html.Div(id="fon-bilgi-karti"),
         ]),
         dbc.Row(
             dbc.Col(
@@ -1084,52 +1117,57 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
         METRIC_ACTIVE_SHARE,
     ]
 
-    # Tablo basliklari
+    # Transpoze tablo: satirlar metrik, sutunlar fon kodu
     from config.constants import METRIC_DESCRIPTIONS
 
-    headers = [html.Th("Fon")]
+    fund_codes = list(metrics.keys())
+
+    # Baslik satiri: ilk sutun "Metrik", ardindan her fon kodu
+    headers = [html.Th("Metrik")]
+    for fc in fund_codes:
+        if fc in fon_unvan_map:
+            headers.append(html.Th(fc))
+        else:
+            headers.append(html.Th(html.Strong(fc)))
+
     tooltip_components = []
+    rows = []
+
+    # Her metrik icin bir satir
     for k_idx, mk in enumerate(metrik_keys):
         desc = METRIC_DESCRIPTIONS.get(mk, "")
         header_id = f"metric-header-{k_idx}"
         if desc:
-            headers.append(
-                html.Th([
-                    mk,
-                    html.Span("?", id=header_id, className="ms-1 text-muted", style={"cursor": "help", "fontSize": "0.85em"}),
-                ])
-            )
+            metric_cell = html.Td([
+                mk,
+                html.Span("?", id=header_id, className="ms-1 text-muted",
+                          style={"cursor": "help", "fontSize": "0.85em"}),
+            ])
             tooltip_components.append(dbc.Tooltip(desc, target=header_id, placement="top"))
         else:
-            headers.append(html.Th(mk))
+            metric_cell = html.Td(mk)
 
-    corr_header_id = "metric-header-corr"
-    headers.append(
-        html.Th([
-            "BM Korelasyon",
-            html.Span("?", id=corr_header_id, className="ms-1 text-muted", style={"cursor": "help", "fontSize": "0.85em"}),
-        ])
-    )
-    tooltip_components.append(dbc.Tooltip("Fon ile kendi benchmark mix'i arasındaki korelasyon (1'e yakın = yüksek uyum)", target=corr_header_id, placement="top"))
-
-    rows = []
-    for fon_kodu, m in metrics.items():
-        # Mix benchmark icin unvan arama
-        if fon_kodu in fon_unvan_map:
-            unvan = fon_unvan_map.get(fon_kodu.upper(), fon_kodu)
-            row = [f"{fon_kodu}"]
-        else:
-            # Mix benchmark
-            row = [html.Strong(fon_kodu)]
-        
-        for k in metrik_keys:
-            val = m.get(k, "-")
+        row_cells = [metric_cell]
+        for fon_kodu in fund_codes:
+            m = metrics[fon_kodu]
+            val = m.get(mk, "-")
             if val == "-":
-                row.append("-")
+                row_cells.append(html.Td("-"))
             else:
-                row.append(f"{val}")
-        
-        # Korelasyon degerini ekle
+                row_cells.append(html.Td(f"{val}"))
+        rows.append(html.Tr(row_cells))
+
+    # Korelasyon satiri (en altta)
+    corr_cells = [html.Td([
+        "BM Korelasyon",
+        html.Span("?", id="metric-header-corr", className="ms-1 text-muted",
+                  style={"cursor": "help", "fontSize": "0.85em"}),
+    ])]
+    tooltip_components.append(dbc.Tooltip(
+        "Fon ile kendi benchmark mix'i arasındaki korelasyon (1'e yakın = yüksek uyum)",
+        target="metric-header-corr", placement="top"
+    ))
+    for fon_kodu in fund_codes:
         corr_val = fon_benchmark_correlations.get(fon_kodu) if fon_benchmark_correlations else None
         if corr_val is not None:
             corr_str = f"{corr_val:.4f}"
@@ -1139,17 +1177,17 @@ def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name
                 corr_color = "warning"
             else:
                 corr_color = "danger"
-            row.append(html.Span(corr_str, style={"color": corr_color, "fontWeight": "bold"}))
+            corr_cells.append(html.Td(html.Span(corr_str, style={"color": corr_color, "fontWeight": "bold"})))
         else:
-            row.append("-")
-        rows.append(row)
+            corr_cells.append(html.Td("-"))
+    rows.append(html.Tr(corr_cells))
 
     table_container = html.Div(
         notifications + [
             dbc.Table(
                 [
                     html.Thead(html.Tr(headers)),
-                    html.Tbody([html.Tr([html.Td(c) for c in r]) for r in rows]),
+                    html.Tbody(rows),
                 ],
                 striped=True,
                 bordered=True,
