@@ -1432,7 +1432,7 @@ def update_selected_funds(fav_clicks, del_clicks, current_value):
 
 
 @callback(
-    Output("fav-store", "data", allow_duplicate=True),
+    Output("fav-store", "data"),
     Input({"type": "fav-badge-del", "index": ALL}, "n_clicks"),
     Input({"type": "sel-fav-star", "index": ALL}, "n_clicks"),
     State("fav-store", "data"),
