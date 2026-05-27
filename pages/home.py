@@ -865,7 +865,7 @@ def run_analysis(
         return fig, scatter_fig, portfoy_fig, kor_fig, rolling_fig, fon_bilgi_kart, {"display": "block"}, " | ".join(status_parts), {"display": "none"}, metrik_html, auto_bm_codes, export_data
     except Exception as exc:
         logger.exception("Analiz hatasi")
-        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), [], None, None
+        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), "", {"display": "none"}, f"Hata: {exc}", {"display": "none"}, html.Small("Hata olustu", className="text-danger"), [], None
 
 
 def _build_metrics_table(fund_dict: dict, mix_series: pd.Series = None, mix_name: str = None, fon_benchmark_series: dict = None, fon_benchmark_sources: dict = None, fon_benchmark_correlations: dict = None):
