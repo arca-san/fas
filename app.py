@@ -8,6 +8,13 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 
+# .env dosyasını yükle (opsiyonel)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 
 FLATLY_URL = "https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/flatly/bootstrap.min.css"
 
