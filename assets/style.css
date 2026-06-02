@@ -1409,19 +1409,6 @@ button.dash-dropdown-clear:active {
   font-weight: bold;
 }
 
-.fb-row-first {
-  background-color: rgba(var(--color-primary-rgb), 0.08);
-}
-
-[data-bs-theme="dark"] .fb-row-first {
-  background-color: rgba(var(--color-primary-dark-rgb), 0.12);
-}
-
-/* ── First row fon kodu strong in dark mode ──────────────────────── */
-[data-bs-theme="dark"] .fb-row-first td:first-child strong {
-  color: var(--color-primary);
-}
-
 /* ── Table header tooltip icon ───────────────────────────────────── */
 .fb-table thead th .ms-1.text-muted {
   cursor: help;

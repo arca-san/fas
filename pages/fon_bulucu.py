@@ -432,7 +432,7 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
         m = metrics.get(kod, {})
         is_first = i == 0
         rank_pct = round((i + 1) / max(total_fon, 1) * 100, 1)
-        row_class = "fb-row-first" if is_first else ""
+        row_class = ""
         fav_btn = _fmt_fav_btn(kod, fav_list)
         cells = [html.Td(fav_btn, className="fb-cell-center", style={"width": "36px"})]
         cells.append(html.Td(html.Strong(kod) if is_first else kod, className="fb-cell-center"))
