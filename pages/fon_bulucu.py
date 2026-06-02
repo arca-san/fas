@@ -135,6 +135,7 @@ layout = dbc.Container([
                     html.H5("Vade", className="card-title"),
                     dbc.RadioItems(
                         id="fb-vade",
+                        className="fb-vade-radio",
                         options=[
                             {"label": "1 Ay", "value": "1a"},
                             {"label": "3 Ay", "value": "3a"},
@@ -177,6 +178,7 @@ layout = dbc.Container([
                     dbc.Col(
                         dcc.Dropdown(
                             id="fb-sort",
+                            className="fb-sort-dropdown",
                             options=[
                                 {"label": "Varsayılan (Getiri)", "value": "getiri"},
                                 {"label": "Sharpe Oranı", "value": "sharpe"},
@@ -346,15 +348,16 @@ def fonlari_bul(n_clicks, kategori_kod, vade, sort_key, theme, fon_tipi, kurucu,
         return {"display": "none"}, None, go.Figure(), f"Hata: {exc}"
 
 
-# ── Callback: tablo render (cache + favoriler) ──────────────────────
+# ── Callback: tablo render (cache + favoriler + sıralama) ──────────
 @callback(
     Output("fb-tablo", "children"),
     Output("fb-tavsiye", "children"),
     Input("fb-cache", "data"),
+    Input("fb-sort", "data"),
     Input("fav-store", "data"),
     prevent_initial_call=True,
 )
-def render_table(cached, fav_data):
+def render_table(cached, sort_key, fav_data):
     if not cached:
         return html.Div(), html.Div()
 
@@ -362,14 +365,38 @@ def render_table(cached, fav_data):
     metrics = cached["metrics"]
     fon_unvan_map = cached["fon_unvan_map"]
     period_label = cached["period_label"]
-    fon_kodlari = cached["fon_kodlari"]
+    period_field = cached["period_field"]
 
-    table = _build_fon_table(top_fonlar, metrics, cached["period_field"], period_label, fon_unvan_map, fav_data)
+    # Sıralama uygula
+    SORT_MAP = {
+        "getiri": (lambda x: x[2], True),
+        "sharpe": (lambda x: metrics.get(x[0], {}).get(METRIC_SHARPE, -9999), True),
+        "alpha":  (lambda x: metrics.get(x[0], {}).get(METRIC_ALPHA, -9999), True),
+        "sortino":(lambda x: metrics.get(x[0], {}).get(METRIC_SORTINO, -9999), True),
+        "vol":    (lambda x: metrics.get(x[0], {}).get(METRIC_VOLATILITY, 9999), False),
+        "dd":     (lambda x: metrics.get(x[0], {}).get(METRIC_MAX_DRAWDOWN, 9999), False),
+    }
+    if sort_key in SORT_MAP:
+        key_fn, reverse = SORT_MAP[sort_key]
+        top_fonlar = sorted(top_fonlar, key=key_fn, reverse=reverse)
+
+    table = _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_map, fav_data)
+
+    # Sıralama etiketini belirle
+    sort_labels = {
+        "getiri": "en yüksek getiri",
+        "sharpe": "en yüksek Sharpe Oranı",
+        "alpha": "en yüksek Alfa",
+        "sortino": "en yüksek Sortino Oranı",
+        "vol": "en düşük Volatilite",
+        "dd": "en düşük Maksimum Düşüş",
+    }
+    sort_text = sort_labels.get(sort_key, "getiri")
 
     tavsiye = html.Div([
         html.H5(f"📊 {len(top_fonlar)} Fon Karşılaştırması", className="mb-2"),
         html.P(
-            f"Seçili dönemde ({period_label}) en yüksek getiriden en düşüğe sıralanmıştır. "
+            f"Seçili dönemde ({period_label}) {sort_text} göre sıralanmıştır. "
             "Fon yöneticisi başarısını değerlendirmek için Alfa, Sharpe ve Enformasyon Oranı metriklerine "
             "odaklanmanız önerilir.",
             className="text-muted", style={"fontSize": "0.9em"},
@@ -393,8 +420,7 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
         if desc:
             headers.append(html.Th([
                 mk,
-                html.Span("?", id=header_id, className="ms-1 text-muted",
-                          style={"cursor": "help", "fontSize": "0.85em"}),
+                html.Span("?", id=header_id, className="ms-1 text-muted fb-hdr-help"),
             ]))
             tooltip_components.append(dbc.Tooltip(desc, target=header_id, placement="top"))
         else:
@@ -415,40 +441,41 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
         m = metrics.get(kod, {})
         is_first = i == 0
         rank_pct = round((i + 1) / max(total_fon, 1) * 100, 1)
-        row_style = {"backgroundColor": "#f0fff0"} if is_first else {}
+        row_class = "fb-row-first" if is_first else ""
         fav_btn = _fmt_fav_btn(kod, fav_list)
-        cells = [html.Td(fav_btn, style={"textAlign": "center", "width": "36px"})]
-        cells.append(html.Td(html.Strong(kod) if is_first else kod))
-        cells.append(html.Td(f"Top %{rank_pct}", style={"textAlign": "center", "fontSize": "0.85em", "color": "#1abc9c" if is_first else "#888"}))
+        cells = [html.Td(fav_btn, className="fb-cell-center", style={"width": "36px"})]
+        cells.append(html.Td(html.Strong(kod) if is_first else kod, className="fb-cell-center"))
+        cells.append(html.Td(
+            f"Top %{rank_pct}",
+            className="fb-rank-best" if is_first else "fb-rank-other",
+        ))
         # Katılım/Serbest etiketi
         unvan_lower = unvan.lower()
         if "katilim" in unvan_lower or "katılım" in unvan_lower:
-            cells.append(html.Td(html.Span("KATILIM", className="badge bg-success", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+            cells.append(html.Td(html.Span("KATILIM", className="badge bg-success fb-badge-sm"), className="fb-cell-center"))
         elif "serbest" in unvan_lower:
-            cells.append(html.Td(html.Span("SERBEST", className="badge bg-warning text-dark", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+            cells.append(html.Td(html.Span("SERBEST", className="badge bg-warning text-dark fb-badge-sm"), className="fb-cell-center"))
         elif "surdurulebilir" in unvan_lower or "sürdürülebilir" in unvan_lower or "esg" in unvan_lower:
-            cells.append(html.Td(html.Span("ESG", className="badge bg-success", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+            cells.append(html.Td(html.Span("ESG", className="badge bg-success fb-badge-sm"), className="fb-cell-center"))
         elif "borsa yatirim" in unvan_lower or "byf" in unvan_lower or "etf" in unvan_lower:
-            cells.append(html.Td(html.Span("BYF", className="badge bg-info", style={"fontSize": "0.7em"}), style={"textAlign": "center"}))
+            cells.append(html.Td(html.Span("BYF", className="badge bg-info fb-badge-sm"), className="fb-cell-center"))
         else:
-            cells.append(html.Td("", style={"textAlign": "center"}))
+            cells.append(html.Td("", className="fb-cell-center"))
         for mk in metric_keys:
             val = m.get(mk, "-")
             is_best = best_vals.get(mk) and best_vals[mk][0] == kod
-            style = {"textAlign": "center"}
-            if is_best:
-                style["color"] = "#1abc9c"
-                style["fontWeight"] = "bold"
-            cells.append(html.Td(f"{val}", style=style))
-        rows.append(html.Tr(cells, style=row_style))
+            cell_class = "fb-cell-best" if is_best else "fb-cell-center"
+            cells.append(html.Td(f"{val}", className=cell_class))
+        rows.append(html.Tr(cells, className=row_class))
 
     return html.Div(
         tooltip_components + [
             dbc.Table(
                 [html.Thead(html.Tr(headers)), html.Tbody(rows)],
                 striped=True, bordered=True, hover=True, size="sm", responsive=True,
+                className="fb-table",
             ),
-            html.Small("⭐ yeşil renkli değerler o metrikte en iyi performansı gösterir.",
+            html.Small("⭐ renkli değerler o metrikte en iyi performansı gösterir.",
                        className="text-muted d-block mt-1", style={"fontSize": "0.8em"}),
         ]
     )
@@ -458,20 +485,32 @@ def _build_fon_table(top_fonlar, metrics, period_field, period_label, fon_unvan_
 def _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari, theme="light"):
     kod_list = [f[0] for f in top_fonlar]
     getiri_list = [f[2] for f in top_fonlar]
-    renkler = ["#2ca02c" if g > 0 else "#d62728" for g in getiri_list]
-    renkler[0] = "#1f77b4"  # en iyi fon ayri renk
-
     is_dark = theme == "dark"
-    text_color = "#ffffff" if is_dark else "#212529"
+
+    # Tema uyumlu renkler
+    if is_dark:
+        pozitif_renk = "#2ecc71"
+        negatif_renk = "#e74c3c"
+        birinci_renk = "#bb86fc"
+        text_color = "#e0e0e0"
+    else:
+        pozitif_renk = "#2ca02c"
+        negatif_renk = "#d62728"
+        birinci_renk = "#1f77b4"
+        text_color = "#212529"
+
+    renkler = [pozitif_renk if g > 0 else negatif_renk for g in getiri_list]
+    renkler[0] = birinci_renk  # en iyi fon ayri renk
 
     fig = go.Figure(data=[
         go.Bar(
             x=kod_list,
             y=getiri_list,
             marker_color=renkler,
+            marker_line=dict(width=0),
             text=[f"%{g:.2f}" for g in getiri_list],
             textposition="outside",
-            textfont=dict(color=text_color),
+            textfont=dict(color=text_color, size=11),
         )
     ])
     fig.update_layout(
@@ -479,8 +518,10 @@ def _build_bar_chart(top_fonlar, period_field, period_label, fon_kodlari, theme=
         xaxis_title="Fon",
         yaxis_title="Getiri (%)",
         template="plotly_dark" if is_dark else "plotly_white",
-        hovermode="x",
+        hovermode="x unified",
         margin=dict(l=40, r=40, t=60, b=40),
+        xaxis=dict(tickangle=-30),
+        bargap=0.2,
     )
     return fig
 

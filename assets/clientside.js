@@ -120,10 +120,22 @@
             }
         });
 
+        var isDark = t.template === 'plotly_dark';
         if (fig.data) {
             fig.data.forEach(function(trace) {
                 if (trace.textfont) {
                     trace.textfont.color = t.bar_text;
+                }
+                if (trace.type === 'bar' && trace.marker && trace.marker.color) {
+                    var colors = trace.marker.color;
+                    if (Array.isArray(colors)) {
+                        trace.marker.color = colors.map(function(c) {
+                            if (c === '#2ca02c' || c === '#2ecc71') return isDark ? '#2ecc71' : '#2ca02c';
+                            if (c === '#d62728' || c === '#e74c3c') return isDark ? '#e74c3c' : '#d62728';
+                            if (c === '#1f77b4' || c === '#bb86fc') return isDark ? '#bb86fc' : '#1f77b4';
+                            return c;
+                        });
+                    }
                 }
             });
         }

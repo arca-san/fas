@@ -1380,6 +1380,144 @@ button.dash-dropdown-clear:active {
 }
 
 /* ==========================================================================
+   Fon Bulucu — Fund Comparison Table
+   ========================================================================== */
+.fb-cell-center {
+  text-align: center;
+}
+
+.fb-badge-sm {
+  font-size: 0.7em;
+}
+
+.fb-rank-best {
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.fb-rank-other {
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.fb-cell-best {
+  text-align: center;
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.fb-row-first {
+  background-color: rgba(var(--color-primary-rgb), 0.08);
+}
+
+[data-bs-theme="dark"] .fb-row-first {
+  background-color: rgba(var(--color-primary-dark-rgb), 0.12);
+}
+
+/* ── First row fon kodu strong in dark mode ──────────────────────── */
+[data-bs-theme="dark"] .fb-row-first td:first-child strong {
+  color: var(--color-primary);
+}
+
+/* ── Table header tooltip icon ───────────────────────────────────── */
+.fb-table thead th .ms-1.text-muted {
+  cursor: help;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.fb-table thead th .ms-1.text-muted:hover {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Fon Bulucu — Dropdown, Radio & Control Fixes
+   ========================================================================== */
+
+/* ── Sıralama dropdown'ı (dcc.Dropdown) ──────────────────────────── */
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-control,
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-placeholder,
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-value-label,
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-input input {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-input) !important;
+}
+
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-control {
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-menu-outer {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-option:hover,
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-option.is-focused {
+  background-color: var(--bg-hover) !important;
+}
+
+[data-bs-theme="dark"] .fb-sort-dropdown .Select-option.is-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--text-white) !important;
+}
+
+/* ── Vade radio items ────────────────────────────────────────────── */
+[data-bs-theme="dark"] .fb-vade-radio .form-check {
+  margin-bottom: 0.25rem;
+}
+
+[data-bs-theme="dark"] .fb-vade-radio .form-check-input:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* ── Tooltip ? icon ──────────────────────────────────────────────── */
+.fb-table thead th .fb-hdr-help {
+  cursor: help;
+  font-size: 0.85em;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.fb-table thead th .fb-hdr-help:hover {
+  opacity: 1;
+}
+
+/* ── Badge overrides for dark mode ───────────────────────────────── */
+[data-bs-theme="dark"] .fb-badge-sm.bg-success {
+  background-color: #1a7a4a !important;
+}
+
+[data-bs-theme="dark"] .fb-badge-sm.bg-warning {
+  background-color: #8a6d00 !important;
+  color: #e0e0e0 !important;
+}
+
+[data-bs-theme="dark"] .fb-badge-sm.bg-info {
+  background-color: #1a6a7a !important;
+}
+
+/* ==========================================================================
+   Dash Dropdown — Dark mode value text fix
+   ========================================================================== */
+[data-bs-theme="dark"] button.dash-dropdown .dash-dropdown-value {
+  color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] button.dash-dropdown .dash-dropdown-value-item {
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
    Dash DevTools Isolation — prevent dark mode from breaking debug toolbar
    ========================================================================== */
 #_dash-devtools,
