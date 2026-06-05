@@ -47,6 +47,11 @@ DEFAULT_COLOR_PALETTE = [
     "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
 ]
 
+DEFAULT_COLOR_PALETTE_LIGHT = [
+    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#26c6da",
+    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+]
+
 # TEFAS rate-limit bilgisi (saniye cinsinden min istek aralığı)
 TEFAS_MIN_REQUEST_INTERVAL = 10.0
 

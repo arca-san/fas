@@ -4,7 +4,7 @@
 Sabit değerler, sütun isimleri, renk paleti ve metrik açıklamaları.
 """
 
-from config.settings import DEFAULT_COLOR_PALETTE
+from config.settings import DEFAULT_COLOR_PALETTE, DEFAULT_COLOR_PALETTE_LIGHT
 
 # Tarih & fiyat sütun isimleri (standartlaştırılmış)
 COL_DATE = "tarih"
