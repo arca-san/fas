@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from config.constants import DEFAULT_COLOR_PALETTE, METRIC_SHARPE, METRIC_VOLATILITY
+from config.constants import DEFAULT_COLOR_PALETTE, DEFAULT_COLOR_PALETTE_LIGHT, METRIC_SHARPE, METRIC_VOLATILITY
 
 
 def create_price_chart(
@@ -64,7 +64,7 @@ def create_price_chart(
 
     # Her fon icin ayri trace, dongusel renk
     fig = go.Figure()
-    palet = DEFAULT_COLOR_PALETTE
+    palet = DEFAULT_COLOR_PALETTE_LIGHT if theme != "dark" else DEFAULT_COLOR_PALETTE
 
     for i, (kod, df) in enumerate(fund_dict.items()):
         # Sadece ortak tarihleri tut
@@ -106,7 +106,7 @@ def create_price_chart(
     import logging
     logger = logging.getLogger(__name__)
     
-    bm_colors = ["#E41A1C", "#377EB8", "#4DAF4A", "#984EA3"]
+    bm_colors = ["#E41A1C", "#377EB8", "#4DAF4A", "#1abc9c" if theme != "dark" else "#984EA3"]
     
     if benchmark_dict:
         logger.debug("=== CHARTS BENCHMARK DICT: %s ===", list(benchmark_dict.keys()))
@@ -297,7 +297,7 @@ def create_rolling_sharpe_chart(
 
     is_dark = theme == "dark"
     fig = go.Figure()
-    palet = DEFAULT_COLOR_PALETTE
+    palet = DEFAULT_COLOR_PALETTE_LIGHT if not is_dark else DEFAULT_COLOR_PALETTE
 
     for i, (kod, df) in enumerate(fund_dict.items()):
         df = df.sort_values("tarih")
@@ -426,7 +426,7 @@ def create_efficient_frontier_chart(
         ))
 
     # Bireysel fonlar
-    palet = DEFAULT_COLOR_PALETTE
+    palet = DEFAULT_COLOR_PALETTE_LIGHT if not is_dark else DEFAULT_COLOR_PALETTE
     idx = 0
     for kod, m in fund_metrics.items():
         vol = m.get("Volatilite (Yıllık)", 0)
@@ -652,7 +652,7 @@ def create_style_drift_chart(
     is_dark = theme == "dark"
     fig = go.Figure()
     cols = [c for c in drift_df.columns if c != "tarih"]
-    palet = DEFAULT_COLOR_PALETTE
+    palet = DEFAULT_COLOR_PALETTE_LIGHT if not is_dark else DEFAULT_COLOR_PALETTE
     for i, col in enumerate(cols):
         fig.add_trace(go.Scatter(
             x=drift_df["tarih"], y=drift_df[col], mode="lines",
@@ -784,7 +784,7 @@ def create_brinson_chart(
         attribution_result.get("interaction_effect", 0),
         attribution_result.get("total_active", 0),
     ]
-    colors = ["#1abc9c" if v >= 0 else "#d62728" for v in values]
+    colors = ["#1abc9c" if not is_dark else "#b666d2" if v >= 0 else "#d62728" for v in values]
 
     fig = go.Figure(data=[go.Bar(
         x=effects, y=values, marker_color=colors,
