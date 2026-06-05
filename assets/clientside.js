@@ -133,6 +133,7 @@
                             if (c === '#2ca02c' || c === '#2ecc71') return isDark ? '#2ecc71' : '#2ca02c';
                             if (c === '#d62728' || c === '#e74c3c') return isDark ? '#e74c3c' : '#d62728';
                             if (c === '#1f77b4' || c === '#bb86fc') return isDark ? '#bb86fc' : '#1f77b4';
+                            if (c === '#1abc9c' || c === '#b666d2') return isDark ? '#b666d2' : '#1abc9c';
                             return c;
                         });
                     }
