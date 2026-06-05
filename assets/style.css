@@ -304,6 +304,12 @@ body,
   color: #664d03 !important;
 }
 
+[data-bs-theme="dark"] .alert-warning {
+  background-color: #3a2a00 !important;
+  border-color: #664d03 !important;
+  color: #ffc107 !important;
+}
+
 /* ==========================================================================
    List Groups
    ========================================================================== */
@@ -490,7 +496,7 @@ a {
 
 /* ── Light mode: turquoise selected/range ─────────────────────────── */
 .dash-datepicker-calendar-date-highlighted {
-  background-color: rgba(26, 188, 156, 0.2);
+  background-color: rgba(var(--color-primary-rgb), 0.2);
   color: var(--color-primary);
 }
 
@@ -555,7 +561,7 @@ a {
 .CalendarDay:hover,
 .dash-datepicker-calendar-date:hover,
 .dash-datepicker-calendar-date-inside:hover {
-  background-color: rgba(26, 188, 156, 0.2);
+  background-color: rgba(var(--color-primary-rgb), 0.2);
   color: var(--color-primary);
 }
 
@@ -691,19 +697,19 @@ a {
 [data-bs-theme="light"] [role="dialog"] [data-end-date],
 [data-bs-theme="light"] [role="dialog"] .rdp-day_rangeStart,
 [data-bs-theme="light"] [role="dialog"] .rdp-day_rangeEnd {
-  background-color: #1abc9c !important;
+  background-color: var(--color-primary) !important;
   color: #ffffff !important;
 }
 
 [data-bs-theme="light"] [role="dialog"] [data-state="range-middle"],
 [data-bs-theme="light"] [role="dialog"] .rdp-day_rangeMiddle {
-  background-color: rgba(26, 188, 156, 0.3) !important;
+  background-color: rgba(var(--color-primary-rgb), 0.3) !important;
 }
 
 [data-bs-theme="light"] [role="dialog"] button[data-today],
 [data-bs-theme="light"] [role="dialog"] [data-state="today"],
 [data-bs-theme="light"] [role="dialog"] .rdp-day_today {
-  border-color: #1abc9c !important;
+  border-color: var(--color-primary) !important;
 }
 
 [data-bs-theme="dark"] [role="dialog"] button[data-selected],
