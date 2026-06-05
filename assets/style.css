@@ -1377,6 +1377,42 @@ button.dash-dropdown-clear:active {
   background-color: var(--bg-card) !important;
 }
 
+/* ── Inline style override: positive/negative text colors for dark mode ── */
+[data-bs-theme="dark"] [style*="color:#2ca02c"],
+[data-bs-theme="dark"] [style*="color: #2ca02c"] {
+  color: #2ecc71 !important;
+}
+
+[data-bs-theme="dark"] [style*="color:#d62728"],
+[data-bs-theme="dark"] [style*="color: #d62728"] {
+  color: #e74c3c !important;
+}
+
+/* ── Inline style override: pastel bg colors for dark mode ────────── */
+[data-bs-theme="dark"] [style*="background-color:#d4edda"],
+[data-bs-theme="dark"] [style*="background-color: #d4edda"],
+[data-bs-theme="dark"] [style*="background-color:#f8d7da"],
+[data-bs-theme="dark"] [style*="background-color: #f8d7da"] {
+  background-color: #1a4a2e !important;
+}
+
+[data-bs-theme="dark"] [style*="color:#155724"],
+[data-bs-theme="dark"] [style*="color: #155724"] {
+  color: #5cb85c !important;
+}
+
+[data-bs-theme="dark"] [style*="color:#555"],
+[data-bs-theme="dark"] [style*="color: #555"] {
+  color: var(--text-secondary) !important;
+}
+
+[data-bs-theme="dark"] [style*="color:#888"],
+[data-bs-theme="dark"] [style*="color: #888"],
+[data-bs-theme="dark"] [style*="color:#ccc"],
+[data-bs-theme="dark"] [style*="color: #ccc"] {
+  color: var(--text-muted) !important;
+}
+
 /* ── Inline style override: any black/dark text → white ───────────── */
 [data-bs-theme="dark"] [style*="color:#000"],
 [data-bs-theme="dark"] [style*="color: #000"],
@@ -1435,6 +1471,15 @@ button.dash-dropdown-clear:active {
 /* ==========================================================================
    Fon Bulucu — Dropdown, Radio & Control Fixes
    ========================================================================== */
+
+/* ── Dropdown option — hover/seçili iken mor/turkuaz olmasın ─────── */
+/* Dash 4, option hover'da aria-selected="true" set ediyor.
+   Varsayılan rule [role="option"][aria-selected="true"] → accent color (turkuaz/purple)
+   uyguluyor, bunu !important ile eziyoruz. */
+.dash-dropdown-option[aria-selected="true"] {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
 
 /* ── Sıralama dropdown'ı (dcc.Dropdown) ──────────────────────────── */
 [data-bs-theme="dark"] .fb-sort-dropdown .Select-control,
