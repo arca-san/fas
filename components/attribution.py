@@ -413,7 +413,7 @@ def find_similar_funds(target_kod: str, fund_dict: dict, top_n: int = 5):
     if target_kod not in fund_dict or len(fund_dict) < 2:
         return []
 
-    from components.metrics import compute_daily_returns
+    from components.optimizer import compute_daily_returns
     returns = {}
     for kod, df in fund_dict.items():
         df = df.sort_values("tarih")

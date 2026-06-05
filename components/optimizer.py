@@ -17,12 +17,14 @@ TRADING_DAYS = 252
 # ── Kovaryans & Getiri ────────────────────────────────────────────────
 
 def compute_daily_returns(fund_dict: dict) -> dict:
-    """Her fon için günlük (decimal) getiri serisi döndürür."""
+    """Her fon için günlük (decimal) getiri serisi döndürür. Index = tarih."""
     returns = {}
     for kod, df in fund_dict.items():
         df = df.sort_values("tarih")
+        tarihler = pd.to_datetime(df["tarih"])
         ret = df["fiyat"].pct_change().dropna()
         if len(ret) >= 2:
+            ret.index = tarihler[-len(ret):]
             returns[kod] = ret
     return returns
 
