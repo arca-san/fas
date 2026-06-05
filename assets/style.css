@@ -58,6 +58,9 @@
   /* ── Bootstrap primary override ─────────────────────────────────── */
   --bs-primary: var(--color-primary);
   --bs-primary-rgb: var(--color-primary-rgb);
+
+  /* ── Dash component design tokens (override purple #7f4bc4) ──────── */
+  --Dash-Fill-Interactive-Strong: var(--color-primary);
 }
 
 /* ==========================================================================
@@ -89,6 +92,9 @@
   --shadow-focus: var(--shadow-focus-dark);
   --shadow-dropdown: var(--shadow-dropdown-dark);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.15);
+
+  /* ── Dash component design tokens (override purple #7f4bc4) ──────── */
+  --Dash-Fill-Interactive-Strong: var(--color-primary-dark);
 }
 
 /* ==========================================================================
