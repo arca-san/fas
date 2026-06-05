@@ -1390,10 +1390,14 @@ button.dash-dropdown-clear:active {
 
 /* ── Inline style override: pastel bg colors for dark mode ────────── */
 [data-bs-theme="dark"] [style*="background-color:#d4edda"],
-[data-bs-theme="dark"] [style*="background-color: #d4edda"],
+[data-bs-theme="dark"] [style*="background-color: #d4edda"] {
+  background-color: #1a4a2e !important;
+}
+
 [data-bs-theme="dark"] [style*="background-color:#f8d7da"],
 [data-bs-theme="dark"] [style*="background-color: #f8d7da"] {
-  background-color: #1a4a2e !important;
+  background-color: #4a1a1a !important;
+  color: #e74c3c !important;
 }
 
 [data-bs-theme="dark"] [style*="color:#155724"],
