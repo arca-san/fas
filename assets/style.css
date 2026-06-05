@@ -1431,6 +1431,24 @@ button.dash-dropdown-clear:active {
   color: var(--text-primary) !important;
 }
 
+/* ── Portfolio metrik tablosu — class-based override (güvenilir) ──── */
+[data-bs-theme="dark"] .pf-cell-best {
+  background-color: #1a4a2e !important;
+}
+[data-bs-theme="dark"] .pf-cell-worst {
+  background-color: #4a1a1a !important;
+  color: #e74c3c !important;
+}
+[data-bs-theme="dark"] .pf-cell-eniyi {
+  color: #5cb85c !important;
+}
+[data-bs-theme="dark"] .pf-cell-bm {
+  color: var(--text-secondary) !important;
+}
+[data-bs-theme="dark"] .pf-cell-na {
+  color: var(--text-muted) !important;
+}
+
 /* ==========================================================================
    Fon Bulucu — Fund Comparison Table
    ========================================================================== */

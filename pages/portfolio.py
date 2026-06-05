@@ -602,7 +602,7 @@ def _build_summary_table(results_data: dict, selected_metric: str) -> html.Div:
         if is_mix:
             label_el = html.Strong(label)
         elif is_bm:
-            label_el = html.Span(label, style={"fontStyle": "italic", "color": "#555"})
+            label_el = html.Span(label, style={"fontStyle": "italic", "color": "#555"}, className="pf-cell-bm")
         else:
             label_el = label
         cells = [label_el]
@@ -610,24 +610,27 @@ def _build_summary_table(results_data: dict, selected_metric: str) -> html.Div:
             pv = p["value"]
             val = values[pv].get(label)
             if val is None:
-                cells.append(html.Td("-", style={"textAlign": "center", "color": "#ccc"}))
+                cells.append(html.Td("-", style={"textAlign": "center", "color": "#ccc"}, className="pf-cell-na"))
             else:
                 style = {"textAlign": "center"}
+                cell_class = None
                 if label == best_in_col.get(pv):
                     style["backgroundColor"] = "#d4edda"
                     style["fontWeight"] = "bold"
+                    cell_class = "pf-cell-best"
                 elif label == worst_in_col.get(pv):
                     style["backgroundColor"] = "#f8d7da"
-                cells.append(html.Td(f"{val}", style=style))
+                    cell_class = "pf-cell-worst"
+                cells.append(html.Td(f"{val}", style=style, className=cell_class) if cell_class else html.Td(f"{val}", style=style))
         rows.append(html.Tr(cells))
 
     # Alt satır: en iyi fon ismi
-    best_row_cells = [html.Strong("En İyi", style={"color": "#155724"})]
+    best_row_cells = [html.Strong("En İyi", style={"color": "#155724"}, className="pf-cell-eniyi")]
     for p in sorted_periods:
         pv = p["value"]
         best = best_in_col.get(pv)
         best_label = f"⭐ {best}" if best else "-"
-        best_row_cells.append(html.Td(best_label, style={"textAlign": "center", "color": "#155724", "fontWeight": "bold"}))
+        best_row_cells.append(html.Td(best_label, style={"textAlign": "center", "color": "#155724", "fontWeight": "bold"}, className="pf-cell-eniyi"))
     rows.append(html.Tr(best_row_cells))
 
     desc = METRIC_DESCRIPTIONS.get(selected_metric, "")
@@ -689,7 +692,7 @@ def _build_detail_tab_content(
     # Fon benchmark mix satirlari
     bm_mix_metrics = period_data.get("benchmark_mix_metrics", {})
     for fon_kodu, bm_m in bm_mix_metrics.items():
-        row = [html.Span(f"{fon_kodu} BM", style={"fontStyle": "italic", "color": "#555"})]
+        row = [html.Span(f"{fon_kodu} BM", style={"fontStyle": "italic", "color": "#555"}, className="pf-cell-bm")]
         for k in metric_keys:
             val = bm_m.get(k, "-")
             row.append(f"{val}" if val != "-" else "-")
@@ -707,7 +710,7 @@ def _build_detail_tab_content(
     # Kullanici secimi benchmark satirlari
     user_benchmark_metrics = period_data.get("user_benchmark_metrics", {})
     for bm_ad, bm_m in user_benchmark_metrics.items():
-        row = [html.Span(bm_ad, style={"fontStyle": "italic", "color": "#555"})]
+        row = [html.Span(bm_ad, style={"fontStyle": "italic", "color": "#555"}, className="pf-cell-bm")]
         for k in metric_keys:
             val = bm_m.get(k, "-")
             row.append(f"{val}" if val != "-" else "-")
